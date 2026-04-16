@@ -1,0 +1,135 @@
+﻿# For more info on HTTP files go to https://aka.ms/vs/httpfile
+@Web_HostAddress = https://localhost:7210
+@Email = administrator@localhost
+@Password = Administrator1!
+@AccessToken = <AccessToken>
+@RefreshToken = <RefreshToken>
+
+# POST Register (optional)
+POST {{Web_HostAddress}}/api/Users/register
+Content-Type: application/json
+
+{
+  "email": "{{Email}}",
+  "password": "{{Password}}"
+}
+
+###
+
+# POST Login
+# Copy accessToken and refreshToken from response into @AccessToken / @RefreshToken.
+POST {{Web_HostAddress}}/api/Users/login
+Content-Type: application/json
+
+{
+  "email": "{{Email}}",
+  "password": "{{Password}}"
+}
+
+###
+
+# POST Refresh
+# Use when access token expires; rotate both tokens from response.
+POST {{Web_HostAddress}}/api/Users/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{RefreshToken}}"
+}
+
+###
+
+# GET WeatherForecast
+GET {{Web_HostAddress}}/api/WeatherForecasts
+Authorization: Bearer {{AccessToken}}
+
+###
+
+# GET TodoLists
+GET {{Web_HostAddress}}/api/TodoLists
+Authorization: Bearer {{AccessToken}}
+
+###
+
+# POST TodoLists
+POST {{Web_HostAddress}}/api/TodoLists
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "Title": "Backlog"
+}
+
+###
+
+# PUT TodoLists
+PUT {{Web_HostAddress}}/api/TodoLists/1
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "Id": 1,
+  "Title": "Product Backlog"
+}
+
+###
+
+# DELETE TodoLists
+DELETE {{Web_HostAddress}}/api/TodoLists/1
+Authorization: Bearer {{AccessToken}}
+
+###
+
+# POST TodoItems
+POST {{Web_HostAddress}}/api/TodoItems
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "ListId": 1,
+  "Title": "Eat a burrito 🌯"
+}
+
+###
+
+# PATCH TodoItems UpdateDetail
+PATCH {{Web_HostAddress}}/api/TodoItems/UpdateDetail/1
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "Id": 1,
+  "ListId": 1,
+  "Priority": 3,
+  "Note": "This is a good idea!"
+}
+
+###
+
+# PUT TodoItems
+PUT {{Web_HostAddress}}/api/TodoItems/1
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "Id": 1,
+  "Title": "Eat a yummy burrito 🌯",
+  "Done": true
+}
+
+###
+
+# DELETE TodoItem
+DELETE {{Web_HostAddress}}/api/TodoItems/1
+Authorization: Bearer {{AccessToken}}
+
+###
+
+# POST Logout
+POST {{Web_HostAddress}}/api/Users/logout
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{}
+
+###
