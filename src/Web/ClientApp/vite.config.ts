@@ -19,8 +19,6 @@ export default defineConfig({
           '/api': proxyOptions,
           '/openapi': proxyOptions,
           '/scalar': proxyOptions,
-          '/weatherforecast': proxyOptions,
-          '/WeatherForecast': proxyOptions,
         }
       : undefined,
   },

@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SurveillanceCameras.Application.Common.Interfaces;
-using SurveillanceCameras.Infrastructure.Consumer;
 using SurveillanceCameras.Infrastructure.Data;
 using SurveillanceCameras.Infrastructure.Kafka.Options;
 
@@ -30,7 +29,6 @@ public static class KafkaDependencyInjection
 
         // 5. Consumers — each is an IHostedService (BackgroundService)
         //    Add new consumers here as the system grows
-        builder.Services.AddHostedService<CameraStatusChangedConsumer>();
     }
 }
 

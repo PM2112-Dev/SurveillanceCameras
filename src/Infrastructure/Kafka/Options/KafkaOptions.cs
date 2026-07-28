@@ -19,7 +19,7 @@ public sealed class KafkaOptions
 
     /// <summary>
     /// Map of IntegrationEvent type name → Kafka topic name.
-    /// Example: { "CameraStatusChangedIntegrationEvent": "sc.camera.status" }
+    /// Example: { "StoryUpdatedIntegrationEvent": "sc.story.updated" }
     /// </summary>
     public Dictionary<string, string> Topics { get; set; } = new();
 

@@ -11,5 +11,15 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="PostgreSQL" uuid="82eaf81b-0d1e-43b0-b897-e199e8349846">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:57362/?password=cNNu%28ygTyUc7Fq_G6jTweA&amp;user=kwcdwcrERs</jdbc-url>
+      <jdbc-additional-properties>
+        <property name="aspireResourceId" value="PostgreSQL-03e6348f" />
+      </jdbc-additional-properties>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

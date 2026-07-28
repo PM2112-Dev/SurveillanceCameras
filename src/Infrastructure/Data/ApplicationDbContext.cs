@@ -12,14 +12,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    public DbSet<TodoList> TodoLists => Set<TodoList>();
-
-    public DbSet<TodoItem> TodoItems => Set<TodoItem>();
-    
-    public DbSet<Area> Areas => Set<Area>();
-    
-    public DbSet<Camera> Cameras => Set<Camera>();
-    
     public DbSet<Story> Stories => Set<Story>();
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();

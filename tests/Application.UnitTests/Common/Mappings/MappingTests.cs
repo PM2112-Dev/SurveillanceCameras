@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using AutoMapper;
 using SurveillanceCameras.Application.Common.Interfaces;
-using SurveillanceCameras.Application.TodoLists.Queries.GetTodos;
+using SurveillanceCameras.Application.Local.Stories.Queries.Model;
 using SurveillanceCameras.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -34,8 +34,7 @@ public class MappingTests
     }
 
     [Test]
-    [TestCase(typeof(TodoList), typeof(TodoListDto))]
-    [TestCase(typeof(TodoItem), typeof(TodoItemDto))]
+    [TestCase(typeof(Story), typeof(StoryDto))]
     public void ShouldSupportMappingFromSourceToDestination(Type source, Type destination)
     {
         var instance = GetInstanceOf(source);
