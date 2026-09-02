@@ -4,12 +4,15 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddAzureContainerAppEnvironment("aca-env");
 
-var databaseServer = builder
-    .AddAzurePostgresFlexibleServer(Services.DatabaseServer)
-    .WithPasswordAuthentication()
-    .RunAsContainer(container => 
-        container.WithLifetime(ContainerLifetime.Persistent))
-    .AddDatabase(Services.Database);
+// Locally, connect straight to the PostgreSQL instance already running on the machine
+// (see ConnectionStrings:SurveillanceCamerasDb) instead of spinning up a Docker container.
+// When publishing, provision a real Azure Postgres Flexible Server.
+IResourceBuilder<IResourceWithConnectionString> databaseServer = builder.ExecutionContext.IsPublishMode
+    ? builder
+        .AddAzurePostgresFlexibleServer(Services.DatabaseServer)
+        .WithPasswordAuthentication()
+        .AddDatabase(Services.Database)
+    : builder.AddConnectionString(Services.Database);
 
 var web = builder.AddProject<Projects.Web>(Services.WebApi)
     .WithReference(databaseServer)
