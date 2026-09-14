@@ -65,7 +65,7 @@ public class Categories : IEndpointGroup
     [EndpointDescription("Xoá Category")]
     public static async Task<NoContent> DeleteCategory(ISender sender, int id)
     {
-        await sender.Send(new DeleteCategoryCommand { Id = id });
+        await sender.Send(new DeleteCategoryCommand(id));
 
         return TypedResults.NoContent();
     }

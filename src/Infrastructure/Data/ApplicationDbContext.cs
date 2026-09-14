@@ -19,6 +19,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<StorySource> StorySources => Set<StorySource>();
 
     public DbSet<Category> Categories => Set<Category>();
+    
+    public DbSet<PromptType> PromptTypes => Set<PromptType>();
+    
+    public DbSet<Prompt> Prompts => Set<Prompt>();
+    
+    public DbSet<Chapter> Chapters => Set<Chapter>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

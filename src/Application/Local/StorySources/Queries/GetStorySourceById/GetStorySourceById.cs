@@ -16,18 +16,20 @@ public class GetStorySourceByIdQueryHandler : IRequestHandler<GetStorySourceById
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
+    private readonly IUser _user;
 
-    public GetStorySourceByIdQueryHandler(IApplicationDbContext context, IMapper mapper)
+    public GetStorySourceByIdQueryHandler(IApplicationDbContext context, IMapper mapper, IUser user)
     {
         _context = context;
         _mapper = mapper;
+        _user = user;
     }
 
     public async Task<StorySourceDto> Handle(GetStorySourceByIdQuery request, CancellationToken cancellationToken)
     {
         var entity = await _context.StorySources
             .Include(x => x.Categories)
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id, cancellationToken);
 
         Guard.Against.NotFound(request.Id, entity);
 

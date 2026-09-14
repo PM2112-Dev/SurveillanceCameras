@@ -1,5 +1,4 @@
 using SurveillanceCameras.Application.Common.Interfaces;
-using SurveillanceCameras.Application.Repositories;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.Categories.Commands.CreateCategory;

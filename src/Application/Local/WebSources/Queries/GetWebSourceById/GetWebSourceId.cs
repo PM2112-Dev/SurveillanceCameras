@@ -1,5 +1,5 @@
+using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Local.WebSources.Queries.DTOs;
-using SurveillanceCameras.Application.Repositories;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.WebSources.Queries.GetWebSourceById;
@@ -8,21 +8,24 @@ public record GetWebSourceIdQuery(int Id) : IRequest<WebSourceDto>;
 
 public class GetWebSourceByIdQueryHandler : IRequestHandler<GetWebSourceIdQuery, WebSourceDto>
 {
-    private readonly IWebSourceRepository _repository;
+    private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
-    
-    public GetWebSourceByIdQueryHandler(IWebSourceRepository repository, IMapper mapper)
+    private readonly IUser _user;
+
+    public GetWebSourceByIdQueryHandler(IApplicationDbContext context, IMapper mapper, IUser user)
     {
-        _repository = repository;
+        _context = context;
         _mapper = mapper;
+        _user = user;
     }
 
     public async Task<WebSourceDto> Handle(GetWebSourceIdQuery request, CancellationToken cancellationToken)
     {
-        var query = await _repository.GetByIdAsync(request.Id, cancellationToken);
-        
-        var entity = _mapper.Map<WebSourceDto>(query);
+        var entity = await _context.WebSources
+            .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id, cancellationToken);
 
-        return entity;
+        Guard.Against.NotFound(request.Id, entity);
+
+        return _mapper.Map<WebSourceDto>(entity);
     }
 }

@@ -1,9 +1,15 @@
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Domain.Entities;
 
-namespace SurveillanceCameras.Application.Prompts.Commands.CreatePrompt;
+namespace SurveillanceCameras.Application.Local.Prompts.Commands.CreatePrompt;
 
 public record CreatePromptCommand : IRequest<int>
 {
+    public int PromptTypeId { get; init; }
+
+    public string? Title { get; init; }
+
+    public string? Content { get; init; }
 }
 
 public class CreatePromptCommandValidator : AbstractValidator<CreatePromptCommand>
@@ -24,6 +30,13 @@ public class CreatePromptCommandHandler : IRequestHandler<CreatePromptCommand, i
 
     public async Task<int> Handle(CreatePromptCommand request, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var entity = new Prompt
+        {
+            PromptTypeId = request.PromptTypeId, Title = request.Title, Content = request.Content
+        };
+        
+        _context.Prompts.Add(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+        return entity.Id;
     }
 }

@@ -1,12 +1,8 @@
 using SurveillanceCameras.Application.Common.Interfaces;
-using SurveillanceCameras.Application.Repositories;
 
 namespace SurveillanceCameras.Application.Local.Categories.Commands.DeleteCategory;
 
-public record DeleteCategoryCommand : IRequest
-{
-    public int Id { get; init; }
-}
+public record DeleteCategoryCommand(int Id) : IRequest;
 
 public class DeleteCategoryCommandValidator : AbstractValidator<DeleteCategoryCommand>
 {

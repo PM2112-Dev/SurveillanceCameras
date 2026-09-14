@@ -46,7 +46,8 @@ public class GetStorySourcesQueryHandler : IRequestHandler<GetStorySourcesQuery,
             query = query.Where(x => x.Title != null && x.Title.Contains(request.Title));
 
         return await PaginatedList<StorySourceDto>.CreateAsync(
-            query.OrderByDescending(x => x.Created).ProjectTo<StorySourceDto>(_mapper.ConfigurationProvider),
+            query.OrderByDescending(x => x.Created)
+                .ProjectTo<StorySourceDto>(_mapper.ConfigurationProvider),
             request.Page,
             request.PageSize,
             cancellationToken);

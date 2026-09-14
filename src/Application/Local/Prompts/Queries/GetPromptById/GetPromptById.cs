@@ -1,10 +1,11 @@
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Common.Security;
+using SurveillanceCameras.Application.Local.Prompts.Queries.DTOs;
 
-namespace SurveillanceCameras.Application.Prompts.Queries.GetPromptById;
+namespace SurveillanceCameras.Application.Local.Prompts.Queries.GetPromptById;
 
-public record GetPromptByIdQuery : IRequest
-{
-}
+[Authorize]
+public record GetPromptByIdQuery(int Id) : IRequest<PromptDto>;
 
 public class GetPromptByIdQueryValidator : AbstractValidator<GetPromptByIdQuery>
 {
@@ -13,17 +14,26 @@ public class GetPromptByIdQueryValidator : AbstractValidator<GetPromptByIdQuery>
     }
 }
 
-public class GetPromptByIdQueryHandler : IRequestHandler<GetPromptByIdQuery>
+public class GetPromptByIdQueryHandler : IRequestHandler<GetPromptByIdQuery, PromptDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IMapper _mapper;
+    private readonly IUser _user;
 
-    public GetPromptByIdQueryHandler(IApplicationDbContext context)
+    public GetPromptByIdQueryHandler(IApplicationDbContext context, IMapper mapper, IUser user)
     {
         _context = context;
+        _mapper = mapper;
+        _user = user;
     }
 
-    public async Task Handle(GetPromptByIdQuery request, CancellationToken cancellationToken)
+    public async Task<PromptDto> Handle(GetPromptByIdQuery request, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var entity = await _context.Prompts
+            .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id, cancellationToken);
+
+        Guard.Against.NotFound(request.Id, entity);
+        
+        return _mapper.Map<PromptDto>(entity);
     }
 }
