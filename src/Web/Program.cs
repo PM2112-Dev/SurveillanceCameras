@@ -1,6 +1,7 @@
 using SurveillanceCameras.Infrastructure.Data;
 using Scalar.AspNetCore;
 using SurveillanceCameras.Application;
+using SurveillanceCameras.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,7 +43,7 @@ app.MapScalarApiReference(options =>
         .AddPreferredSecuritySchemes("Bearer");
 });
 
-app.UseExceptionHandler(options => { });
+app.UseExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,5 +1,6 @@
-﻿using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Domain.Common;
+using SurveillanceCameras.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -46,7 +47,13 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
                 {
                     entry.Entity.CreatedBy = _user.Id;
                     entry.Entity.Created = utcNow;
-                } 
+
+                    // Set default status to Active if not explicitly set
+                    if (entry.Entity.BaseStatus == default)
+                    {
+                        entry.Entity.BaseStatus = BaseStatus.Active;
+                    }
+                }
                 entry.Entity.LastModifiedBy = _user.Id;
                 entry.Entity.LastModified = utcNow;
             }
@@ -57,8 +64,8 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
 public static class Extensions
 {
     public static bool HasChangedOwnedEntities(this EntityEntry entry) =>
-        entry.References.Any(r => 
-            r.TargetEntry != null && 
-            r.TargetEntry.Metadata.IsOwned() && 
+        entry.References.Any(r =>
+            r.TargetEntry != null &&
+            r.TargetEntry.Metadata.IsOwned() &&
             (r.TargetEntry.State == EntityState.Added || r.TargetEntry.State == EntityState.Modified));
 }

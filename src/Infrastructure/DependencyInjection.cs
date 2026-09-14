@@ -1,19 +1,22 @@
-﻿using SurveillanceCameras.Application.Common.Interfaces;
-using SurveillanceCameras.Infrastructure.Data;
-using SurveillanceCameras.Infrastructure.Data.Interceptors;
-using SurveillanceCameras.Infrastructure.Identity;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using SurveillanceCameras.Application.Service.WikiDichService;
+using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Repositories;
+using SurveillanceCameras.Application.WikiDichService;
+using SurveillanceCameras.Infrastructure.Data;
+using SurveillanceCameras.Infrastructure.Data.Interceptors;
+using SurveillanceCameras.Infrastructure.Identity;
+using SurveillanceCameras.Infrastructure.Repositories;
 using SurveillanceCameras.Infrastructure.Service.WikiDichService;
 
-namespace Microsoft.Extensions.DependencyInjection;
+namespace SurveillanceCameras.Infrastructure;
 
 public static class DependencyInjection
 {
@@ -35,6 +38,11 @@ public static class DependencyInjection
         builder.EnrichNpgsqlDbContext<ApplicationDbContext>();
 
         builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+
+        // Register repositories
+        builder.Services.AddScoped<IWebSourceRepository, WebSourceRepository>();
+        builder.Services.AddScoped<IStorySourceRepository, StorySourceRepository>();
+        builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 

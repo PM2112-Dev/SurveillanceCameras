@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
         }
       }
 
-      client.infoGET()
+      client.getInfo()
         .then(() => setIsAuthenticated(true))
         .catch(() => {
           tokenStore.clear();

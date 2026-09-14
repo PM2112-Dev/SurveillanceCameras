@@ -39,89 +39,44 @@ Content-Type: application/json
 
 ###
 
-# GET WeatherForecast
-GET {{Web_HostAddress}}/api/WeatherForecasts
+# GET WebSources (list, filter + paging)
+GET {{Web_HostAddress}}/api/WebSources?title=&page=1&pageSize=20
 Authorization: Bearer {{AccessToken}}
 
 ###
 
-# GET TodoLists
-GET {{Web_HostAddress}}/api/TodoLists
-Authorization: Bearer {{AccessToken}}
-
-###
-
-# POST TodoLists
-POST {{Web_HostAddress}}/api/TodoLists
+# POST WebSources
+POST {{Web_HostAddress}}/api/WebSources
 Authorization: Bearer {{AccessToken}}
 Content-Type: application/json
 
 {
-  "Title": "Backlog"
+  "title": "Wikidich",
+  "baseUrl": "https://wikidich.com"
 }
 
 ###
 
-# PUT TodoLists
-PUT {{Web_HostAddress}}/api/TodoLists/1
+# GET StorySources (list, filter theo WebSource / tên)
+GET {{Web_HostAddress}}/api/StorySources?webSourceId=&title=&page=1&pageSize=20
+Authorization: Bearer {{AccessToken}}
+
+###
+
+# GET Categories (list)
+GET {{Web_HostAddress}}/api/Categories?title=&page=1&pageSize=20
+Authorization: Bearer {{AccessToken}}
+
+###
+
+# POST Categories
+POST {{Web_HostAddress}}/api/Categories
 Authorization: Bearer {{AccessToken}}
 Content-Type: application/json
 
 {
-  "Id": 1,
-  "Title": "Product Backlog"
+  "title": "Tiên hiệp"
 }
-
-###
-
-# DELETE TodoLists
-DELETE {{Web_HostAddress}}/api/TodoLists/1
-Authorization: Bearer {{AccessToken}}
-
-###
-
-# POST TodoItems
-POST {{Web_HostAddress}}/api/TodoItems
-Authorization: Bearer {{AccessToken}}
-Content-Type: application/json
-
-{
-  "ListId": 1,
-  "Title": "Eat a burrito 🌯"
-}
-
-###
-
-# PATCH TodoItems UpdateDetail
-PATCH {{Web_HostAddress}}/api/TodoItems/UpdateDetail/1
-Authorization: Bearer {{AccessToken}}
-Content-Type: application/json
-
-{
-  "Id": 1,
-  "ListId": 1,
-  "Priority": 3,
-  "Note": "This is a good idea!"
-}
-
-###
-
-# PUT TodoItems
-PUT {{Web_HostAddress}}/api/TodoItems/1
-Authorization: Bearer {{AccessToken}}
-Content-Type: application/json
-
-{
-  "Id": 1,
-  "Title": "Eat a yummy burrito 🌯",
-  "Done": true
-}
-
-###
-
-# DELETE TodoItem
-DELETE {{Web_HostAddress}}/api/TodoItems/1
-Authorization: Bearer {{AccessToken}}
 
 ###
 

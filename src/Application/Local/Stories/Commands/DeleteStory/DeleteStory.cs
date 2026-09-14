@@ -1,8 +1,17 @@
 using SurveillanceCameras.Application.Common.Interfaces;
 
-namespace SurveillanceCameras.Application.Stories.Commands.DeleteStory;
+namespace SurveillanceCameras.Application.Local.Stories.Commands.DeleteStory;
 
-public record DeleteStoryCommand(int Id) : IRequest;
+public record DeleteStoryCommand : IRequest
+{
+}
+
+public class DeleteStoryCommandValidator : AbstractValidator<DeleteStoryCommand>
+{
+    public DeleteStoryCommandValidator()
+    {
+    }
+}
 
 public class DeleteStoryCommandHandler : IRequestHandler<DeleteStoryCommand>
 {
@@ -15,13 +24,6 @@ public class DeleteStoryCommandHandler : IRequestHandler<DeleteStoryCommand>
 
     public async Task Handle(DeleteStoryCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _context.Stories
-            .FindAsync([request.Id], cancellationToken);
-
-        Guard.Against.NotFound(request.Id, entity);
-
-        _context.Stories.Remove(entity);
-
-        await _context.SaveChangesAsync(cancellationToken);
+        throw new NotImplementedException();
     }
 }

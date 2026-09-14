@@ -69,7 +69,7 @@ dotnet test
 To learn more about the template go to the [project website](https://cleanarchitecture.jasontaylor.dev). Here you can find additional guidance, request new features, report a bug, and discuss the template with other users.
 
 cd /Users/pdm-mac/PDM/Server/SurveillanceCameras
-dotnet ef migrations add MigrationsV2 --project src/Infrastructure --startup-project src/Web --output-dir Data/Migrations
+dotnet ef migrations add MigrationsV3 --project src/Infrastructure --startup-project src/Web --output-dir Data/Migrations
 dotnet ef database update --project src/Infrastructure --startup-project src/Web
 
 
@@ -80,7 +80,7 @@ dotnet ef database update --project src/Infrastructure --startup-project src/Web
 "refreshToken": "6Djj1ObAzFoukl3K2fnYLVo2tpwFPLot0dDkgDRmgHxc7thbuz3QWISVdVEVUMuf951l0oVGBMQHEadpahhGDg=="
 }
 
-dotnet new ca-usecase -n GetStoryById -fn Stories -ut query
+dotnet new ca-usecase -n GetStories -fn Stories -ut query
 
 dotnet new ca-usecase --name CreateStory --feature-name Stories --usecase-type command --return-type int
 dotnet new ca-usecase --name UpdateStory --feature-name Stories --usecase-type command

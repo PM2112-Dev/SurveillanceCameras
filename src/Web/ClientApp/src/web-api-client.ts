@@ -7,7 +7,7 @@
 /* eslint-disable */
 // ReSharper disable InconsistentNaming
 
-export class StoriesClient {
+export class CategoriesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -18,11 +18,24 @@ export class StoriesClient {
     }
 
     /**
-     * Get all stories
+     * Get Categories
+     * @param title (optional) 
      * @return OK
      */
-    getStories(): Promise<StoryVm> {
-        let url_ = this.baseUrl + "/api/Stories";
+    getCategories(title: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfCategoryDto> {
+        let url_ = this.baseUrl + "/api/Categories?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -33,18 +46,18 @@ export class StoriesClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetStories(_response);
+            return this.processGetCategories(_response);
         });
     }
 
-    protected processGetStories(response: Response): Promise<StoryVm> {
+    protected processGetCategories(response: Response): Promise<PaginatedListOfCategoryDto> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = StoryVm.fromJS(resultData200);
+            result200 = PaginatedListOfCategoryDto.fromJS(resultData200);
             return result200;
             });
         } else if (status === 400) {
@@ -64,15 +77,15 @@ export class StoriesClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<StoryVm>(null as any);
+        return Promise.resolve<PaginatedListOfCategoryDto>(null as any);
     }
 
     /**
-     * Create a new story
+     * Create Category
      * @return Created
      */
-    createStory(body: CreateStoryCommand): Promise<number> {
-        let url_ = this.baseUrl + "/api/Stories";
+    createCategory(body: CreateCategoryCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/Categories";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -87,11 +100,11 @@ export class StoriesClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processCreateStory(_response);
+            return this.processCreateCategory(_response);
         });
     }
 
-    protected processCreateStory(response: Response): Promise<number> {
+    protected processCreateCategory(response: Response): Promise<number> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 201) {
@@ -123,11 +136,11 @@ export class StoriesClient {
     }
 
     /**
-     * Get Story by Id
+     * Get Category by Id
      * @return OK
      */
-    getStoryById(id: number): Promise<StoryDto> {
-        let url_ = this.baseUrl + "/api/Stories/{id}";
+    getCategoryById(id: number): Promise<CategoryDto> {
+        let url_ = this.baseUrl + "/api/Categories/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -141,18 +154,18 @@ export class StoriesClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetStoryById(_response);
+            return this.processGetCategoryById(_response);
         });
     }
 
-    protected processGetStoryById(response: Response): Promise<StoryDto> {
+    protected processGetCategoryById(response: Response): Promise<CategoryDto> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = StoryDto.fromJS(resultData200);
+            result200 = CategoryDto.fromJS(resultData200);
             return result200;
             });
         } else if (status === 400) {
@@ -172,15 +185,15 @@ export class StoriesClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<StoryDto>(null as any);
+        return Promise.resolve<CategoryDto>(null as any);
     }
 
     /**
-     * Update a story
+     * Update Category
      * @return No Content
      */
-    updateStory(id: number, body: UpdateStoryCommand): Promise<void> {
-        let url_ = this.baseUrl + "/api/Stories/{id}";
+    updateCategory(id: number, body: UpdateCategoryCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Categories/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -197,11 +210,11 @@ export class StoriesClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processUpdateStory(_response);
+            return this.processUpdateCategory(_response);
         });
     }
 
-    protected processUpdateStory(response: Response): Promise<void> {
+    protected processUpdateCategory(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 204) {
@@ -229,11 +242,11 @@ export class StoriesClient {
     }
 
     /**
-     * Delete a story
+     * Delete Category
      * @return No Content
      */
-    deleteStory(id: number): Promise<void> {
-        let url_ = this.baseUrl + "/api/Stories/{id}";
+    deleteCategory(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Categories/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -246,11 +259,300 @@ export class StoriesClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processDeleteStory(_response);
+            return this.processDeleteCategory(_response);
         });
     }
 
-    protected processDeleteStory(response: Response): Promise<void> {
+    protected processDeleteCategory(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
+export class StorySourcesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get Story Sources
+     * @param webSourceId (optional) 
+     * @param title (optional) 
+     * @return OK
+     */
+    getStorySources(webSourceId: number | undefined, title: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfStorySourceDto> {
+        let url_ = this.baseUrl + "/api/StorySources?";
+        if (webSourceId === null)
+            throw new globalThis.Error("The parameter 'webSourceId' cannot be null.");
+        else if (webSourceId !== undefined)
+            url_ += "WebSourceId=" + encodeURIComponent("" + webSourceId) + "&";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetStorySources(_response);
+        });
+    }
+
+    protected processGetStorySources(response: Response): Promise<PaginatedListOfStorySourceDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfStorySourceDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfStorySourceDto>(null as any);
+    }
+
+    /**
+     * Create Story Source
+     * @return Created
+     */
+    createStorySource(body: CreateStorySourceCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/StorySources";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateStorySource(_response);
+        });
+    }
+
+    protected processCreateStorySource(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get Story Source by Id
+     * @return OK
+     */
+    getStorySourceById(id: number): Promise<StorySourceDto> {
+        let url_ = this.baseUrl + "/api/StorySources/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetStorySourceById(_response);
+        });
+    }
+
+    protected processGetStorySourceById(response: Response): Promise<StorySourceDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = StorySourceDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<StorySourceDto>(null as any);
+    }
+
+    /**
+     * Update Story Source
+     * @return No Content
+     */
+    updateStorySource(id: number, body: UpdateStorySourceCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/StorySources/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateStorySource(_response);
+        });
+    }
+
+    protected processUpdateStorySource(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete Story Source
+     * @return No Content
+     */
+    deleteStorySource(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/StorySources/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteStorySource(_response);
+        });
+    }
+
+    protected processDeleteStorySource(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 204) {
@@ -527,6 +829,290 @@ export class UsersClient {
     }
 }
 
+export class WebSourcesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get WebSources
+     * @param title (optional) 
+     * @return OK
+     */
+    getWebSource(title: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfWebSourceDto> {
+        let url_ = this.baseUrl + "/api/WebSources?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWebSource(_response);
+        });
+    }
+
+    protected processGetWebSource(response: Response): Promise<PaginatedListOfWebSourceDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfWebSourceDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfWebSourceDto>(null as any);
+    }
+
+    /**
+     * Create Web Source
+     * @return Created
+     */
+    createWebSource(body: CreateWebSourceCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/WebSources";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateWebSource(_response);
+        });
+    }
+
+    protected processCreateWebSource(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get Web Source by Id
+     * @return OK
+     */
+    getWebSourceById(id: number): Promise<WebSourceDto> {
+        let url_ = this.baseUrl + "/api/WebSources/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWebSourceById(_response);
+        });
+    }
+
+    protected processGetWebSourceById(response: Response): Promise<WebSourceDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = WebSourceDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<WebSourceDto>(null as any);
+    }
+
+    /**
+     * Update Web Source
+     * @return No Content
+     */
+    updateWebSource(id: number, body: UpdateWebSourceCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/WebSources/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateWebSource(_response);
+        });
+    }
+
+    protected processUpdateWebSource(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete Web Source
+     * @return No Content
+     */
+    deleteWebSource(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/WebSources/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteWebSource(_response);
+        });
+    }
+
+    protected processDeleteWebSource(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
 export class AccessTokenResponse implements IAccessTokenResponse {
     tokenType!: string;
     accessToken!: string;
@@ -587,33 +1173,144 @@ export interface IAccessTokenResponse {
     [key: string]: any;
 }
 
-export class CreateStoryCommand implements ICreateStoryCommand {
+export class CategoryDto implements ICategoryDto {
+    storySources?: StorySourceDto[];
+    id?: number;
     title?: string | undefined;
-    titleRaw?: string | undefined;
-    storyWebId?: string | undefined;
-    linkRaw?: string | undefined;
-    author?: string | undefined;
-    imageUrl?: string | undefined;
-    totalChapters?: number | undefined;
-    descriptionRaw?: string | undefined;
-    descriptionEdit?: string | undefined;
-    linkChapterOne?: string | undefined;
-    genres?: string[] | undefined;
-    isScraped?: boolean;
-    isEdited?: boolean;
-    isComment?: boolean;
-    publish?: number;
-    uploaded?: number;
-    isFull?: boolean;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
-    isEarning?: boolean;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
 
     [key: string]: any;
 
-    constructor(data?: ICreateStoryCommand) {
+    constructor(data?: ICategoryDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["storySources"])) {
+                this.storySources = [] as any;
+                for (let item of _data["storySources"])
+                    this.storySources!.push(StorySourceDto.fromJS(item));
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): CategoryDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CategoryDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.storySources)) {
+            data["storySources"] = [];
+            for (let item of this.storySources)
+                data["storySources"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface ICategoryDto {
+    storySources?: StorySourceDto[];
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CategorySummaryDto implements ICategorySummaryDto {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICategorySummaryDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): CategorySummaryDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CategorySummaryDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface ICategorySummaryDto {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CreateCategoryCommand implements ICreateCategoryCommand {
+    title?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateCategoryCommand) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -629,37 +1326,12 @@ export class CreateStoryCommand implements ICreateStoryCommand {
                     this[property] = _data[property];
             }
             this.title = _data["title"];
-            this.titleRaw = _data["titleRaw"];
-            this.storyWebId = _data["storyWebId"];
-            this.linkRaw = _data["linkRaw"];
-            this.author = _data["author"];
-            this.imageUrl = _data["imageUrl"];
-            this.totalChapters = _data["totalChapters"];
-            this.descriptionRaw = _data["descriptionRaw"];
-            this.descriptionEdit = _data["descriptionEdit"];
-            this.linkChapterOne = _data["linkChapterOne"];
-            if (Array.isArray(_data["genres"])) {
-                this.genres = [] as any;
-                for (let item of _data["genres"])
-                    this.genres!.push(item);
-            }
-            this.isScraped = _data["isScraped"];
-            this.isEdited = _data["isEdited"];
-            this.isComment = _data["isComment"];
-            this.publish = _data["publish"];
-            this.uploaded = _data["uploaded"];
-            this.isFull = _data["isFull"];
-            this.earnCount = _data["earnCount"];
-            this.earnNow = _data["earnNow"];
-            this.adCount = _data["adCount"];
-            this.paid = _data["paid"];
-            this.isEarning = _data["isEarning"];
         }
     }
 
-    static fromJS(data: any): CreateStoryCommand {
+    static fromJS(data: any): CreateCategoryCommand {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateStoryCommand();
+        let result = new CreateCategoryCommand();
         result.init(data);
         return result;
     }
@@ -671,58 +1343,164 @@ export class CreateStoryCommand implements ICreateStoryCommand {
                 data[property] = this[property];
         }
         data["title"] = this.title;
-        data["titleRaw"] = this.titleRaw;
-        data["storyWebId"] = this.storyWebId;
-        data["linkRaw"] = this.linkRaw;
-        data["author"] = this.author;
-        data["imageUrl"] = this.imageUrl;
-        data["totalChapters"] = this.totalChapters;
-        data["descriptionRaw"] = this.descriptionRaw;
-        data["descriptionEdit"] = this.descriptionEdit;
-        data["linkChapterOne"] = this.linkChapterOne;
-        if (Array.isArray(this.genres)) {
-            data["genres"] = [];
-            for (let item of this.genres)
-                data["genres"].push(item);
-        }
-        data["isScraped"] = this.isScraped;
-        data["isEdited"] = this.isEdited;
-        data["isComment"] = this.isComment;
-        data["publish"] = this.publish;
-        data["uploaded"] = this.uploaded;
-        data["isFull"] = this.isFull;
-        data["earnCount"] = this.earnCount;
-        data["earnNow"] = this.earnNow;
-        data["adCount"] = this.adCount;
-        data["paid"] = this.paid;
-        data["isEarning"] = this.isEarning;
         return data;
     }
 }
 
-export interface ICreateStoryCommand {
+export interface ICreateCategoryCommand {
     title?: string | undefined;
-    titleRaw?: string | undefined;
-    storyWebId?: string | undefined;
-    linkRaw?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CreateStorySourceCommand implements ICreateStorySourceCommand {
+    title?: string | undefined;
+    webSourceId?: number;
+    storySourceType?: number;
+    sinoVietnamese?: string | undefined;
     author?: string | undefined;
+    description?: string | undefined;
+    linkRaw?: string | undefined;
+    status?: string | undefined;
+    lastUpdate?: Date;
     imageUrl?: string | undefined;
     totalChapters?: number | undefined;
-    descriptionRaw?: string | undefined;
-    descriptionEdit?: string | undefined;
-    linkChapterOne?: string | undefined;
-    genres?: string[] | undefined;
-    isScraped?: boolean;
-    isEdited?: boolean;
-    isComment?: boolean;
-    publish?: number;
-    uploaded?: number;
-    isFull?: boolean;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
-    isEarning?: boolean;
+    categoryIds?: number[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateStorySourceCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+            this.webSourceId = _data["webSourceId"];
+            this.storySourceType = _data["storySourceType"];
+            this.sinoVietnamese = _data["sinoVietnamese"];
+            this.author = _data["author"];
+            this.description = _data["description"];
+            this.linkRaw = _data["linkRaw"];
+            this.status = _data["status"];
+            this.lastUpdate = _data["lastUpdate"] ? new Date(_data["lastUpdate"].toString()) : undefined as any;
+            this.imageUrl = _data["imageUrl"];
+            this.totalChapters = _data["totalChapters"];
+            if (Array.isArray(_data["categoryIds"])) {
+                this.categoryIds = [] as any;
+                for (let item of _data["categoryIds"])
+                    this.categoryIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CreateStorySourceCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateStorySourceCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        data["webSourceId"] = this.webSourceId;
+        data["storySourceType"] = this.storySourceType;
+        data["sinoVietnamese"] = this.sinoVietnamese;
+        data["author"] = this.author;
+        data["description"] = this.description;
+        data["linkRaw"] = this.linkRaw;
+        data["status"] = this.status;
+        data["lastUpdate"] = this.lastUpdate ? this.lastUpdate.toISOString() : undefined as any;
+        data["imageUrl"] = this.imageUrl;
+        data["totalChapters"] = this.totalChapters;
+        if (Array.isArray(this.categoryIds)) {
+            data["categoryIds"] = [];
+            for (let item of this.categoryIds)
+                data["categoryIds"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ICreateStorySourceCommand {
+    title?: string | undefined;
+    webSourceId?: number;
+    storySourceType?: number;
+    sinoVietnamese?: string | undefined;
+    author?: string | undefined;
+    description?: string | undefined;
+    linkRaw?: string | undefined;
+    status?: string | undefined;
+    lastUpdate?: Date;
+    imageUrl?: string | undefined;
+    totalChapters?: number | undefined;
+    categoryIds?: number[] | undefined;
+
+    [key: string]: any;
+}
+
+export class CreateWebSourceCommand implements ICreateWebSourceCommand {
+    title?: string | undefined;
+    baseUrl?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateWebSourceCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+            this.baseUrl = _data["baseUrl"];
+        }
+    }
+
+    static fromJS(data: any): CreateWebSourceCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateWebSourceCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        data["baseUrl"] = this.baseUrl;
+        return data;
+    }
+}
+
+export interface ICreateWebSourceCommand {
+    title?: string | undefined;
+    baseUrl?: string | undefined;
 
     [key: string]: any;
 }
@@ -911,6 +1689,234 @@ export interface ILoginRequest {
     [key: string]: any;
 }
 
+export class PaginatedListOfCategoryDto implements IPaginatedListOfCategoryDto {
+    items?: CategoryDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfCategoryDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(CategoryDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfCategoryDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfCategoryDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfCategoryDto {
+    items?: CategoryDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfStorySourceDto implements IPaginatedListOfStorySourceDto {
+    items?: StorySourceDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfStorySourceDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(StorySourceDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfStorySourceDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfStorySourceDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfStorySourceDto {
+    items?: StorySourceDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfWebSourceDto implements IPaginatedListOfWebSourceDto {
+    items?: WebSourceDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfWebSourceDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(WebSourceDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfWebSourceDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfWebSourceDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfWebSourceDto {
+    items?: WebSourceDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
 export class RefreshRequest implements IRefreshRequest {
     refreshToken!: string;
 
@@ -1011,230 +2017,26 @@ export interface IRegisterRequest {
     [key: string]: any;
 }
 
-export class StoryDto implements IStoryDto {
-    id?: number;
-    title?: string | undefined;
-    titleRaw?: string | undefined;
-    storyWebId?: string | undefined;
-    linkRaw?: string | undefined;
+export class StorySourceDto implements IStorySourceDto {
+    webSourceId?: number;
+    storySourceType?: number;
+    sinoVietnamese?: string | undefined;
     author?: string | undefined;
+    description?: string | undefined;
+    linkRaw?: string | undefined;
+    status?: string | undefined;
+    lastUpdate?: Date;
     imageUrl?: string | undefined;
-    descriptionRaw?: string | undefined;
-    descriptionEdit?: string | undefined;
-    linkChapterOne?: string | undefined;
-    genres?: string[] | undefined;
-    isScraped?: boolean;
-    isEdited?: boolean;
-    isComment?: boolean;
-    publish?: number;
-    uploaded?: number;
-    isFull?: boolean;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
-    isEarning?: boolean;
-
-    [key: string]: any;
-
-    constructor(data?: IStoryDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.id = _data["id"];
-            this.title = _data["title"];
-            this.titleRaw = _data["titleRaw"];
-            this.storyWebId = _data["storyWebId"];
-            this.linkRaw = _data["linkRaw"];
-            this.author = _data["author"];
-            this.imageUrl = _data["imageUrl"];
-            this.descriptionRaw = _data["descriptionRaw"];
-            this.descriptionEdit = _data["descriptionEdit"];
-            this.linkChapterOne = _data["linkChapterOne"];
-            if (Array.isArray(_data["genres"])) {
-                this.genres = [] as any;
-                for (let item of _data["genres"])
-                    this.genres!.push(item);
-            }
-            this.isScraped = _data["isScraped"];
-            this.isEdited = _data["isEdited"];
-            this.isComment = _data["isComment"];
-            this.publish = _data["publish"];
-            this.uploaded = _data["uploaded"];
-            this.isFull = _data["isFull"];
-            this.earnCount = _data["earnCount"];
-            this.earnNow = _data["earnNow"];
-            this.adCount = _data["adCount"];
-            this.paid = _data["paid"];
-            this.isEarning = _data["isEarning"];
-        }
-    }
-
-    static fromJS(data: any): StoryDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new StoryDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["id"] = this.id;
-        data["title"] = this.title;
-        data["titleRaw"] = this.titleRaw;
-        data["storyWebId"] = this.storyWebId;
-        data["linkRaw"] = this.linkRaw;
-        data["author"] = this.author;
-        data["imageUrl"] = this.imageUrl;
-        data["descriptionRaw"] = this.descriptionRaw;
-        data["descriptionEdit"] = this.descriptionEdit;
-        data["linkChapterOne"] = this.linkChapterOne;
-        if (Array.isArray(this.genres)) {
-            data["genres"] = [];
-            for (let item of this.genres)
-                data["genres"].push(item);
-        }
-        data["isScraped"] = this.isScraped;
-        data["isEdited"] = this.isEdited;
-        data["isComment"] = this.isComment;
-        data["publish"] = this.publish;
-        data["uploaded"] = this.uploaded;
-        data["isFull"] = this.isFull;
-        data["earnCount"] = this.earnCount;
-        data["earnNow"] = this.earnNow;
-        data["adCount"] = this.adCount;
-        data["paid"] = this.paid;
-        data["isEarning"] = this.isEarning;
-        return data;
-    }
-}
-
-export interface IStoryDto {
-    id?: number;
-    title?: string | undefined;
-    titleRaw?: string | undefined;
-    storyWebId?: string | undefined;
-    linkRaw?: string | undefined;
-    author?: string | undefined;
-    imageUrl?: string | undefined;
-    descriptionRaw?: string | undefined;
-    descriptionEdit?: string | undefined;
-    linkChapterOne?: string | undefined;
-    genres?: string[] | undefined;
-    isScraped?: boolean;
-    isEdited?: boolean;
-    isComment?: boolean;
-    publish?: number;
-    uploaded?: number;
-    isFull?: boolean;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
-    isEarning?: boolean;
-
-    [key: string]: any;
-}
-
-export class StoryVm implements IStoryVm {
-    stories?: StoryDto[];
-
-    [key: string]: any;
-
-    constructor(data?: IStoryVm) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            if (Array.isArray(_data["stories"])) {
-                this.stories = [] as any;
-                for (let item of _data["stories"])
-                    this.stories!.push(StoryDto.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): StoryVm {
-        data = typeof data === 'object' ? data : {};
-        let result = new StoryVm();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        if (Array.isArray(this.stories)) {
-            data["stories"] = [];
-            for (let item of this.stories)
-                data["stories"].push(item ? item.toJSON() : undefined as any);
-        }
-        return data;
-    }
-}
-
-export interface IStoryVm {
-    stories?: StoryDto[];
-
-    [key: string]: any;
-}
-
-export class UpdateStoryCommand implements IUpdateStoryCommand {
-    id?: number;
-    title?: string | undefined;
-    titleRaw?: string | undefined;
-    storyWebId?: string | undefined;
-    linkRaw?: string | undefined;
-    author?: string | undefined;
     totalChapters?: number | undefined;
-    imageUrl?: string | undefined;
-    descriptionRaw?: string | undefined;
-    descriptionEdit?: string | undefined;
-    linkChapterOne?: string | undefined;
-    genres?: string[] | undefined;
-    isScraped?: boolean;
-    isEdited?: boolean;
-    isComment?: boolean;
-    publish?: number;
-    uploaded?: number;
-    isFull?: boolean;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
-    isEarning?: boolean;
+    categories?: CategorySummaryDto[];
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
 
     [key: string]: any;
 
-    constructor(data?: IUpdateStoryCommand) {
+    constructor(data?: IStorySourceDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -1249,39 +2051,119 @@ export class UpdateStoryCommand implements IUpdateStoryCommand {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.id = _data["id"];
-            this.title = _data["title"];
-            this.titleRaw = _data["titleRaw"];
-            this.storyWebId = _data["storyWebId"];
-            this.linkRaw = _data["linkRaw"];
+            this.webSourceId = _data["webSourceId"];
+            this.storySourceType = _data["storySourceType"];
+            this.sinoVietnamese = _data["sinoVietnamese"];
             this.author = _data["author"];
+            this.description = _data["description"];
+            this.linkRaw = _data["linkRaw"];
+            this.status = _data["status"];
+            this.lastUpdate = _data["lastUpdate"] ? new Date(_data["lastUpdate"].toString()) : undefined as any;
+            this.imageUrl = _data["imageUrl"];
             this.totalChapters = _data["totalChapters"];
-            this.imageUrl = _data["imageUrl"];
-            this.descriptionRaw = _data["descriptionRaw"];
-            this.descriptionEdit = _data["descriptionEdit"];
-            this.linkChapterOne = _data["linkChapterOne"];
-            if (Array.isArray(_data["genres"])) {
-                this.genres = [] as any;
-                for (let item of _data["genres"])
-                    this.genres!.push(item);
+            if (Array.isArray(_data["categories"])) {
+                this.categories = [] as any;
+                for (let item of _data["categories"])
+                    this.categories!.push(CategorySummaryDto.fromJS(item));
             }
-            this.isScraped = _data["isScraped"];
-            this.isEdited = _data["isEdited"];
-            this.isComment = _data["isComment"];
-            this.publish = _data["publish"];
-            this.uploaded = _data["uploaded"];
-            this.isFull = _data["isFull"];
-            this.earnCount = _data["earnCount"];
-            this.earnNow = _data["earnNow"];
-            this.adCount = _data["adCount"];
-            this.paid = _data["paid"];
-            this.isEarning = _data["isEarning"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
         }
     }
 
-    static fromJS(data: any): UpdateStoryCommand {
+    static fromJS(data: any): StorySourceDto {
         data = typeof data === 'object' ? data : {};
-        let result = new UpdateStoryCommand();
+        let result = new StorySourceDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["webSourceId"] = this.webSourceId;
+        data["storySourceType"] = this.storySourceType;
+        data["sinoVietnamese"] = this.sinoVietnamese;
+        data["author"] = this.author;
+        data["description"] = this.description;
+        data["linkRaw"] = this.linkRaw;
+        data["status"] = this.status;
+        data["lastUpdate"] = this.lastUpdate ? this.lastUpdate.toISOString() : undefined as any;
+        data["imageUrl"] = this.imageUrl;
+        data["totalChapters"] = this.totalChapters;
+        if (Array.isArray(this.categories)) {
+            data["categories"] = [];
+            for (let item of this.categories)
+                data["categories"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IStorySourceDto {
+    webSourceId?: number;
+    storySourceType?: number;
+    sinoVietnamese?: string | undefined;
+    author?: string | undefined;
+    description?: string | undefined;
+    linkRaw?: string | undefined;
+    status?: string | undefined;
+    lastUpdate?: Date;
+    imageUrl?: string | undefined;
+    totalChapters?: number | undefined;
+    categories?: CategorySummaryDto[];
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class UpdateCategoryCommand implements IUpdateCategoryCommand {
+    id?: number;
+    title?: string | undefined;
+    storySourceIds?: number[];
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateCategoryCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            if (Array.isArray(_data["storySourceIds"])) {
+                this.storySourceIds = [] as any;
+                for (let item of _data["storySourceIds"])
+                    this.storySourceIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): UpdateCategoryCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCategoryCommand();
         result.init(data);
         return result;
     }
@@ -1294,59 +2176,255 @@ export class UpdateStoryCommand implements IUpdateStoryCommand {
         }
         data["id"] = this.id;
         data["title"] = this.title;
-        data["titleRaw"] = this.titleRaw;
-        data["storyWebId"] = this.storyWebId;
-        data["linkRaw"] = this.linkRaw;
-        data["author"] = this.author;
-        data["totalChapters"] = this.totalChapters;
-        data["imageUrl"] = this.imageUrl;
-        data["descriptionRaw"] = this.descriptionRaw;
-        data["descriptionEdit"] = this.descriptionEdit;
-        data["linkChapterOne"] = this.linkChapterOne;
-        if (Array.isArray(this.genres)) {
-            data["genres"] = [];
-            for (let item of this.genres)
-                data["genres"].push(item);
+        if (Array.isArray(this.storySourceIds)) {
+            data["storySourceIds"] = [];
+            for (let item of this.storySourceIds)
+                data["storySourceIds"].push(item);
         }
-        data["isScraped"] = this.isScraped;
-        data["isEdited"] = this.isEdited;
-        data["isComment"] = this.isComment;
-        data["publish"] = this.publish;
-        data["uploaded"] = this.uploaded;
-        data["isFull"] = this.isFull;
-        data["earnCount"] = this.earnCount;
-        data["earnNow"] = this.earnNow;
-        data["adCount"] = this.adCount;
-        data["paid"] = this.paid;
-        data["isEarning"] = this.isEarning;
         return data;
     }
 }
 
-export interface IUpdateStoryCommand {
+export interface IUpdateCategoryCommand {
     id?: number;
     title?: string | undefined;
-    titleRaw?: string | undefined;
-    storyWebId?: string | undefined;
-    linkRaw?: string | undefined;
+    storySourceIds?: number[];
+
+    [key: string]: any;
+}
+
+export class UpdateStorySourceCommand implements IUpdateStorySourceCommand {
+    id?: number;
+    title?: string | undefined;
+    webSourceId?: number;
+    storySourceType?: number;
+    sinoVietnamese?: string | undefined;
     author?: string | undefined;
-    totalChapters?: number | undefined;
+    description?: string | undefined;
+    linkRaw?: string | undefined;
+    status?: string | undefined;
+    lastUpdate?: Date;
     imageUrl?: string | undefined;
-    descriptionRaw?: string | undefined;
-    descriptionEdit?: string | undefined;
-    linkChapterOne?: string | undefined;
-    genres?: string[] | undefined;
-    isScraped?: boolean;
-    isEdited?: boolean;
-    isComment?: boolean;
-    publish?: number;
-    uploaded?: number;
-    isFull?: boolean;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
-    isEarning?: boolean;
+    totalChapters?: number | undefined;
+    categoryIds?: number[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateStorySourceCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.webSourceId = _data["webSourceId"];
+            this.storySourceType = _data["storySourceType"];
+            this.sinoVietnamese = _data["sinoVietnamese"];
+            this.author = _data["author"];
+            this.description = _data["description"];
+            this.linkRaw = _data["linkRaw"];
+            this.status = _data["status"];
+            this.lastUpdate = _data["lastUpdate"] ? new Date(_data["lastUpdate"].toString()) : undefined as any;
+            this.imageUrl = _data["imageUrl"];
+            this.totalChapters = _data["totalChapters"];
+            if (Array.isArray(_data["categoryIds"])) {
+                this.categoryIds = [] as any;
+                for (let item of _data["categoryIds"])
+                    this.categoryIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): UpdateStorySourceCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateStorySourceCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["webSourceId"] = this.webSourceId;
+        data["storySourceType"] = this.storySourceType;
+        data["sinoVietnamese"] = this.sinoVietnamese;
+        data["author"] = this.author;
+        data["description"] = this.description;
+        data["linkRaw"] = this.linkRaw;
+        data["status"] = this.status;
+        data["lastUpdate"] = this.lastUpdate ? this.lastUpdate.toISOString() : undefined as any;
+        data["imageUrl"] = this.imageUrl;
+        data["totalChapters"] = this.totalChapters;
+        if (Array.isArray(this.categoryIds)) {
+            data["categoryIds"] = [];
+            for (let item of this.categoryIds)
+                data["categoryIds"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IUpdateStorySourceCommand {
+    id?: number;
+    title?: string | undefined;
+    webSourceId?: number;
+    storySourceType?: number;
+    sinoVietnamese?: string | undefined;
+    author?: string | undefined;
+    description?: string | undefined;
+    linkRaw?: string | undefined;
+    status?: string | undefined;
+    lastUpdate?: Date;
+    imageUrl?: string | undefined;
+    totalChapters?: number | undefined;
+    categoryIds?: number[] | undefined;
+
+    [key: string]: any;
+}
+
+export class UpdateWebSourceCommand implements IUpdateWebSourceCommand {
+    id?: number;
+    title?: string | undefined;
+    baseUrl?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateWebSourceCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.baseUrl = _data["baseUrl"];
+        }
+    }
+
+    static fromJS(data: any): UpdateWebSourceCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateWebSourceCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["baseUrl"] = this.baseUrl;
+        return data;
+    }
+}
+
+export interface IUpdateWebSourceCommand {
+    id?: number;
+    title?: string | undefined;
+    baseUrl?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class WebSourceDto implements IWebSourceDto {
+    baseUrl?: string | undefined;
+    storySources?: StorySourceDto[] | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IWebSourceDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.baseUrl = _data["baseUrl"];
+            if (Array.isArray(_data["storySources"])) {
+                this.storySources = [] as any;
+                for (let item of _data["storySources"])
+                    this.storySources!.push(StorySourceDto.fromJS(item));
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): WebSourceDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new WebSourceDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["baseUrl"] = this.baseUrl;
+        if (Array.isArray(this.storySources)) {
+            data["storySources"] = [];
+            for (let item of this.storySources)
+                data["storySources"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IWebSourceDto {
+    baseUrl?: string | undefined;
+    storySources?: StorySourceDto[] | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
 
     [key: string]: any;
 }

@@ -1,26 +1,46 @@
-import { Counter } from "./components/Counter";
-import { Home } from "./components/Home";
-import { LoginPage } from "./components/api-authorization/LoginPage";
-import { RegisterPage } from "./components/api-authorization/RegisterPage";
-import { ProtectedRoute } from "./components/api-authorization/ProtectedRoute";
+import { Route, Routes } from 'react-router-dom';
+import { AppLayout } from './components/AppLayout';
+import { AuthLayout } from './components/AuthLayout';
+import { LoginPage } from './components/api-authorization/LoginPage';
+import { RegisterPage } from './components/api-authorization/RegisterPage';
+import { ProtectedRoute } from './components/api-authorization/ProtectedRoute';
+import { Dashboard } from './pages/Dashboard';
+import { WebSourceList } from './pages/WebSources/WebSourceList';
+import { WebSourceForm } from './pages/WebSources/WebSourceForm';
+import { StorySourceList } from './pages/StorySources/StorySourceList';
+import { StorySourceForm } from './pages/StorySources/StorySourceForm';
+import { CategoryList } from './pages/Categories/CategoryList';
+import { CategoryForm } from './pages/Categories/CategoryForm';
 
-const AppRoutes = [
-  {
-    index: true,
-    element: <Home />
-  },
-  {
-    path: '/counter',
-    element: <Counter />
-  },
-  {
-    path: '/login',
-    element: <LoginPage />
-  },
-  {
-    path: '/register',
-    element: <RegisterPage />
-  }
-];
+export default function AppRoutes() {
+  return (
+    <Routes>
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Route>
 
-export default AppRoutes;
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+
+        <Route path="/web-sources" element={<WebSourceList />} />
+        <Route path="/web-sources/new" element={<WebSourceForm />} />
+        <Route path="/web-sources/:id" element={<WebSourceForm />} />
+
+        <Route path="/story-sources" element={<StorySourceList />} />
+        <Route path="/story-sources/new" element={<StorySourceForm />} />
+        <Route path="/story-sources/:id" element={<StorySourceForm />} />
+
+        <Route path="/categories" element={<CategoryList />} />
+        <Route path="/categories/new" element={<CategoryForm />} />
+        <Route path="/categories/:id" element={<CategoryForm />} />
+      </Route>
+    </Routes>
+  );
+}

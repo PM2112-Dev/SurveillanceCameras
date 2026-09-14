@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="PostgreSQL" uuid="692ef07d-ba96-4328-889f-f512bc3f4594">
+    <data-source source="LOCAL" name="SurveillanceCamerasDb@Localhost" uuid="8709460b-0d28-4059-b2c2-5a09a715fd63">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
+      <configured-by-url>true</configured-by-url>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:52118/?password=Fw2ufN8%7EXbD%7DgfRBHQdYnj&amp;user=cSththENjq</jdbc-url>
-      <jdbc-additional-properties>
-        <property name="aspireResourceId" value="PostgreSQL-48949fe4" />
-      </jdbc-additional-properties>
+      <jdbc-url>jdbc:postgresql://Localhost:5432/SurveillanceCamerasDb?password=admin123&amp;user=postgres</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="PostgreSQL" uuid="82eaf81b-0d1e-43b0-b897-e199e8349846">
+    <data-source source="LOCAL" name="PostgreSQL" uuid="f91bb9e6-17a3-4dfd-ba79-5e865c5f50b3">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:57362/?password=cNNu%28ygTyUc7Fq_G6jTweA&amp;user=kwcdwcrERs</jdbc-url>
+      <jdbc-url>jdbc:postgresql://localhost:49478/?password=cNNu%28ygTyUc7Fq_G6jTweA&amp;user=kwcdwcrERs</jdbc-url>
       <jdbc-additional-properties>
         <property name="aspireResourceId" value="PostgreSQL-03e6348f" />
       </jdbc-additional-properties>

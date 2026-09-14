@@ -1,6 +1,6 @@
-using SurveillanceCameras.Application.Local.Stories.Queries.Model;
+using SurveillanceCameras.Application.Service.WikiDichService;
 
-namespace SurveillanceCameras.Application.Service.WikiDichService;
+namespace SurveillanceCameras.Application.WikiDichService;
 
 public interface IWikiDichApiService
 {

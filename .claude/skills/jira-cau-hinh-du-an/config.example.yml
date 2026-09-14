@@ -1,0 +1,129 @@
+# =============================================================================
+# FILE CẤU HÌNH MẪU — Pipeline "Jira → AI hoàn thành task"
+# -----------------------------------------------------------------------------
+# Copy file này thành "config.yml" (cùng thư mục .claude/jira-ai-pipeline/)
+# rồi điền giá trị thật của bạn. KHÔNG commit config.yml thật nếu chứa thông
+# tin nhạy cảm (account id, tên repo private...) — tuỳ chính sách của bạn.
+#
+# Toàn bộ 6 skill trong .claude/skills/jira-*/ đều đọc từ file config.yml này.
+# =============================================================================
+
+jira:
+  ket_noi:
+    site: "" # domain Jira, ví dụ: yourteam.atlassian.net
+    project_key: "" # mã project Jira, ví dụ: PROJ
+
+  # --- Nguồn lấy ticket ---
+  # Lưu ý kỹ thuật: bộ công cụ Atlassian MCP hiện tại chỉ hỗ trợ tìm kiếm bằng
+  # JQL (searchJiraIssuesUsingJql), KHÔNG có API Board/Backlog (Agile API)
+  # riêng. Vì vậy "lấy từ board" được mô phỏng bằng JQL tương đương
+  # (sprint in openSprints()), không gọi thẳng board theo ID.
+  nguon_lay_ticket:
+    loai: "jql" # "jql" | "backlog" | "sprint_hien_tai"
+    # loai = "jql"            -> dùng thẳng câu jql_tuy_chinh bên dưới
+    # loai = "backlog"        -> tự sinh JQL: project = <project_key> AND status = "Backlog" (kèm bo_loc)
+    # loai = "sprint_hien_tai"-> tự sinh JQL: project = <project_key> AND sprint in openSprints() (kèm bo_loc)
+    jql_tuy_chinh: "" # chỉ dùng khi loai = "jql", ví dụ: project = PROJ AND status = "To Do"
+
+  # --- Bộ lọc áp dụng cho từng ticket ứng viên (theo đúng thứ tự) ---
+  bo_loc:
+    # 1) Start Date: nếu bat_buoc_start_date = true, ticket phải có field Start Date
+    #    và Start Date <= hôm nay mới được coi là hợp lệ để xử lý.
+    bat_buoc_start_date: true
+    field_start_date: "customfield_XXXXX" # id custom field "Start date" trong Jira của bạn
+
+    # 2) Assignee: chỉ lấy ticket được assign đúng account này.
+    assignee_account_id: "" # lấy qua lookupJiraAccountId nếu chưa biết accountId
+
+    # 3) Status: ticket phải đang ở 1 trong các trạng thái này mới được lấy.
+    trang_thai_lay:
+      - "To Do"
+
+  # --- Label để xác định phạm vi xử lý: Backend / Frontend / cả hai ---
+  labels_phan_loai:
+    be: "BE"
+    fe: "FE"
+    # Không cần khai báo label riêng cho "cả hai": nếu ticket có CẢ 2 label
+    # be + fe (hoặc có 1 label full_stack tuỳ bạn đặt bên dưới) thì hệ thống
+    # tự hiểu phạm vi xử lý là BOTH.
+    ca_hai: "FULLSTACK" # optional — để trống "" nếu không dùng label riêng cho cả hai
+
+  # --- Chuyển trạng thái Jira tại từng mốc của pipeline ---
+  chuyen_trang_thai:
+    khi_bat_dau: "In Progress" # ngay khi ticket qua bộ lọc, bắt đầu xử lý
+    khi_cho_review: "In Review" # sau khi PR được mở
+    khi_hoan_thanh: "Done" # sau khi PR merge (hoặc theo cấu hình auto-merge)
+    khi_bi_chan: "Blocked" # khi pipeline lỗi / vượt số vòng thử lại tối đa
+
+  # --- Phản hồi lên Jira trong lúc xử lý ---
+  phan_hoi:
+    comment_khi_bat_dau: true
+    comment_tien_do: true # comment mỗi khi pipeline đi qua 1 giai đoạn lớn
+    comment_ket_qua: true # comment tóm tắt kết quả cuối (kèm link PR)
+    gan_link_pr: true # gắn PR vào issue qua remote link / dev panel
+
+github:
+  repo: "owner/ten-repo" # ví dụ: PM2112-Dev/SurveillanceCameras
+  nhanh_goc: "main"
+
+  tu_dong_tao_nhanh_moi: true
+  mau_ten_nhanh: "ai/{issue_key}-{slug}" # {issue_key}=PROJ-123, {slug}=tom-tat-khong-dau
+
+  tu_dong_commit: true
+  mau_commit: "{issue_key}: {tom_tat}"
+
+  tu_dong_push: true
+
+  tu_dong_tao_pull_request: true
+  pull_request:
+    draft: true # mở PR dạng draft cho tới khi qua hết review + test nội bộ
+    mau_tieu_de: "[{issue_key}] {tom_tat}"
+    mau_noi_dung: |
+      ## Jira
+      {duong_dan_issue}
+
+      ## Tóm tắt thay đổi
+      {tom_tat_ai}
+
+      ## Kế hoạch test
+      {ke_hoach_test}
+    labels:
+      - "ai-generated"
+    reviewers: [] # danh sách username GitHub, để trống nếu không auto-assign
+    tu_dong_merge: false # LUÔN false trừ khi bạn thật sự tin tưởng pipeline
+
+# --- Đội agent Nghiên cứu (research team) ---
+nhom_nghien_cuu:
+  so_luong_agent: 3
+  vai_tro:
+    - ten: "nghiep-vu"
+      trong_tam: "Phân tích nghiệp vụ, user flow, ảnh hưởng tới người dùng cuối"
+    - ten: "ky-thuat"
+      trong_tam: "Kiến trúc kỹ thuật, khả năng tái sử dụng code hiện có, rủi ro kỹ thuật"
+    - ten: "phan-bien"
+      trong_tam: "Tìm điểm yếu, rủi ro, trường hợp biên của các phương án còn lại"
+  so_vong_phan_bien: 2 # số vòng các agent đọc & phản biện chéo trước khi chốt phương án
+
+# --- Đội agent Phát triển (developer team) ---
+nhom_phat_trien:
+  so_luong_agent: 2 # sẽ tự giảm nếu ticket chỉ có phạm vi BE hoặc chỉ FE
+  phan_cong:
+    - ten: "backend"
+      pham_vi:
+        - "src/Domain/**"
+        - "src/Application/**"
+        - "src/Infrastructure/**"
+        - "src/Web/Endpoints/**"
+    - ten: "frontend"
+      pham_vi:
+        - "src/Web/ClientApp/**"
+  chay_lai_toi_da: 3 # số lần tự sửa code nếu build/test thất bại trước khi báo lỗi
+
+# --- Kiểm thử trước khi bàn giao ---
+kiem_thu:
+  lenh_build:
+    - "dotnet build"
+  lenh_test:
+    - "dotnet test"
+  chay_generate_api_khi_doi_be: true # tự chạy `npm run generate-api` (NSwag) khi BE đổi OpenAPI contract
+  chay_lai_toi_da: 2 # số lần tự sửa nếu test vẫn fail sau khi build pass

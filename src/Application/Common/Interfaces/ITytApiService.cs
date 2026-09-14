@@ -1,6 +1,6 @@
 namespace SurveillanceCameras.Application.Common.Interfaces;
 
-public interface ITytApiService
+public interface ITytApiService<in T>
 {
     
 }

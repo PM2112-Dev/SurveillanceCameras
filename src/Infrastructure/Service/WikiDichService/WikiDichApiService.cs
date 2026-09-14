@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using SurveillanceCameras.Application.Service.WikiDichService;
+using SurveillanceCameras.Application.WikiDichService;
 
 namespace SurveillanceCameras.Infrastructure.Service.WikiDichService;
 

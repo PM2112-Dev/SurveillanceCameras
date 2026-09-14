@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Domain.Common;
 using SurveillanceCameras.Domain.Entities;
@@ -11,10 +11,14 @@ namespace SurveillanceCameras.Infrastructure.Data;
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-
-    public DbSet<Story> Stories => Set<Story>();
-
+    
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+
+    public DbSet<WebSource> WebSources => Set<WebSource>();
+    
+    public DbSet<StorySource> StorySources => Set<StorySource>();
+
+    public DbSet<Category> Categories => Set<Category>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
