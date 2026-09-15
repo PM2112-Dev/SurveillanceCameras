@@ -4,7 +4,9 @@ public class Chapter : BaseAuditableEntity
 {
     public int StoryId { get; set; }
     
-    public string? ChapterTytId { get; set; }
+    public int PromptId { get; set; }
+    
+    public string? TytChapterId { get; set; }
     
     public string? NameRaw { get; set; }
     
@@ -18,5 +20,9 @@ public class Chapter : BaseAuditableEntity
     
     public bool IsUploaded { get; set; }
     
+    public bool IsPublished { get; set; }
+    
     public string? Description { get; set; }
+    
+    public required Prompt Prompt { get; set; }
 }

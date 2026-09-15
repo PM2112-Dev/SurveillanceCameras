@@ -1,8 +1,10 @@
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Common.Security;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.Prompts.Commands.CreatePrompt;
 
+[Authorize]
 public record CreatePromptCommand : IRequest<int>
 {
     public int PromptTypeId { get; init; }
