@@ -29,4 +29,6 @@ public class Story : BaseAuditableEntity
     public int AdCount { get; set; }
     
     public int Paid { get; set; }
+    
+    public StorySource StorySource { get; set; } = null!;
 }

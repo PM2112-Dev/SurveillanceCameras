@@ -1,3 +1,4 @@
+using SurveillanceCameras.Application.Local.StorySources.Queries.DTOs;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.Stories.Queries.DTOs;
@@ -31,6 +32,8 @@ public class StoryDto : BaseDto
     public int AdCount { get; init; }
     
     public int Paid { get; init; }
+    
+    public StorySourceDto? StorySource { get; init; }
     
     private class Mapping : Profile
     {

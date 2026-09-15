@@ -1,3 +1,4 @@
+using System.Text.Json;
 using SurveillanceCameras.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -46,7 +47,11 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
                 Status = StatusCodes.Status400BadRequest,
                 Type = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
                 Title = "Bad Request",
-                Detail = bre.Message
+                // The outer message only says which parameter failed; the inner JsonException carries
+                // the JSON path and target type, which is what the caller actually needs to fix the payload.
+                Detail = bre.InnerException is JsonException je
+                    ? $"{bre.Message} {je.Message}"
+                    : bre.Message
             }),
             _ => (-1, null)
         };
