@@ -12,7 +12,7 @@ public class StorySourceDto : BaseDto
     public string? Description { get; init; }
     public string? LinkRaw { get; init; }
     public string? Status { get; init; }
-    public DateTimeOffset LastUpdate { get; init; }
+    public string? LastUpdate { get; init; }
     public string? ImageUrl { get; init; }
     public int? TotalChapters { get; init; }
 

@@ -22,7 +22,7 @@ public record UpdateStorySourceCommand : IRequest
 
     public string? Status { get; init; }
 
-    public DateTimeOffset LastUpdate { get; set; }
+    public string? LastUpdate { get; set; }
 
     public string? ImageUrl { get; init; }
 

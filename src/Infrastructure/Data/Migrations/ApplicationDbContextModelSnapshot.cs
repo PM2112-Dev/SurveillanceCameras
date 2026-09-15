@@ -577,8 +577,8 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<DateTimeOffset>("LastUpdate")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("LastUpdate")
+                        .HasColumnType("text");
 
                     b.Property<string>("LinkRaw")
                         .HasColumnType("text");

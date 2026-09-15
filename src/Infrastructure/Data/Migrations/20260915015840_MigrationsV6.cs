@@ -5,7 +5,7 @@
 namespace SurveillanceCameras.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddStoryStorySourceRelation : Migration
+    public partial class MigrationsV6 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

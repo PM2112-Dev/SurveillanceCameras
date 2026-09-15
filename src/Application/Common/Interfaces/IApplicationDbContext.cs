@@ -13,14 +13,16 @@ public interface IApplicationDbContext
     DbSet<PromptType> PromptTypes { get; }
 
     DbSet<Prompt> Prompts { get; }
-    
+
     DbSet<Story> Stories { get; }
-    
+
     DbSet<AccountType> AccountTypes { get; }
-    
+
     DbSet<Account> Accounts { get; }
-    
+
     DbSet<Chapter> Chapters { get; }
+
+    DbSet<AI> AIs { get; }
 
     /// <summary>Outbox pattern: pending integration events awaiting Kafka publish.</summary>
     DbSet<OutboxMessage> OutboxMessages { get; }

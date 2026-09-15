@@ -1,6 +1,5 @@
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Local.WebSources.Queries.DTOs;
-using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.WebSources.Queries.GetWebSourceById;
 

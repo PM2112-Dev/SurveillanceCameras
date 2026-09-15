@@ -22,7 +22,5 @@ public class Chapter : BaseAuditableEntity
     
     public bool IsPublished { get; set; }
     
-    public string? Description { get; set; }
-    
-    public required Prompt Prompt { get; set; }
+    public Prompt? Prompt { get; set; }
 }

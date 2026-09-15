@@ -21,7 +21,7 @@ public record CreateStorySourceCommand : IRequest<int>
     
     public string? Status { get; init; }
     
-    public DateTimeOffset LastUpdate { get; set; }
+    public string? LastUpdate { get; set; }
     
     public string? ImageUrl { get; init; }
     
@@ -48,7 +48,7 @@ public class CreateStorySourceCommandHandler : IRequestHandler<CreateStorySource
 
     public async Task<int> Handle(CreateStorySourceCommand request, CancellationToken cancellationToken)
     {
-        var categories = request.CategoryIds != null && request.CategoryIds.Count > 0 
+        var categories = request.CategoryIds is { Count: > 0 } 
             ? await _context.Categories
                 .Where(c => request.CategoryIds.Contains(c.Id))
                 .ToListAsync(cancellationToken)

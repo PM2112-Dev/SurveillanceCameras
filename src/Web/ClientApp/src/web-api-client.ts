@@ -2427,7 +2427,7 @@ export class CreateStorySourceCommand implements ICreateStorySourceCommand {
     description?: string | undefined;
     linkRaw?: string | undefined;
     status?: string | undefined;
-    lastUpdate?: Date;
+    lastUpdate?: string | undefined;
     imageUrl?: string | undefined;
     totalChapters?: number | undefined;
     categoryIds?: number[] | undefined;
@@ -2457,7 +2457,7 @@ export class CreateStorySourceCommand implements ICreateStorySourceCommand {
             this.description = _data["description"];
             this.linkRaw = _data["linkRaw"];
             this.status = _data["status"];
-            this.lastUpdate = _data["lastUpdate"] ? new Date(_data["lastUpdate"].toString()) : undefined as any;
+            this.lastUpdate = _data["lastUpdate"];
             this.imageUrl = _data["imageUrl"];
             this.totalChapters = _data["totalChapters"];
             if (Array.isArray(_data["categoryIds"])) {
@@ -2489,7 +2489,7 @@ export class CreateStorySourceCommand implements ICreateStorySourceCommand {
         data["description"] = this.description;
         data["linkRaw"] = this.linkRaw;
         data["status"] = this.status;
-        data["lastUpdate"] = this.lastUpdate ? this.lastUpdate.toISOString() : undefined as any;
+        data["lastUpdate"] = this.lastUpdate;
         data["imageUrl"] = this.imageUrl;
         data["totalChapters"] = this.totalChapters;
         if (Array.isArray(this.categoryIds)) {
@@ -2510,7 +2510,7 @@ export interface ICreateStorySourceCommand {
     description?: string | undefined;
     linkRaw?: string | undefined;
     status?: string | undefined;
-    lastUpdate?: Date;
+    lastUpdate?: string | undefined;
     imageUrl?: string | undefined;
     totalChapters?: number | undefined;
     categoryIds?: number[] | undefined;
@@ -3461,7 +3461,7 @@ export class StoryDto implements IStoryDto {
     earnNow?: number;
     adCount?: number;
     paid?: number;
-    storySource!: StorySourceDto[];
+    storySource?: StorySourceDto | undefined;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
@@ -3475,9 +3475,6 @@ export class StoryDto implements IStoryDto {
                 if (data.hasOwnProperty(property))
                     (this as any)[property] = (data as any)[property];
             }
-        }
-        if (!data) {
-            this.storySource = [];
         }
     }
 
@@ -3501,11 +3498,7 @@ export class StoryDto implements IStoryDto {
             this.earnNow = _data["earnNow"];
             this.adCount = _data["adCount"];
             this.paid = _data["paid"];
-            if (Array.isArray(_data["storySource"])) {
-                this.storySource = [] as any;
-                for (let item of _data["storySource"])
-                    this.storySource!.push(StorySourceDto.fromJS(item));
-            }
+            this.storySource = _data["storySource"] ? StorySourceDto.fromJS(_data["storySource"]) : undefined as any;
             this.id = _data["id"];
             this.title = _data["title"];
             this.code = _data["code"];
@@ -3540,11 +3533,7 @@ export class StoryDto implements IStoryDto {
         data["earnNow"] = this.earnNow;
         data["adCount"] = this.adCount;
         data["paid"] = this.paid;
-        if (Array.isArray(this.storySource)) {
-            data["storySource"] = [];
-            for (let item of this.storySource)
-                data["storySource"].push(item ? item.toJSON() : undefined as any);
-        }
+        data["storySource"] = this.storySource ? this.storySource.toJSON() : undefined as any;
         data["id"] = this.id;
         data["title"] = this.title;
         data["code"] = this.code;
@@ -3568,7 +3557,7 @@ export interface IStoryDto {
     earnNow?: number;
     adCount?: number;
     paid?: number;
-    storySource: StorySourceDto[];
+    storySource?: StorySourceDto | undefined;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
@@ -3585,7 +3574,7 @@ export class StorySourceDto implements IStorySourceDto {
     description?: string | undefined;
     linkRaw?: string | undefined;
     status?: string | undefined;
-    lastUpdate?: Date;
+    lastUpdate?: string | undefined;
     imageUrl?: string | undefined;
     totalChapters?: number | undefined;
     categories?: CategorySummaryDto[];
@@ -3618,7 +3607,7 @@ export class StorySourceDto implements IStorySourceDto {
             this.description = _data["description"];
             this.linkRaw = _data["linkRaw"];
             this.status = _data["status"];
-            this.lastUpdate = _data["lastUpdate"] ? new Date(_data["lastUpdate"].toString()) : undefined as any;
+            this.lastUpdate = _data["lastUpdate"];
             this.imageUrl = _data["imageUrl"];
             this.totalChapters = _data["totalChapters"];
             if (Array.isArray(_data["categories"])) {
@@ -3653,7 +3642,7 @@ export class StorySourceDto implements IStorySourceDto {
         data["description"] = this.description;
         data["linkRaw"] = this.linkRaw;
         data["status"] = this.status;
-        data["lastUpdate"] = this.lastUpdate ? this.lastUpdate.toISOString() : undefined as any;
+        data["lastUpdate"] = this.lastUpdate;
         data["imageUrl"] = this.imageUrl;
         data["totalChapters"] = this.totalChapters;
         if (Array.isArray(this.categories)) {
@@ -3677,7 +3666,7 @@ export interface IStorySourceDto {
     description?: string | undefined;
     linkRaw?: string | undefined;
     status?: string | undefined;
-    lastUpdate?: Date;
+    lastUpdate?: string | undefined;
     imageUrl?: string | undefined;
     totalChapters?: number | undefined;
     categories?: CategorySummaryDto[];
@@ -3963,7 +3952,7 @@ export class UpdateStorySourceCommand implements IUpdateStorySourceCommand {
     description?: string | undefined;
     linkRaw?: string | undefined;
     status?: string | undefined;
-    lastUpdate?: Date;
+    lastUpdate?: string | undefined;
     imageUrl?: string | undefined;
     totalChapters?: number | undefined;
     categoryIds?: number[] | undefined;
@@ -3994,7 +3983,7 @@ export class UpdateStorySourceCommand implements IUpdateStorySourceCommand {
             this.description = _data["description"];
             this.linkRaw = _data["linkRaw"];
             this.status = _data["status"];
-            this.lastUpdate = _data["lastUpdate"] ? new Date(_data["lastUpdate"].toString()) : undefined as any;
+            this.lastUpdate = _data["lastUpdate"];
             this.imageUrl = _data["imageUrl"];
             this.totalChapters = _data["totalChapters"];
             if (Array.isArray(_data["categoryIds"])) {
@@ -4027,7 +4016,7 @@ export class UpdateStorySourceCommand implements IUpdateStorySourceCommand {
         data["description"] = this.description;
         data["linkRaw"] = this.linkRaw;
         data["status"] = this.status;
-        data["lastUpdate"] = this.lastUpdate ? this.lastUpdate.toISOString() : undefined as any;
+        data["lastUpdate"] = this.lastUpdate;
         data["imageUrl"] = this.imageUrl;
         data["totalChapters"] = this.totalChapters;
         if (Array.isArray(this.categoryIds)) {
@@ -4049,7 +4038,7 @@ export interface IUpdateStorySourceCommand {
     description?: string | undefined;
     linkRaw?: string | undefined;
     status?: string | undefined;
-    lastUpdate?: Date;
+    lastUpdate?: string | undefined;
     imageUrl?: string | undefined;
     totalChapters?: number | undefined;
     categoryIds?: number[] | undefined;

@@ -9,7 +9,7 @@ public class StorySource : BaseAuditableEntity
     public string? Description { get; set; }
     public string? LinkRaw { get; set; }
     public string? Status { get; set; }
-    public DateTimeOffset LastUpdate { get; set; }
+    public string? LastUpdate { get; set; }
     public string? ImageUrl { get; set; }
     public int? TotalChapters { get; set; }
 

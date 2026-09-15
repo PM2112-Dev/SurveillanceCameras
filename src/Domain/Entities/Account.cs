@@ -1,6 +1,6 @@
 namespace SurveillanceCameras.Domain.Entities;
 
-public class Account :BaseAuditableEntity
+public class Account : BaseAuditableEntity
 {
     public int AccountTypeId { get; set; }
     

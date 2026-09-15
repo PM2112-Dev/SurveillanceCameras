@@ -6,7 +6,7 @@ namespace SurveillanceCameras.Application.Local.Stories.Queries.GetStoryById;
 
 public record GetStoryByIdQuery(int Id) : IRequest<StoryDto>;
 
-public class GetStoryByIdQueryValidator : AbstractValidator<GetStoriesQuery>
+public class GetStoryByIdQueryValidator : AbstractValidator<GetStoryByIdQuery>
 {
     public GetStoryByIdQueryValidator()
     {

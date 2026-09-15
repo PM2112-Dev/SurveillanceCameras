@@ -32,6 +32,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<Account> Accounts => Set<Account>();
     
     public DbSet<Chapter> Chapters => Set<Chapter>();
+    
+    public DbSet<AI> AIs => Set<AI>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

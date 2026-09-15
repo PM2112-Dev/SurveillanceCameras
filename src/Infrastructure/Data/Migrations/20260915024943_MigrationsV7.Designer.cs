@@ -12,8 +12,8 @@ using SurveillanceCameras.Infrastructure.Data;
 namespace SurveillanceCameras.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260915021359_AddStoryStorySourceRelation")]
-    partial class AddStoryStorySourceRelation
+    [Migration("20260915024943_MigrationsV7")]
+    partial class MigrationsV7
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -580,8 +580,8 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<DateTimeOffset>("LastUpdate")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("LastUpdate")
+                        .HasColumnType("text");
 
                     b.Property<string>("LinkRaw")
                         .HasColumnType("text");
