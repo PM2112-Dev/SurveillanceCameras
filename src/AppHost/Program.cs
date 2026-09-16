@@ -14,6 +14,13 @@ IResourceBuilder<IResourceWithConnectionString> databaseServer = builder.Executi
         .AddDatabase(Services.Database)
     : builder.AddConnectionString(Services.Database);
 
+// Kafka is only needed for local development message brokering; not provisioned in publish mode.
+// docker-compose/host Kafka isn't available on every dev machine, so this stays run-mode only,
+// same reasoning as the Postgres branch above but Kafka has no "local, already-installed" option yet.
+IResourceBuilder<IResourceWithConnectionString>? kafka = builder.ExecutionContext.IsRunMode
+    ? builder.AddKafka(Services.Kafka).WithKafkaUI()
+    : null;
+
 var web = builder.AddProject<Projects.Web>(Services.WebApi)
     .WithReference(databaseServer)
     .WaitFor(databaseServer)
@@ -24,6 +31,11 @@ var web = builder.AddProject<Projects.Web>(Services.WebApi)
         url.DisplayText = "Scalar API Reference";
         url.Url = "/scalar";
     });
+
+if (kafka is not null)
+{
+    web = web.WithReference(kafka).WaitFor(kafka);
+}
 
 if (builder.ExecutionContext.IsRunMode)
 {

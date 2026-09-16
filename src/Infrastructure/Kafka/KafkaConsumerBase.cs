@@ -15,8 +15,13 @@ namespace SurveillanceCameras.Infrastructure.Kafka;
 /// <typeparam name="TEvent">The integration event type this consumer handles.</typeparam>
 public abstract class KafkaConsumerBase<TEvent> : BackgroundService
 {
-    private readonly IConsumer<string, string> _consumer;
-    private readonly IProducer<string, string> _dlqProducer;
+    // Lazy for the same reason as KafkaEventBus: consumers are registered via AddHostedService,
+    // and ASP.NET Core's ValidateOnBuild (Development default) constructs every hosted service
+    // during builder.Build() to validate the DI graph — before ExecuteAsync ever runs. Building
+    // the consumer/DLQ producer eagerly here would open real broker connections at build/start
+    // time regardless of whether Kafka is actually reachable yet.
+    private readonly Lazy<IConsumer<string, string>> _consumer;
+    private readonly Lazy<IProducer<string, string>> _dlqProducer;
     private readonly KafkaOptions _options;
     private readonly ILogger _logger;
 
@@ -27,23 +32,36 @@ public abstract class KafkaConsumerBase<TEvent> : BackgroundService
         _options = options.Value;
         _logger = logger;
 
-        var consumerConfig = new ConsumerConfig
+        _consumer = new Lazy<IConsumer<string, string>>(() =>
         {
-            BootstrapServers = _options.BootstrapServers,
-            GroupId = _options.ConsumerGroupId,
-            AutoOffsetReset = AutoOffsetReset.Earliest,
-            // Manual commit — only commit after successful processing
-            EnableAutoCommit = false
-        };
-        _consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
+            var consumerConfig = new ConsumerConfig
+            {
+                BootstrapServers = _options.BootstrapServers,
+                GroupId = _options.ConsumerGroupId,
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                // Manual commit — only commit after successful processing
+                EnableAutoCommit = false
+            };
+            return new ConsumerBuilder<string, string>(consumerConfig)
+                .SetLogHandler((_, m) => _logger.LogDebug("[rdkafka:{Facility}] {Message}", m.Facility, m.Message))
+                .SetErrorHandler((_, e) => _logger.LogWarning("Kafka consumer error: {Reason} (fatal: {IsFatal})", e.Reason, e.IsFatal))
+                .Build();
+        });
 
-        var producerConfig = new ProducerConfig { BootstrapServers = _options.BootstrapServers };
-        _dlqProducer = new ProducerBuilder<string, string>(producerConfig).Build();
+        _dlqProducer = new Lazy<IProducer<string, string>>(() =>
+        {
+            var producerConfig = new ProducerConfig { BootstrapServers = _options.BootstrapServers };
+            return new ProducerBuilder<string, string>(producerConfig)
+                .SetLogHandler((_, m) => _logger.LogDebug("[rdkafka:{Facility}] {Message}", m.Facility, m.Message))
+                .SetErrorHandler((_, e) => _logger.LogWarning("Kafka DLQ producer error: {Reason} (fatal: {IsFatal})", e.Reason, e.IsFatal))
+                .Build();
+        });
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _consumer.Subscribe(Topic);
+        var consumer = _consumer.Value;
+        consumer.Subscribe(Topic);
         _logger.LogInformation("{Consumer} subscribed to topic [{Topic}]", GetType().Name, Topic);
 
         try
@@ -53,11 +71,10 @@ public abstract class KafkaConsumerBase<TEvent> : BackgroundService
                 ConsumeResult<string, string>? result = null;
                 try
                 {
-                    result = _consumer.Consume(stoppingToken);
+                    result = consumer.Consume(stoppingToken);
                     if (result?.Message is null) continue;
 
-                    await ProcessWithRetryAsync(result, stoppingToken);
-                    _consumer.Commit(result);
+                    await ProcessWithRetryAsync(consumer, result, stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -73,11 +90,11 @@ public abstract class KafkaConsumerBase<TEvent> : BackgroundService
         }
         finally
         {
-            _consumer.Close();
+            consumer.Close();
         }
     }
 
-    private async Task ProcessWithRetryAsync(ConsumeResult<string, string> result, CancellationToken ct)
+    private async Task ProcessWithRetryAsync(IConsumer<string, string> consumer, ConsumeResult<string, string> result, CancellationToken ct)
     {
         var maxRetries = _options.MaxConsumerRetries;
         var attempt = 0;
@@ -90,6 +107,7 @@ public abstract class KafkaConsumerBase<TEvent> : BackgroundService
                           ?? throw new InvalidOperationException($"Failed to deserialize {typeof(TEvent).Name}");
 
                 await HandleAsync(evt, ct);
+                consumer.Commit(result);
                 return;
             }
             catch (OperationCanceledException) { throw; }
@@ -103,6 +121,7 @@ public abstract class KafkaConsumerBase<TEvent> : BackgroundService
                         GetType().Name, maxRetries, result.Message.Key);
 
                     await RouteToDlqAsync(result, ex);
+                    consumer.Commit(result);
                     return;
                 }
 
@@ -131,7 +150,7 @@ public abstract class KafkaConsumerBase<TEvent> : BackgroundService
             foreach (var h in result.Message.Headers)
                 headers.Add(h.Key, h.GetValueBytes());
 
-        await _dlqProducer.ProduceAsync(dlqTopic, new Message<string, string>
+        await _dlqProducer.Value.ProduceAsync(dlqTopic, new Message<string, string>
         {
             Key = result.Message.Key,
             Value = result.Message.Value,
@@ -146,9 +165,8 @@ public abstract class KafkaConsumerBase<TEvent> : BackgroundService
 
     public override void Dispose()
     {
-        _consumer.Dispose();
-        _dlqProducer.Dispose();
+        if (_dlqProducer.IsValueCreated) _dlqProducer.Value.Dispose();
+        if (_consumer.IsValueCreated) _consumer.Value.Dispose();
         base.Dispose();
     }
 }
-

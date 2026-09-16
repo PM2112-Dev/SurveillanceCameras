@@ -12,6 +12,7 @@ using SurveillanceCameras.Application.WikiDichService;
 using SurveillanceCameras.Infrastructure.Data;
 using SurveillanceCameras.Infrastructure.Data.Interceptors;
 using SurveillanceCameras.Infrastructure.Identity;
+using SurveillanceCameras.Infrastructure.Kafka;
 using SurveillanceCameras.Infrastructure.Service.WikiDichService;
 
 namespace SurveillanceCameras.Infrastructure;
@@ -25,6 +26,7 @@ public static class DependencyInjection
 
         builder.Services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
         builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
+        builder.Services.AddScoped<ISaveChangesInterceptor, OutboxInterceptor>();
 
         builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
@@ -86,5 +88,7 @@ public static class DependencyInjection
 
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();
+
+        builder.AddKafkaServices();
     }
 }

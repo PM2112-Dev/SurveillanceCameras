@@ -1,4 +1,5 @@
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Local.StorySources.IntegrationEvents;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.StorySources.Commands.CreateStorySource;
@@ -70,8 +71,25 @@ public class CreateStorySourceCommandHandler : IRequestHandler<CreateStorySource
             Categories = categories
         };
         
-        _context.StorySources.Add(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        // Two SaveChanges calls inside one transaction: the first assigns the DB-generated Id
+        // (needed by the integration event's payload), the second lets OutboxInterceptor persist
+        // the OutboxMessage for that event — both commit together, so a crash between them rolls
+        // back the whole insert rather than leaving an entity with no corresponding outbox row.
+        await _context.ExecuteInTransactionAsync(async ct =>
+        {
+            _context.StorySources.Add(entity);
+            await _context.SaveChangesAsync(ct);
+
+            entity.AddIntegrationEvent(new StorySourceCreatedIntegrationEvent
+            {
+                StorySourceId = entity.Id,
+                Title = entity.Title,
+                WebSourceId = entity.WebSourceId,
+                LinkRaw = entity.LinkRaw
+            });
+            await _context.SaveChangesAsync(ct);
+        }, cancellationToken);
+
         return entity.Id;
     }
 }

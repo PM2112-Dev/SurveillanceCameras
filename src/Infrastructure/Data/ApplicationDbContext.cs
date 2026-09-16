@@ -41,6 +41,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     }
 
+    public async Task ExecuteInTransactionAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default)
+    {
+        var strategy = Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await Database.BeginTransactionAsync(cancellationToken);
+            await operation(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        });
+    }
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);

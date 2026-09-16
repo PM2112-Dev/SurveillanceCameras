@@ -25,4 +25,10 @@ public static class Services
     /// This is the name of the database that will be created and used by the application.
     /// </summary>
     public const string Database = "SurveillanceCamerasDb";
+
+    /// <summary>
+    /// The name of the Kafka resource. Also used as the config key AppHost injects the
+    /// connection string under (ConnectionStrings:Kafka) and as the appsettings.json fallback key.
+    /// </summary>
+    public const string Kafka = "Kafka";
 }

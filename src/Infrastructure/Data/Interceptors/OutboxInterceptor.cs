@@ -41,12 +41,24 @@ public class OutboxInterceptor : SaveChangesInterceptor
         if (context is null) return;
 
         // Collect integration events staged on entities
-        var integrationEvents = context.ChangeTracker
+        var entities = context.ChangeTracker
             .Entries<BaseEntity>()
-            .SelectMany(e => e.Entity.IntegrationEvents)
+            .Where(e => e.Entity.IntegrationEvents.Count > 0)
+            .Select(e => e.Entity)
             .ToList();
 
-        if (integrationEvents.Count == 0) return;
+        if (entities.Count == 0) return;
+
+        var integrationEvents = entities.SelectMany(e => e.IntegrationEvents).ToList();
+
+        // Clear immediately, same as DispatchDomainEventsInterceptor does for domain events —
+        // the DbContext (and its tracked entities) outlives a single SaveChanges call within a
+        // request scope, so a second SaveChanges on the same entity would otherwise re-queue and
+        // duplicate-publish the same events.
+        foreach (var entity in entities)
+        {
+            entity.ClearIntegrationEvents();
+        }
 
         foreach (var evt in integrationEvents)
         {

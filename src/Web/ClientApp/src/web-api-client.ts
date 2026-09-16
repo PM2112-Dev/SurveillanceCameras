@@ -7,6 +7,863 @@
 /* eslint-disable */
 // ReSharper disable InconsistentNaming
 
+export class AccountsClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get Accounts
+     * @param title (optional) 
+     * @param accountTypeId (optional) 
+     * @return OK
+     */
+    getAccounts(title: string | undefined, accountTypeId: number | undefined, page: number, pageSize: number): Promise<PaginatedListOfAccountDto> {
+        let url_ = this.baseUrl + "/api/Accounts?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (accountTypeId === null)
+            throw new globalThis.Error("The parameter 'accountTypeId' cannot be null.");
+        else if (accountTypeId !== undefined)
+            url_ += "AccountTypeId=" + encodeURIComponent("" + accountTypeId) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAccounts(_response);
+        });
+    }
+
+    protected processGetAccounts(response: Response): Promise<PaginatedListOfAccountDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfAccountDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfAccountDto>(null as any);
+    }
+
+    /**
+     * Create Account
+     * @return Created
+     */
+    createAccount(body: CreateAccountCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/Accounts";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateAccount(_response);
+        });
+    }
+
+    protected processCreateAccount(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get Account by Id
+     * @return OK
+     */
+    getAccountById(id: number): Promise<AccountDto> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAccountById(_response);
+        });
+    }
+
+    protected processGetAccountById(response: Response): Promise<AccountDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AccountDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AccountDto>(null as any);
+    }
+
+    /**
+     * Update Account
+     * @return No Content
+     */
+    updateAccount(id: number, body: UpdateAccountCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateAccount(_response);
+        });
+    }
+
+    protected processUpdateAccount(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete Account
+     * @return No Content
+     */
+    deleteAccount(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteAccount(_response);
+        });
+    }
+
+    protected processDeleteAccount(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
+export class AccountTypesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get AccountTypes
+     * @param title (optional) 
+     * @return OK
+     */
+    getAccountTypes(title: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfAccountTypeDto> {
+        let url_ = this.baseUrl + "/api/AccountTypes?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAccountTypes(_response);
+        });
+    }
+
+    protected processGetAccountTypes(response: Response): Promise<PaginatedListOfAccountTypeDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfAccountTypeDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfAccountTypeDto>(null as any);
+    }
+
+    /**
+     * Create AccountType
+     * @return Created
+     */
+    createAccountType(body: CreateAccountTypeCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/AccountTypes";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateAccountType(_response);
+        });
+    }
+
+    protected processCreateAccountType(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get AccountType by Id
+     * @return OK
+     */
+    getAccountTypeById(id: number): Promise<AccountTypeDto> {
+        let url_ = this.baseUrl + "/api/AccountTypes/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAccountTypeById(_response);
+        });
+    }
+
+    protected processGetAccountTypeById(response: Response): Promise<AccountTypeDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AccountTypeDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AccountTypeDto>(null as any);
+    }
+
+    /**
+     * Update AccountType
+     * @return No Content
+     */
+    updateAccountType(id: number, body: UpdateAccountTypeCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/AccountTypes/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateAccountType(_response);
+        });
+    }
+
+    protected processUpdateAccountType(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete AccountType
+     * @return No Content
+     */
+    deleteAccountType(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/AccountTypes/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteAccountType(_response);
+        });
+    }
+
+    protected processDeleteAccountType(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
+export class AIsClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get AIs
+     * @param title (optional) 
+     * @return OK
+     */
+    getAIs(title: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfAIDto> {
+        let url_ = this.baseUrl + "/api/AIs?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAIs(_response);
+        });
+    }
+
+    protected processGetAIs(response: Response): Promise<PaginatedListOfAIDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfAIDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfAIDto>(null as any);
+    }
+
+    /**
+     * Create AI
+     * @return Created
+     */
+    createAI(body: CreateAICommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/AIs";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateAI(_response);
+        });
+    }
+
+    protected processCreateAI(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get AI by Id
+     * @return OK
+     */
+    getAIById(id: number): Promise<AIDto> {
+        let url_ = this.baseUrl + "/api/AIs/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAIById(_response);
+        });
+    }
+
+    protected processGetAIById(response: Response): Promise<AIDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AIDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AIDto>(null as any);
+    }
+
+    /**
+     * Update AI
+     * @return No Content
+     */
+    updateAI(id: number, body: UpdateAICommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/AIs/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateAI(_response);
+        });
+    }
+
+    protected processUpdateAI(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete AI
+     * @return No Content
+     */
+    deleteAI(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/AIs/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteAI(_response);
+        });
+    }
+
+    protected processDeleteAI(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
 export class CategoriesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -264,6 +1121,305 @@ export class CategoriesClient {
     }
 
     protected processDeleteCategory(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
+export class ChaptersClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get Chapters
+     * @param storyId (optional) 
+     * @param title (optional) 
+     * @param isUploaded (optional) 
+     * @param isPublished (optional) 
+     * @return OK
+     */
+    getChapters(storyId: number | undefined, title: string | undefined, isUploaded: boolean | undefined, isPublished: boolean | undefined, page: number, pageSize: number): Promise<PaginatedListOfChapterDto> {
+        let url_ = this.baseUrl + "/api/Chapters?";
+        if (storyId === null)
+            throw new globalThis.Error("The parameter 'storyId' cannot be null.");
+        else if (storyId !== undefined)
+            url_ += "StoryId=" + encodeURIComponent("" + storyId) + "&";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (isUploaded === null)
+            throw new globalThis.Error("The parameter 'isUploaded' cannot be null.");
+        else if (isUploaded !== undefined)
+            url_ += "IsUploaded=" + encodeURIComponent("" + isUploaded) + "&";
+        if (isPublished === null)
+            throw new globalThis.Error("The parameter 'isPublished' cannot be null.");
+        else if (isPublished !== undefined)
+            url_ += "IsPublished=" + encodeURIComponent("" + isPublished) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetChapters(_response);
+        });
+    }
+
+    protected processGetChapters(response: Response): Promise<PaginatedListOfChapterDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfChapterDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfChapterDto>(null as any);
+    }
+
+    /**
+     * Create Chapter
+     * @return Created
+     */
+    createChapter(body: CreateChapterCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/Chapters";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateChapter(_response);
+        });
+    }
+
+    protected processCreateChapter(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get Chapter by Id
+     * @return OK
+     */
+    getChapterById(id: number): Promise<ChapterDto> {
+        let url_ = this.baseUrl + "/api/Chapters/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetChapterById(_response);
+        });
+    }
+
+    protected processGetChapterById(response: Response): Promise<ChapterDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ChapterDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ChapterDto>(null as any);
+    }
+
+    /**
+     * Update Chapter
+     * @return No Content
+     */
+    updateChapter(id: number, body: UpdateChapterCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Chapters/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateChapter(_response);
+        });
+    }
+
+    protected processUpdateChapter(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete Chapter
+     * @return No Content
+     */
+    deleteChapter(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Chapters/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteChapter(_response);
+        });
+    }
+
+    protected processDeleteChapter(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 204) {
@@ -2030,6 +3186,246 @@ export interface IAccessTokenResponse {
     [key: string]: any;
 }
 
+export class AccountDto implements IAccountDto {
+    accountTypeId?: number | undefined;
+    cookie?: string | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAccountDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.accountTypeId = _data["accountTypeId"];
+            this.cookie = _data["cookie"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): AccountDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AccountDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["accountTypeId"] = this.accountTypeId;
+        data["cookie"] = this.cookie;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IAccountDto {
+    accountTypeId?: number | undefined;
+    cookie?: string | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AccountTypeDto implements IAccountTypeDto {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAccountTypeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): AccountTypeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AccountTypeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IAccountTypeDto {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AIDto implements IAIDto {
+    model?: string | undefined;
+    apiKey?: string | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAIDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.model = _data["model"];
+            this.apiKey = _data["apiKey"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): AIDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AIDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["model"] = this.model;
+        data["apiKey"] = this.apiKey;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IAIDto {
+    model?: string | undefined;
+    apiKey?: string | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class BaseEvent implements IBaseEvent {
+
+    [key: string]: any;
+
+    constructor(data?: IBaseEvent) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+        }
+    }
+
+    static fromJS(data: any): BaseEvent {
+        data = typeof data === 'object' ? data : {};
+        let result = new BaseEvent();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        return data;
+    }
+}
+
+export interface IBaseEvent {
+
+    [key: string]: any;
+}
+
 export class CategoryDto implements ICategoryDto {
     storySources?: StorySourceDto[];
     id?: number;
@@ -2162,6 +3558,273 @@ export interface ICategorySummaryDto {
     [key: string]: any;
 }
 
+export class ChapterDto implements IChapterDto {
+    storyId?: number;
+    promptId?: number;
+    tytChapterId?: string | undefined;
+    nameRaw?: string | undefined;
+    nameEdit?: string | undefined;
+    chapterNumber?: number;
+    contentRaw?: string | undefined;
+    contentEdit?: string | undefined;
+    isUploaded?: boolean;
+    isPublished?: boolean;
+    prompt!: Prompt;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IChapterDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.prompt = new Prompt();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.storyId = _data["storyId"];
+            this.promptId = _data["promptId"];
+            this.tytChapterId = _data["tytChapterId"];
+            this.nameRaw = _data["nameRaw"];
+            this.nameEdit = _data["nameEdit"];
+            this.chapterNumber = _data["chapterNumber"];
+            this.contentRaw = _data["contentRaw"];
+            this.contentEdit = _data["contentEdit"];
+            this.isUploaded = _data["isUploaded"];
+            this.isPublished = _data["isPublished"];
+            this.prompt = _data["prompt"] ? Prompt.fromJS(_data["prompt"]) : new Prompt();
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): ChapterDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChapterDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["storyId"] = this.storyId;
+        data["promptId"] = this.promptId;
+        data["tytChapterId"] = this.tytChapterId;
+        data["nameRaw"] = this.nameRaw;
+        data["nameEdit"] = this.nameEdit;
+        data["chapterNumber"] = this.chapterNumber;
+        data["contentRaw"] = this.contentRaw;
+        data["contentEdit"] = this.contentEdit;
+        data["isUploaded"] = this.isUploaded;
+        data["isPublished"] = this.isPublished;
+        data["prompt"] = this.prompt ? this.prompt.toJSON() : undefined as any;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IChapterDto {
+    storyId?: number;
+    promptId?: number;
+    tytChapterId?: string | undefined;
+    nameRaw?: string | undefined;
+    nameEdit?: string | undefined;
+    chapterNumber?: number;
+    contentRaw?: string | undefined;
+    contentEdit?: string | undefined;
+    isUploaded?: boolean;
+    isPublished?: boolean;
+    prompt: Prompt;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CreateAccountCommand implements ICreateAccountCommand {
+    accountTypeId?: number;
+    title?: string | undefined;
+    cookie?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateAccountCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.accountTypeId = _data["accountTypeId"];
+            this.title = _data["title"];
+            this.cookie = _data["cookie"];
+        }
+    }
+
+    static fromJS(data: any): CreateAccountCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateAccountCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["accountTypeId"] = this.accountTypeId;
+        data["title"] = this.title;
+        data["cookie"] = this.cookie;
+        return data;
+    }
+}
+
+export interface ICreateAccountCommand {
+    accountTypeId?: number;
+    title?: string | undefined;
+    cookie?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CreateAccountTypeCommand implements ICreateAccountTypeCommand {
+    title?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateAccountTypeCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+        }
+    }
+
+    static fromJS(data: any): CreateAccountTypeCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateAccountTypeCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        return data;
+    }
+}
+
+export interface ICreateAccountTypeCommand {
+    title?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CreateAICommand implements ICreateAICommand {
+    title?: string | undefined;
+    model?: string | undefined;
+    apiKey?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateAICommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+            this.model = _data["model"];
+            this.apiKey = _data["apiKey"];
+        }
+    }
+
+    static fromJS(data: any): CreateAICommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateAICommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        data["model"] = this.model;
+        data["apiKey"] = this.apiKey;
+        return data;
+    }
+}
+
+export interface ICreateAICommand {
+    title?: string | undefined;
+    model?: string | undefined;
+    apiKey?: string | undefined;
+
+    [key: string]: any;
+}
+
 export class CreateCategoryCommand implements ICreateCategoryCommand {
     title?: string | undefined;
 
@@ -2206,6 +3869,94 @@ export class CreateCategoryCommand implements ICreateCategoryCommand {
 
 export interface ICreateCategoryCommand {
     title?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CreateChapterCommand implements ICreateChapterCommand {
+    storyId?: number;
+    promptId?: number;
+    title?: string | undefined;
+    tytChapterId?: string | undefined;
+    nameRaw?: string | undefined;
+    nameEdit?: string | undefined;
+    chapterNumber?: number;
+    contentRaw?: string | undefined;
+    contentEdit?: string | undefined;
+    isUploaded?: boolean;
+    isPublished?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateChapterCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.storyId = _data["storyId"];
+            this.promptId = _data["promptId"];
+            this.title = _data["title"];
+            this.tytChapterId = _data["tytChapterId"];
+            this.nameRaw = _data["nameRaw"];
+            this.nameEdit = _data["nameEdit"];
+            this.chapterNumber = _data["chapterNumber"];
+            this.contentRaw = _data["contentRaw"];
+            this.contentEdit = _data["contentEdit"];
+            this.isUploaded = _data["isUploaded"];
+            this.isPublished = _data["isPublished"];
+        }
+    }
+
+    static fromJS(data: any): CreateChapterCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateChapterCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["storyId"] = this.storyId;
+        data["promptId"] = this.promptId;
+        data["title"] = this.title;
+        data["tytChapterId"] = this.tytChapterId;
+        data["nameRaw"] = this.nameRaw;
+        data["nameEdit"] = this.nameEdit;
+        data["chapterNumber"] = this.chapterNumber;
+        data["contentRaw"] = this.contentRaw;
+        data["contentEdit"] = this.contentEdit;
+        data["isUploaded"] = this.isUploaded;
+        data["isPublished"] = this.isPublished;
+        return data;
+    }
+}
+
+export interface ICreateChapterCommand {
+    storyId?: number;
+    promptId?: number;
+    title?: string | undefined;
+    tytChapterId?: string | undefined;
+    nameRaw?: string | undefined;
+    nameEdit?: string | undefined;
+    chapterNumber?: number;
+    contentRaw?: string | undefined;
+    contentEdit?: string | undefined;
+    isUploaded?: boolean;
+    isPublished?: boolean;
 
     [key: string]: any;
 }
@@ -2702,6 +4453,62 @@ export interface IInfoResponse {
     [key: string]: any;
 }
 
+export class IntegrationEvent implements IIntegrationEvent {
+    eventId?: string;
+    occurredOn?: Date;
+    eventType?: string;
+
+    [key: string]: any;
+
+    constructor(data?: IIntegrationEvent) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.eventId = _data["eventId"];
+            this.occurredOn = _data["occurredOn"] ? new Date(_data["occurredOn"].toString()) : undefined as any;
+            this.eventType = _data["eventType"];
+        }
+    }
+
+    static fromJS(data: any): IntegrationEvent {
+        data = typeof data === 'object' ? data : {};
+        let result = new IntegrationEvent();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["eventId"] = this.eventId;
+        data["occurredOn"] = this.occurredOn ? this.occurredOn.toISOString() : undefined as any;
+        data["eventType"] = this.eventType;
+        return data;
+    }
+}
+
+export interface IIntegrationEvent {
+    eventId?: string;
+    occurredOn?: Date;
+    eventType?: string;
+
+    [key: string]: any;
+}
+
 export class LoginRequest implements ILoginRequest {
     email!: string;
     password!: string;
@@ -2750,6 +4557,234 @@ export class LoginRequest implements ILoginRequest {
 export interface ILoginRequest {
     email: string;
     password: string;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfAccountDto implements IPaginatedListOfAccountDto {
+    items?: AccountDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfAccountDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(AccountDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfAccountDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfAccountDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfAccountDto {
+    items?: AccountDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfAccountTypeDto implements IPaginatedListOfAccountTypeDto {
+    items?: AccountTypeDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfAccountTypeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(AccountTypeDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfAccountTypeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfAccountTypeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfAccountTypeDto {
+    items?: AccountTypeDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfAIDto implements IPaginatedListOfAIDto {
+    items?: AIDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfAIDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(AIDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfAIDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfAIDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfAIDto {
+    items?: AIDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
 
     [key: string]: any;
 }
@@ -2821,6 +4856,82 @@ export class PaginatedListOfCategoryDto implements IPaginatedListOfCategoryDto {
 
 export interface IPaginatedListOfCategoryDto {
     items?: CategoryDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfChapterDto implements IPaginatedListOfChapterDto {
+    items?: ChapterDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfChapterDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(ChapterDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfChapterDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfChapterDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfChapterDto {
+    items?: ChapterDto[] | undefined;
     pageNumber: number;
     totalPages?: number;
     totalCount?: number;
@@ -3206,6 +5317,114 @@ export interface IPaginatedListOfWebSourceDto {
     totalCount?: number;
     hasPreviousPage?: boolean;
     hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class Prompt implements IPrompt {
+    promptTypeId?: number;
+    content?: string | undefined;
+    baseStatus?: number;
+    created?: Date;
+    createdBy?: string | undefined;
+    lastModified?: Date;
+    lastModifiedBy?: string | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    domainEvents?: BaseEvent[] | undefined;
+    integrationEvents?: IntegrationEvent[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IPrompt) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.promptTypeId = _data["promptTypeId"];
+            this.content = _data["content"];
+            this.baseStatus = _data["baseStatus"];
+            this.created = _data["created"] ? new Date(_data["created"].toString()) : undefined as any;
+            this.createdBy = _data["createdBy"];
+            this.lastModified = _data["lastModified"] ? new Date(_data["lastModified"].toString()) : undefined as any;
+            this.lastModifiedBy = _data["lastModifiedBy"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            if (Array.isArray(_data["domainEvents"])) {
+                this.domainEvents = [] as any;
+                for (let item of _data["domainEvents"])
+                    this.domainEvents!.push(BaseEvent.fromJS(item));
+            }
+            if (Array.isArray(_data["integrationEvents"])) {
+                this.integrationEvents = [] as any;
+                for (let item of _data["integrationEvents"])
+                    this.integrationEvents!.push(IntegrationEvent.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): Prompt {
+        data = typeof data === 'object' ? data : {};
+        let result = new Prompt();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["promptTypeId"] = this.promptTypeId;
+        data["content"] = this.content;
+        data["baseStatus"] = this.baseStatus;
+        data["created"] = this.created ? this.created.toISOString() : undefined as any;
+        data["createdBy"] = this.createdBy;
+        data["lastModified"] = this.lastModified ? this.lastModified.toISOString() : undefined as any;
+        data["lastModifiedBy"] = this.lastModifiedBy;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        if (Array.isArray(this.domainEvents)) {
+            data["domainEvents"] = [];
+            for (let item of this.domainEvents)
+                data["domainEvents"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.integrationEvents)) {
+            data["integrationEvents"] = [];
+            for (let item of this.integrationEvents)
+                data["integrationEvents"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IPrompt {
+    promptTypeId?: number;
+    content?: string | undefined;
+    baseStatus?: number;
+    created?: Date;
+    createdBy?: string | undefined;
+    lastModified?: Date;
+    lastModifiedBy?: string | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    domainEvents?: BaseEvent[] | undefined;
+    integrationEvents?: IntegrationEvent[] | undefined;
 
     [key: string]: any;
 }
@@ -3678,6 +5897,178 @@ export interface IStorySourceDto {
     [key: string]: any;
 }
 
+export class UpdateAccountCommand implements IUpdateAccountCommand {
+    id?: number;
+    title?: string | undefined;
+    accountTypeId?: number;
+    cookie?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateAccountCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.accountTypeId = _data["accountTypeId"];
+            this.cookie = _data["cookie"];
+        }
+    }
+
+    static fromJS(data: any): UpdateAccountCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateAccountCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["accountTypeId"] = this.accountTypeId;
+        data["cookie"] = this.cookie;
+        return data;
+    }
+}
+
+export interface IUpdateAccountCommand {
+    id?: number;
+    title?: string | undefined;
+    accountTypeId?: number;
+    cookie?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class UpdateAccountTypeCommand implements IUpdateAccountTypeCommand {
+    id?: number;
+    title?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateAccountTypeCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+        }
+    }
+
+    static fromJS(data: any): UpdateAccountTypeCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateAccountTypeCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        return data;
+    }
+}
+
+export interface IUpdateAccountTypeCommand {
+    id?: number;
+    title?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class UpdateAICommand implements IUpdateAICommand {
+    id?: number;
+    title?: string | undefined;
+    model?: string | undefined;
+    apiKey?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateAICommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.model = _data["model"];
+            this.apiKey = _data["apiKey"];
+        }
+    }
+
+    static fromJS(data: any): UpdateAICommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateAICommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["model"] = this.model;
+        data["apiKey"] = this.apiKey;
+        return data;
+    }
+}
+
+export interface IUpdateAICommand {
+    id?: number;
+    title?: string | undefined;
+    model?: string | undefined;
+    apiKey?: string | undefined;
+
+    [key: string]: any;
+}
+
 export class UpdateCategoryCommand implements IUpdateCategoryCommand {
     id?: number;
     title?: string | undefined;
@@ -3726,6 +6117,98 @@ export class UpdateCategoryCommand implements IUpdateCategoryCommand {
 export interface IUpdateCategoryCommand {
     id?: number;
     title?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class UpdateChapterCommand implements IUpdateChapterCommand {
+    id?: number;
+    storyId?: number;
+    promptId?: number;
+    title?: string | undefined;
+    tytChapterId?: string | undefined;
+    nameRaw?: string | undefined;
+    nameEdit?: string | undefined;
+    chapterNumber?: number;
+    contentRaw?: string | undefined;
+    contentEdit?: string | undefined;
+    isUploaded?: boolean;
+    isPublished?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateChapterCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.storyId = _data["storyId"];
+            this.promptId = _data["promptId"];
+            this.title = _data["title"];
+            this.tytChapterId = _data["tytChapterId"];
+            this.nameRaw = _data["nameRaw"];
+            this.nameEdit = _data["nameEdit"];
+            this.chapterNumber = _data["chapterNumber"];
+            this.contentRaw = _data["contentRaw"];
+            this.contentEdit = _data["contentEdit"];
+            this.isUploaded = _data["isUploaded"];
+            this.isPublished = _data["isPublished"];
+        }
+    }
+
+    static fromJS(data: any): UpdateChapterCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateChapterCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["storyId"] = this.storyId;
+        data["promptId"] = this.promptId;
+        data["title"] = this.title;
+        data["tytChapterId"] = this.tytChapterId;
+        data["nameRaw"] = this.nameRaw;
+        data["nameEdit"] = this.nameEdit;
+        data["chapterNumber"] = this.chapterNumber;
+        data["contentRaw"] = this.contentRaw;
+        data["contentEdit"] = this.contentEdit;
+        data["isUploaded"] = this.isUploaded;
+        data["isPublished"] = this.isPublished;
+        return data;
+    }
+}
+
+export interface IUpdateChapterCommand {
+    id?: number;
+    storyId?: number;
+    promptId?: number;
+    title?: string | undefined;
+    tytChapterId?: string | undefined;
+    nameRaw?: string | undefined;
+    nameEdit?: string | undefined;
+    chapterNumber?: number;
+    contentRaw?: string | undefined;
+    contentEdit?: string | undefined;
+    isUploaded?: boolean;
+    isPublished?: boolean;
 
     [key: string]: any;
 }

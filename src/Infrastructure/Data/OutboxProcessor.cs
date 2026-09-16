@@ -1,11 +1,9 @@
-using Confluent.Kafka;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SurveillanceCameras.Application.Common.Interfaces;
-using SurveillanceCameras.Infrastructure.Data;
 using SurveillanceCameras.Infrastructure.Kafka.Options;
 
 namespace SurveillanceCameras.Infrastructure.Data;
@@ -72,9 +70,9 @@ public sealed class OutboxProcessor : BackgroundService
         {
             try
             {
-                // Publish via KafkaEventBus using a raw producer call
-                // We bypass the typed generic here by producing directly
-                await PublishRawAsync(message.Topic, message.Payload, message.EventType, ct);
+                // Reuse the singleton KafkaEventBus producer (one long-lived connection) instead of
+                // opening a fresh IProducer per message — see IEventBus.PublishRawAsync for why.
+                await _eventBus.PublishRawAsync(message.Topic, message.Id.ToString(), message.Payload, ct);
                 message.MarkProcessed();
 
                 _logger.LogDebug("OutboxMessage {Id} ({EventType}) published to [{Topic}].",
@@ -90,33 +88,6 @@ public sealed class OutboxProcessor : BackgroundService
         }
 
         await db.SaveChangesAsync(ct);
-    }
-
-    private async Task PublishRawAsync(string topic, string payload, string eventType, CancellationToken ct)
-    {
-        // Use the IEventBus-backed producer directly via Kafka client
-        // We get the producer from a dedicated field to avoid double-serialization
-        var config = new ProducerConfig
-        {
-            BootstrapServers = _options.BootstrapServers,
-            EnableIdempotence = true,
-            Acks = Acks.All
-        };
-
-        using var producer = new ProducerBuilder<string, string>(config).Build();
-
-        var message = new Message<string, string>
-        {
-            Key = Guid.NewGuid().ToString(),
-            Value = payload,
-            Headers = new Headers
-            {
-                { "event-type", System.Text.Encoding.UTF8.GetBytes(eventType) },
-                { "source", System.Text.Encoding.UTF8.GetBytes("outbox-processor") }
-            }
-        };
-
-        await producer.ProduceAsync(topic, message, ct);
     }
 }
 

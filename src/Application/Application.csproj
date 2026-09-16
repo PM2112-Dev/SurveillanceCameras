@@ -25,9 +25,4 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Service\GeminiService\" />
-    <Folder Include="Service\TytService\" />
-  </ItemGroup>
-
 </Project>
