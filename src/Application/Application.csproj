@@ -25,4 +25,8 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Local\CrawlStories\Queries\DTOs\" />
+  </ItemGroup>
+
 </Project>

@@ -36,7 +36,7 @@ public abstract class BaseEntity
         _domainEvents.Clear();
     }
 
-    public void AddIntegrationEvent(IntegrationEvent integrationEvent)
+    public void AddIntegrationEvent(IntegrationEvent integrationEvent, CancellationToken cancellationToken)
     {
         _integrationEvents.Add(integrationEvent);
     }

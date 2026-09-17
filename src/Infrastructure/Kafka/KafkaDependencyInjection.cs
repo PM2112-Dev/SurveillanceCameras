@@ -55,7 +55,8 @@ public static class KafkaDependencyInjection
         if (!IsDesignTimeTooling())
         {
             builder.Services.AddHostedService<OutboxProcessor>();
-            builder.Services.AddHostedService<WikiDichCrawlConsumer>();
+            builder.Services.AddHostedService<FetchStoryWebSourceConsumer>();
+            // builder.Services.AddHostedService<WikiDichCrawlConsumer>();
         }
     }
 

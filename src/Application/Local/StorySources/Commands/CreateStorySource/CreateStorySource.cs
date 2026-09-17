@@ -75,21 +75,39 @@ public class CreateStorySourceCommandHandler : IRequestHandler<CreateStorySource
         // (needed by the integration event's payload), the second lets OutboxInterceptor persist
         // the OutboxMessage for that event — both commit together, so a crash between them rolls
         // back the whole insert rather than leaving an entity with no corresponding outbox row.
-        await _context.ExecuteInTransactionAsync(async ct =>
+        // await _context.ExecuteInTransactionAsync(async ct =>
+        // {
+        //     _context.StorySources.Add(entity);
+        //     await _context.SaveChangesAsync(ct);
+        //
+        //     entity.AddIntegrationEvent(new StorySourceCreatedIntegrationEvent
+        //     {
+        //         StorySourceId = entity.Id,
+        //         Title = entity.Title,
+        //         WebSourceId = entity.WebSourceId,
+        //         LinkRaw = entity.LinkRaw
+        //     });
+        //     await _context.SaveChangesAsync(ct);
+        // }, cancellationToken);
+
+        if (request.LinkRaw is not null)
+        {
+            await _context.ExecuteInTransactionAsync(async ct =>
+                {
+                    _context.StorySources.Add(entity);
+                    await _context.SaveChangesAsync(ct);
+                    
+                    
+                    
+                }, cancellationToken
+            );
+        }
+        else
         {
             _context.StorySources.Add(entity);
-            await _context.SaveChangesAsync(ct);
-
-            entity.AddIntegrationEvent(new StorySourceCreatedIntegrationEvent
-            {
-                StorySourceId = entity.Id,
-                Title = entity.Title,
-                WebSourceId = entity.WebSourceId,
-                LinkRaw = entity.LinkRaw
-            });
-            await _context.SaveChangesAsync(ct);
-        }, cancellationToken);
-
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        
         return entity.Id;
     }
 }

@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Local.WebSources.IntegrationEvents;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.WebSources.Commands.CreateWebSource;
@@ -23,15 +24,23 @@ public class CreateWebSourceCommandHandler : IRequestHandler<CreateWebSourceComm
 
     public async Task<int> Handle(CreateWebSourceCommand request, CancellationToken cancellationToken)
     {
-        var entity = new WebSource
+        var entity = new WebSource { Title = request.Title, BaseUrl = request.BaseUrl, };
+
+        await _context.ExecuteInTransactionAsync(async ct =>
         {
-            Title = request.Title,
-            BaseUrl = request.BaseUrl,
-        };
-        
-        _context.WebSources.Add(entity);
-        
+            _context.WebSources.Add(entity);
+            await _context.SaveChangesAsync(ct);
+
+            entity.AddIntegrationEvent(
+                new FetchStoryWebSourceIntegrationEvent
+                {
+                    WebSourceId = entity.Id, 
+                    LinkRaw = entity.BaseUrl
+                }, ct);
+        }, cancellationToken);
+
         await _context.SaveChangesAsync(cancellationToken);
+
         return entity.Id;
     }
 }

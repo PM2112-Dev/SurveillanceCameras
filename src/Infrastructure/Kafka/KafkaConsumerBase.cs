@@ -2,6 +2,8 @@ using Confluent.Kafka;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Domain.Common;
 using SurveillanceCameras.Infrastructure.Kafka.Options;
 using System.Text.Json;
 
@@ -14,6 +16,7 @@ namespace SurveillanceCameras.Infrastructure.Kafka;
 /// </summary>
 /// <typeparam name="TEvent">The integration event type this consumer handles.</typeparam>
 public abstract class KafkaConsumerBase<TEvent> : BackgroundService
+    where TEvent : IntegrationEvent
 {
     // Lazy for the same reason as KafkaEventBus: consumers are registered via AddHostedService,
     // and ASP.NET Core's ValidateOnBuild (Development default) constructs every hosted service
@@ -25,11 +28,19 @@ public abstract class KafkaConsumerBase<TEvent> : BackgroundService
     private readonly KafkaOptions _options;
     private readonly ILogger _logger;
 
-    protected abstract string Topic { get; }
+    // Derived from the same IKafkaTopicRegistry the producer (IEventBus.PublishAsync) uses to
+    // resolve a topic for TEvent — a consumer that hard-codes its own topic string can silently
+    // drift from whatever the producer resolves to (convention fallback or config override) and
+    // never receive a single message. Virtual only so a consumer with a genuinely different
+    // subscription need (e.g. a raw/legacy topic) can still override it explicitly.
+    protected virtual string Topic => _topicRegistry.GetTopic<TEvent>();
 
-    protected KafkaConsumerBase(IOptions<KafkaOptions> options, ILogger logger)
+    private readonly IKafkaTopicRegistry _topicRegistry;
+
+    protected KafkaConsumerBase(IOptions<KafkaOptions> options, IKafkaTopicRegistry topicRegistry, ILogger logger)
     {
         _options = options.Value;
+        _topicRegistry = topicRegistry;
         _logger = logger;
 
         _consumer = new Lazy<IConsumer<string, string>>(() =>
