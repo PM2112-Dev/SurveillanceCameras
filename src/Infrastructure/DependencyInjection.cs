@@ -8,11 +8,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Repository;
 using SurveillanceCameras.Application.WikiDichService;
 using SurveillanceCameras.Infrastructure.Data;
 using SurveillanceCameras.Infrastructure.Data.Interceptors;
 using SurveillanceCameras.Infrastructure.Identity;
 using SurveillanceCameras.Infrastructure.Kafka;
+using SurveillanceCameras.Infrastructure.Repository;
 using SurveillanceCameras.Infrastructure.Service.WikiDichService;
 
 namespace SurveillanceCameras.Infrastructure;
@@ -42,6 +44,11 @@ public static class DependencyInjection
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 
         builder.Services.AddHttpClient<IWikiDichApiService, WikiDichApiService>();
+
+        builder.Services.AddScoped<WikidichzzzRepository>();
+        builder.Services.AddScoped<WikidichRepository>();
+        builder.Services.AddScoped<WikicvRepository>();
+        builder.Services.AddScoped<ICrawlStoryRepositoryFactory, CrawlStoryRepositoryFactory>();
 
         var jwtSection = builder.Configuration.GetSection("Jwt");
         var issuer = jwtSection["Issuer"];
