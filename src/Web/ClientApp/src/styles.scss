@@ -218,6 +218,55 @@ html {
   text-align: right;
 }
 
+// ── Status badge (trạng thái phiên đăng nhập, ...) ────────────────────────────
+.status-badge {
+  --badge-color: var(--pico-muted-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--badge-color) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--badge-color) 12%, transparent);
+  color: var(--badge-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &.ok {
+    --badge-color: #2e9e5b;
+  }
+
+  &.warn {
+    --badge-color: #c98a00;
+  }
+
+  &.danger {
+    --badge-color: var(--pico-del-color);
+  }
+}
+
+.cell-sub {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--pico-muted-color);
+  font-size: 0.8rem;
+}
+
+.hint {
+  margin-bottom: var(--pico-spacing);
+  color: var(--pico-muted-color);
+  font-size: 0.9rem;
+}
+
 // ── Stat cards (dashboard) ────────────────────────────────────────────────────
 .stat-grid {
   display: grid;
@@ -241,6 +290,10 @@ html {
   }
 }
 
+.stat-card--static:hover {
+  border-color: var(--pico-muted-border-color);
+}
+
 .stat-value {
   font-family: "Outfit", sans-serif;
   font-size: 2rem;
@@ -251,6 +304,85 @@ html {
 .stat-label {
   color: var(--pico-muted-color);
   font-size: 0.9rem;
+}
+
+// ── Thông tin kênh TikTok ─────────────────────────────────────────────────────
+.profile-card {
+  max-width: 60rem;
+  padding: calc(var(--pico-spacing) * 1.25);
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  background: var(--pico-card-background-color);
+
+  .stat-grid {
+    margin: var(--pico-spacing) 0;
+  }
+}
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: var(--pico-spacing);
+}
+
+.profile-avatar {
+  width: 6rem;
+  height: 6rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--pico-muted-border-color);
+}
+
+.profile-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.profile-verified {
+  color: var(--pico-primary);
+}
+
+.profile-handle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--pico-muted-color);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--pico-primary);
+  }
+}
+
+.profile-bio {
+  margin: 0.5rem 0 0;
+  white-space: pre-wrap;
+}
+
+.profile-ids {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem var(--pico-spacing);
+  margin: 0;
+
+  dt {
+    color: var(--pico-muted-color);
+  }
+
+  dd {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0;
+    min-width: 0;
+  }
+
+  code {
+    word-break: break-all;
+  }
 }
 
 // ── Forms ─────────────────────────────────────────────────────────────────────

@@ -53,6 +53,13 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
                     ? $"{bre.Message} {je.Message}"
                     : bre.Message
             }),
+            TikTokApiException te => (StatusCodes.Status502BadGateway, new ProblemDetails
+            {
+                Status = StatusCodes.Status502BadGateway,
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.6.3",
+                Title = "TikTok request failed.",
+                Detail = te.Message
+            }),
             _ => (-1, null)
         };
 

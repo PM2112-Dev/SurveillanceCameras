@@ -9,13 +9,16 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Repository;
-using SurveillanceCameras.Application.WikiDichService;
+using SurveillanceCameras.Application.Service.TikTokSession;
+// using SurveillanceCameras.Application.WikiDichService;
 using SurveillanceCameras.Infrastructure.Data;
 using SurveillanceCameras.Infrastructure.Data.Interceptors;
 using SurveillanceCameras.Infrastructure.Identity;
 using SurveillanceCameras.Infrastructure.Kafka;
 using SurveillanceCameras.Infrastructure.Repository;
-using SurveillanceCameras.Infrastructure.Service.WikiDichService;
+using SurveillanceCameras.Infrastructure.Service.TikTokApi;
+using SurveillanceCameras.Infrastructure.Service.TikTokSession;
+// using SurveillanceCameras.Infrastructure.Service.WikiDichService;
 
 namespace SurveillanceCameras.Infrastructure;
 
@@ -43,12 +46,18 @@ public static class DependencyInjection
 
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 
-        builder.Services.AddHttpClient<IWikiDichApiService, WikiDichApiService>();
+        // builder.Services.AddHttpClient<IWikiDichApiService, WikiDichApiService>();
 
         builder.Services.AddScoped<WikidichzzzRepository>();
         builder.Services.AddScoped<WikidichRepository>();
         builder.Services.AddScoped<WikicvRepository>();
         builder.Services.AddScoped<ICrawlStoryRepositoryFactory, CrawlStoryRepositoryFactory>();
+
+        builder.Services.Configure<TikTokSessionOptions>(builder.Configuration.GetSection(TikTokSessionOptions.SectionName));
+        builder.Services.AddSingleton<TikTokSessionManager>();
+        builder.Services.AddSingleton<ITikTokSessionManager>(sp => sp.GetRequiredService<TikTokSessionManager>());
+
+        builder.Services.AddTikTokApi(builder.Configuration);
 
         var jwtSection = builder.Configuration.GetSection("Jwt");
         var issuer = jwtSection["Issuer"];

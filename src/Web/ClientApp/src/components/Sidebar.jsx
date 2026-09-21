@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Globe, BookOpen, Tags } from 'lucide-react';
+import { LayoutDashboard, Globe, BookOpen, Tags, Users } from 'lucide-react';
 
 const menuItems = [
   { to: '/', label: 'Tổng quan', icon: LayoutDashboard, end: true },
   { to: '/web-sources', label: 'Nguồn web', icon: Globe },
   { to: '/story-sources', label: 'Nguồn truyện', icon: BookOpen },
-  { to: '/categories', label: 'Thể loại', icon: Tags }
+  { to: '/categories', label: 'Thể loại', icon: Tags },
+  { to: '/accounts', label: 'Tài khoản', icon: Users }
 ];
 
 export function Sidebar() {

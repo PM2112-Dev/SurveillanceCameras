@@ -294,6 +294,280 @@ export class AccountsClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    /**
+     * Start TikTok Session
+     * @return No Content
+     */
+    startTikTokSession(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}/tiktok-session/start";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processStartTikTokSession(_response);
+        });
+    }
+
+    protected processStartTikTokSession(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Stop TikTok Session
+     * @return No Content
+     */
+    stopTikTokSession(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}/tiktok-session/stop";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processStopTikTokSession(_response);
+        });
+    }
+
+    protected processStopTikTokSession(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get TikTok Session Status
+     * @return OK
+     */
+    getTikTokSessionStatus(id: number): Promise<TikTokSessionStatus> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}/tiktok-session";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetTikTokSessionStatus(_response);
+        });
+    }
+
+    protected processGetTikTokSessionStatus(response: Response): Promise<TikTokSessionStatus> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = TikTokSessionStatus.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<TikTokSessionStatus>(null as any);
+    }
+
+    /**
+     * Get TikTok Drama List
+     * @param count (optional) 
+     * @param cursor (optional) 
+     * @return OK
+     */
+    getTikTokDramaList(id: number, secUid: string, count: number | undefined, cursor: string | undefined): Promise<DramaListDto> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}/tiktok/dramas?";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (secUid === undefined || secUid === null)
+            throw new globalThis.Error("The parameter 'secUid' must be defined and cannot be null.");
+        else
+            url_ += "secUid=" + encodeURIComponent("" + secUid) + "&";
+        if (count === null)
+            throw new globalThis.Error("The parameter 'count' cannot be null.");
+        else if (count !== undefined)
+            url_ += "count=" + encodeURIComponent("" + count) + "&";
+        if (cursor === null)
+            throw new globalThis.Error("The parameter 'cursor' cannot be null.");
+        else if (cursor !== undefined)
+            url_ += "cursor=" + encodeURIComponent("" + cursor) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetTikTokDramaList(_response);
+        });
+    }
+
+    protected processGetTikTokDramaList(response: Response): Promise<DramaListDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = DramaListDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DramaListDto>(null as any);
+    }
+
+    /**
+     * Get TikTok User Profile
+     * @return OK
+     */
+    getTikTokUserProfile(id: number, handle: string): Promise<TikTokUserProfileDto> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}/tiktok/users/{handle}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (handle === undefined || handle === null)
+            throw new globalThis.Error("The parameter 'handle' must be defined.");
+        url_ = url_.replace("{handle}", encodeURIComponent("" + handle));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetTikTokUserProfile(_response);
+        });
+    }
+
+    protected processGetTikTokUserProfile(response: Response): Promise<TikTokUserProfileDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = TikTokUserProfileDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<TikTokUserProfileDto>(null as any);
+    }
 }
 
 export class AccountTypesClient {
@@ -4321,6 +4595,294 @@ export interface ICreateWebSourceCommand {
     [key: string]: any;
 }
 
+export class DramaCoverDto implements IDramaCoverDto {
+    urlList?: string[];
+
+    [key: string]: any;
+
+    constructor(data?: IDramaCoverDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["urlList"])) {
+                this.urlList = [] as any;
+                for (let item of _data["urlList"])
+                    this.urlList!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): DramaCoverDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new DramaCoverDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.urlList)) {
+            data["urlList"] = [];
+            for (let item of this.urlList)
+                data["urlList"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IDramaCoverDto {
+    urlList?: string[];
+
+    [key: string]: any;
+}
+
+export class DramaDto implements IDramaDto {
+    dramaID?: string | undefined;
+    dramaName?: string | undefined;
+    description?: string | undefined;
+    numVideos?: number;
+    numWatched?: number;
+    totalDuration?: number;
+    isLimitedFree?: boolean;
+    cover?: DramaCoverDto | undefined;
+    zoomCover?: { [key: string]: string; };
+    themes?: DramaThemeDto[];
+
+    [key: string]: any;
+
+    constructor(data?: IDramaDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.dramaID = _data["dramaID"];
+            this.dramaName = _data["dramaName"];
+            this.description = _data["description"];
+            this.numVideos = _data["numVideos"];
+            this.numWatched = _data["numWatched"];
+            this.totalDuration = _data["totalDuration"];
+            this.isLimitedFree = _data["isLimitedFree"];
+            this.cover = _data["cover"] ? DramaCoverDto.fromJS(_data["cover"]) : undefined as any;
+            if (_data["zoomCover"]) {
+                this.zoomCover = {} as any;
+                for (let key in _data["zoomCover"]) {
+                    if (_data["zoomCover"].hasOwnProperty(key))
+                        (this.zoomCover as any)![key] = _data["zoomCover"][key];
+                }
+            }
+            if (Array.isArray(_data["themes"])) {
+                this.themes = [] as any;
+                for (let item of _data["themes"])
+                    this.themes!.push(DramaThemeDto.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): DramaDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new DramaDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["dramaID"] = this.dramaID;
+        data["dramaName"] = this.dramaName;
+        data["description"] = this.description;
+        data["numVideos"] = this.numVideos;
+        data["numWatched"] = this.numWatched;
+        data["totalDuration"] = this.totalDuration;
+        data["isLimitedFree"] = this.isLimitedFree;
+        data["cover"] = this.cover ? this.cover.toJSON() : undefined as any;
+        if (this.zoomCover) {
+            data["zoomCover"] = {};
+            for (let key in this.zoomCover) {
+                if (this.zoomCover.hasOwnProperty(key))
+                    (data["zoomCover"] as any)[key] = (this.zoomCover as any)[key];
+            }
+        }
+        if (Array.isArray(this.themes)) {
+            data["themes"] = [];
+            for (let item of this.themes)
+                data["themes"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IDramaDto {
+    dramaID?: string | undefined;
+    dramaName?: string | undefined;
+    description?: string | undefined;
+    numVideos?: number;
+    numWatched?: number;
+    totalDuration?: number;
+    isLimitedFree?: boolean;
+    cover?: DramaCoverDto | undefined;
+    zoomCover?: { [key: string]: string; };
+    themes?: DramaThemeDto[];
+
+    [key: string]: any;
+}
+
+export class DramaListDto implements IDramaListDto {
+    cursor?: string | undefined;
+    hasMore?: boolean;
+    statusCode?: number;
+    status_msg?: string | undefined;
+    dramaList?: DramaDto[];
+
+    [key: string]: any;
+
+    constructor(data?: IDramaListDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.cursor = _data["cursor"];
+            this.hasMore = _data["hasMore"];
+            this.statusCode = _data["statusCode"];
+            this.status_msg = _data["status_msg"];
+            if (Array.isArray(_data["dramaList"])) {
+                this.dramaList = [] as any;
+                for (let item of _data["dramaList"])
+                    this.dramaList!.push(DramaDto.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): DramaListDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new DramaListDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["cursor"] = this.cursor;
+        data["hasMore"] = this.hasMore;
+        data["statusCode"] = this.statusCode;
+        data["status_msg"] = this.status_msg;
+        if (Array.isArray(this.dramaList)) {
+            data["dramaList"] = [];
+            for (let item of this.dramaList)
+                data["dramaList"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IDramaListDto {
+    cursor?: string | undefined;
+    hasMore?: boolean;
+    statusCode?: number;
+    status_msg?: string | undefined;
+    dramaList?: DramaDto[];
+
+    [key: string]: any;
+}
+
+export class DramaThemeDto implements IDramaThemeDto {
+    tagID?: string | undefined;
+    tagKey?: string | undefined;
+    tagVal?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IDramaThemeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.tagID = _data["tagID"];
+            this.tagKey = _data["tagKey"];
+            this.tagVal = _data["tagVal"];
+        }
+    }
+
+    static fromJS(data: any): DramaThemeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new DramaThemeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["tagID"] = this.tagID;
+        data["tagKey"] = this.tagKey;
+        data["tagVal"] = this.tagVal;
+        return data;
+    }
+}
+
+export interface IDramaThemeDto {
+    tagID?: string | undefined;
+    tagKey?: string | undefined;
+    tagVal?: string | undefined;
+
+    [key: string]: any;
+}
+
 export class HttpValidationProblemDetails implements IHttpValidationProblemDetails {
     type?: string | undefined;
     title?: string | undefined;
@@ -5893,6 +6455,150 @@ export interface IStorySourceDto {
     title?: string | undefined;
     code?: string | undefined;
     baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class TikTokSessionStatus implements ITikTokSessionStatus {
+    accountId!: number;
+    state!: number;
+    cookieUpdatedAt?: Date | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ITikTokSessionStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.accountId = _data["accountId"];
+            this.state = _data["state"];
+            this.cookieUpdatedAt = _data["cookieUpdatedAt"] ? new Date(_data["cookieUpdatedAt"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): TikTokSessionStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new TikTokSessionStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["accountId"] = this.accountId;
+        data["state"] = this.state;
+        data["cookieUpdatedAt"] = this.cookieUpdatedAt ? this.cookieUpdatedAt.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface ITikTokSessionStatus {
+    accountId: number;
+    state: number;
+    cookieUpdatedAt?: Date | undefined;
+
+    [key: string]: any;
+}
+
+export class TikTokUserProfileDto implements ITikTokUserProfileDto {
+    userId?: string | undefined;
+    uniqueId?: string | undefined;
+    secUid?: string | undefined;
+    nickname?: string | undefined;
+    signature?: string | undefined;
+    avatarUrl?: string | undefined;
+    verified?: boolean;
+    followerCount?: number;
+    followingCount?: number;
+    heartCount?: number;
+    videoCount?: number;
+
+    [key: string]: any;
+
+    constructor(data?: ITikTokUserProfileDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.userId = _data["userId"];
+            this.uniqueId = _data["uniqueId"];
+            this.secUid = _data["secUid"];
+            this.nickname = _data["nickname"];
+            this.signature = _data["signature"];
+            this.avatarUrl = _data["avatarUrl"];
+            this.verified = _data["verified"];
+            this.followerCount = _data["followerCount"];
+            this.followingCount = _data["followingCount"];
+            this.heartCount = _data["heartCount"];
+            this.videoCount = _data["videoCount"];
+        }
+    }
+
+    static fromJS(data: any): TikTokUserProfileDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new TikTokUserProfileDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["userId"] = this.userId;
+        data["uniqueId"] = this.uniqueId;
+        data["secUid"] = this.secUid;
+        data["nickname"] = this.nickname;
+        data["signature"] = this.signature;
+        data["avatarUrl"] = this.avatarUrl;
+        data["verified"] = this.verified;
+        data["followerCount"] = this.followerCount;
+        data["followingCount"] = this.followingCount;
+        data["heartCount"] = this.heartCount;
+        data["videoCount"] = this.videoCount;
+        return data;
+    }
+}
+
+export interface ITikTokUserProfileDto {
+    userId?: string | undefined;
+    uniqueId?: string | undefined;
+    secUid?: string | undefined;
+    nickname?: string | undefined;
+    signature?: string | undefined;
+    avatarUrl?: string | undefined;
+    verified?: boolean;
+    followerCount?: number;
+    followingCount?: number;
+    heartCount?: number;
+    videoCount?: number;
 
     [key: string]: any;
 }

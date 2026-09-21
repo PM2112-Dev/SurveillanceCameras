@@ -1,5 +1,3 @@
-using SurveillanceCameras.Application.Service.WikiDichService;
-
 namespace SurveillanceCameras.Application.CrawlData;
 
 public interface ICrawlDataService

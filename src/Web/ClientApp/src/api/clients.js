@@ -1,4 +1,6 @@
 import {
+  AccountsClient,
+  AccountTypesClient,
   CategoriesClient,
   StorySourcesClient,
   WebSourcesClient
@@ -7,6 +9,8 @@ import { authorizedHttp } from './httpClient.js';
 
 // Mọi client phải được tiêm authorizedHttp, nếu không request sẽ đi ra mà không kèm
 // JWT và mất luôn cơ chế tự refresh token khi gặp 401.
+export const accountsClient = new AccountsClient(undefined, authorizedHttp);
+export const accountTypesClient = new AccountTypesClient(undefined, authorizedHttp);
 export const categoriesClient = new CategoriesClient(undefined, authorizedHttp);
 export const storySourcesClient = new StorySourcesClient(undefined, authorizedHttp);
 export const webSourcesClient = new WebSourcesClient(undefined, authorizedHttp);

@@ -490,3 +490,6 @@ $RECYCLE.BIN/
 *.db
 *.db-shm
 *.db-wal
+
+# Chrome profiles holding logged-in sessions (contain credentials/cookies)
+**/data/browser-profiles/

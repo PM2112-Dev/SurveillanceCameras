@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SurveillanceCameras.Application.Common.Behaviours;
-using SurveillanceCameras.Application.Service.WikiDichService;
 
 namespace SurveillanceCameras.Application;
 
