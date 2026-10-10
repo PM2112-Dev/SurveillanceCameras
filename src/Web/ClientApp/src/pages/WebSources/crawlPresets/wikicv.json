@@ -1,0 +1,55 @@
+{
+  "storyList": {
+    "item": ".book-item",
+    "title": ".book-title",
+    "link": ".info-col a.tooltipped@href",
+    "author": ".book-author a",
+    "cover": ".cover-wrapper img@src",
+    "status": ".book-publisher a[href*='status=']",
+    "request": {
+      "query": { "start": "{offset}" }
+    },
+    "pagination": {
+      "pageSize": 20,
+      "nextPage": "ul.pagination li:last-child:not(.disabled) a[href*='start=']"
+    }
+  },
+  "story": {
+    "title": ".cover-info h2",
+    "author": ".cover-info a[href^='/tac-gia']",
+    "description": ".book-desc-detail",
+    "cover": ".cover-wrapper img@src",
+    "status": ".cover-info a[href*='status=']",
+    "genres": ".book-desc a[href*='tim-kiem']"
+  },
+  "chapterList": {
+    "vars": {
+      "bookId": "var bookId = \"(\\w+)\"",
+      "signKey": "var signKey = \"(\\w+)\"",
+      "rotateBy": "text\\.substring\\((\\d+)\\)"
+    },
+    "request": {
+      "url": "{origin}/book/index",
+      "query": {
+        "bookId": "{bookId}",
+        "start": "{offset}",
+        "size": "{pageSize}",
+        "signKey": "{signKey}",
+        "sign": "{sha256(rotate(signKey + offset + pageSize, rotateBy))}"
+      },
+      "headers": { "X-Requested-With": "XMLHttpRequest", "Referer": "{url}" }
+    },
+    "item": "li.chapter-name a",
+    "title": "",
+    "link": "@href",
+    "pagination": {
+      "pageSize": 50,
+      "lastPage": "ul.pagination a[data-start]@data-start",
+      "lastPageIsOffset": true
+    }
+  },
+  "chapter": {
+    "title": "#bookContent p.book-title:nth-of-type(2)",
+    "content": "#bookContentBody"
+  }
+}

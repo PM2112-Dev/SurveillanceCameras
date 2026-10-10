@@ -30,4 +30,8 @@
       <ProjectReference Include="..\..\src\Infrastructure\Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Service\TikTokApi\" />
+    </ItemGroup>
+
 </Project>

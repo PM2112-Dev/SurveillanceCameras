@@ -40,8 +40,11 @@ public static class DependencyInjection
                     DevAutoAuthenticationHandler.SchemeName, _ => { })
                 .AddPolicyScheme("DevOrJwt", "DevOrJwt", options =>
                 {
+                    // /api/app là API của app người xem: không có token nghĩa là khách chưa đăng nhập, không được
+                    // tự biến thành Administrator (nếu không thì không thử được luồng khách/đăng nhập của app).
                     options.ForwardDefaultSelector = context =>
                         context.Request.Headers.ContainsKey("Authorization")
+                        || context.Request.Path.StartsWithSegments("/api/app")
                             ? JwtBearerDefaults.AuthenticationScheme
                             : DevAutoAuthenticationHandler.SchemeName;
                 });

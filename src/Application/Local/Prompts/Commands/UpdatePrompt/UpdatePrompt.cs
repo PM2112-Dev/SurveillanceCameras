@@ -15,8 +15,13 @@ public record UpdatePromptCommand : IRequest
 
 public class UpdatePromptCommandValidator : AbstractValidator<UpdatePromptCommand>
 {
-    public UpdatePromptCommandValidator()
+    public UpdatePromptCommandValidator(IApplicationDbContext context, IUser user)
     {
+        RuleFor(x => x.Title).NotEmpty().MaximumLength(500);
+        RuleFor(x => x.Content).NotEmpty();
+        RuleFor(x => x.PromptTypeId)
+            .MustAsync((id, ct) => PromptValidation.PromptTypeExistsAsync(context, user, id, ct))
+            .WithMessage("Chọn loại prompt hợp lệ.");
     }
 }
 

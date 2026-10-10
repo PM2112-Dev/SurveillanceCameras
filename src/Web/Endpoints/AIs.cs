@@ -6,6 +6,8 @@ using SurveillanceCameras.Application.Local.AIs.Commands.UpdateAI;
 using SurveillanceCameras.Application.Local.AIs.Queries.DTOs;
 using SurveillanceCameras.Application.Local.AIs.Queries.GetAIById;
 using SurveillanceCameras.Application.Local.AIs.Queries.GetAIs;
+using SurveillanceCameras.Application.Local.AIs.Queries.GetProviderModels;
+using SurveillanceCameras.Application.Repository.AI;
 
 namespace SurveillanceCameras.Web.Endpoints;
 
@@ -20,6 +22,17 @@ public class AIs : IEndpointGroup
         groupBuilder.MapPost(CreateAI);
         groupBuilder.MapPut(UpdateAI, "{id}");
         groupBuilder.MapDelete(DeleteAI, "{id}");
+        // POST vì request mang API key — không đặt key trên query string.
+        groupBuilder.MapPost(GetProviderModels, "models");
+    }
+
+    [EndpointSummary("Get provider models")]
+    [EndpointDescription("Lấy danh sách model của nền tảng AI mà API key dùng được (key trên form, hoặc key đã lưu của AIId)")]
+    public static async Task<Ok<List<AIModelDto>>> GetProviderModels(ISender sender, GetProviderModelsQuery query)
+    {
+        var models = await sender.Send(query);
+
+        return TypedResults.Ok(models);
     }
 
     [EndpointSummary("Get AIs")]

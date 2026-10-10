@@ -1,0 +1,96 @@
+# Chạy toàn bộ hệ thống: docker compose up -d --build
+# Web:            http://<máy>:8080
+# Màn hình Chrome: http://<máy>:6080/vnc.html  (đăng nhập tài khoản TYT/Wikicv/TikTok)
+name: story-system
+
+services:
+  web:
+    build: .
+    image: story-system-web:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+      - "${NOVNC_PORT:-6080}:6080"
+    environment:
+      ConnectionStrings__SurveillanceCamerasDb: "Host=db;Port=5432;Database=SurveillanceCamerasDb;Username=postgres;Password=${POSTGRES_PASSWORD:?Đặt POSTGRES_PASSWORD trong .env}"
+      ConnectionStrings__Kafka: "kafka:9092"
+      Database__InitialiseOnStartup: "true"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY:?Đặt JWT_SIGNING_KEY trong .env}"
+      # Trong container dùng Chromium của Playwright (Google Chrome không có bản Linux ARM).
+      AccountSession__Channel: ""
+      AccountSession__Headless: "false"
+      AccountSession__ProfileDirectory: "data/browser-profiles"
+      TikTokApi__BrowserChannel: ""
+      Media__RootDirectory: "data/media"
+      VNC_PASSWORD: "${VNC_PASSWORD:-}"
+      TZ: "${TZ:-Asia/Ho_Chi_Minh}"
+    volumes:
+      - web-data:/app/data
+      - ./docker/media:/seed/media:ro
+    shm_size: "1gb"   # Chrome cần /dev/shm lớn, mặc định 64MB dễ crash tab
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: SurveillanceCamerasDb
+      TZ: "${TZ:-Asia/Ho_Chi_Minh}"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # Dữ liệu mang từ máy cũ (docker/initdb/*.sql) — chỉ nạp khi volume DB còn trống (lần chạy đầu).
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d SurveillanceCamerasDb"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  kafka:
+    image: apache/kafka:3.9.1
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+
+  # Tạo sẵn topic cho các consumer (tên = kebab-case của tên IntegrationEvent).
+  kafka-init:
+    image: apache/kafka:3.9.1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        for t in story-source-created story-chapters-sync-requested chapter-fetch-requested chapter-edit-requested tyt-story-create-requested fetch-story-web-source; do
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic "$$t" --partitions 3 --replication-factor 1
+        done
+    restart: "no"
+
+volumes:
+  web-data:
+  db-data:
+  kafka-data:

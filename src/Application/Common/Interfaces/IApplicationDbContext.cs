@@ -14,20 +14,39 @@ public interface IApplicationDbContext
 
     DbSet<Prompt> Prompts { get; }
 
-    DbSet<Story> Stories { get; }
+    DbSet<Work> Works { get; }
 
     DbSet<AccountType> AccountTypes { get; }
 
     DbSet<Account> Accounts { get; }
 
-    DbSet<Chapter> Chapters { get; }
+    DbSet<Episode> Episodes { get; }
 
     DbSet<AI> AIs { get; }
 
+    DbSet<StoryVideoType> StoryVideoTypes { get; }
+
+    DbSet<UserProfileType> UserProfileTypes { get; }
+
+    DbSet<UserProfile> UserProfiles { get; }
+
+    DbSet<AppBookmark> AppBookmarks { get; }
+
+    DbSet<AppWatchHistory> AppWatchHistories { get; }
+
+    DbSet<AppComment> AppComments { get; }
+
+    DbSet<AppEpisodeUnlock> AppEpisodeUnlocks { get; }
+
+    DbSet<AppSubscription> AppSubscriptions { get; }
+    
     /// <summary>Outbox pattern: pending integration events awaiting Kafka publish.</summary>
     DbSet<OutboxMessage> OutboxMessages { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+
+    /// <summary>Dùng cho tác vụ nền xử lý nhiều bản ghi: xoá bớt entity đang theo dõi giữa các lô.</summary>
+    Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker ChangeTracker { get; }
 
     /// <summary>
     /// Runs <paramref name="operation"/> inside one DB transaction via EF Core's execution

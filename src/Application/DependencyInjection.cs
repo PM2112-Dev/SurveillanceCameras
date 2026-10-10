@@ -14,6 +14,11 @@ public static class DependencyInjection
 
         builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
+        builder.Services.Configure<Local.App.AppOptions>(builder.Configuration.GetSection(Local.App.AppOptions.SectionName));
+
+        builder.Services.AddScoped<Local.AIs.AIPromptRunner>();
+        builder.Services.AddScoped<Local.Movies.Commands.SyncTikTokDramas.TikTokDramaSyncer>();
+
         builder.Services.AddMediatR(cfg => {
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
             cfg.AddOpenRequestPreProcessor(typeof(LoggingBehaviour<>));

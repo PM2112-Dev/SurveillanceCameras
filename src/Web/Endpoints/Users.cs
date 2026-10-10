@@ -155,7 +155,7 @@ public class Users : IEndpointGroup
         return TypedResults.Ok();
     }
 
-    private static async Task<AccessTokenResponse> CreateTokenResponseAsync(
+    internal static async Task<AccessTokenResponse> CreateTokenResponseAsync(
         ApplicationUser user,
         UserManager<ApplicationUser> userManager,
         IConfiguration configuration)
@@ -204,7 +204,7 @@ public class Users : IEndpointGroup
             refreshToken);
     }
 
-    private static async Task RevokeRefreshTokenAsync(ApplicationUser user, UserManager<ApplicationUser> userManager)
+    internal static async Task RevokeRefreshTokenAsync(ApplicationUser user, UserManager<ApplicationUser> userManager)
     {
         await userManager.RemoveAuthenticationTokenAsync(user, RefreshTokenProvider, RefreshTokenName);
         await userManager.RemoveAuthenticationTokenAsync(user, RefreshTokenProvider, RefreshTokenExpiryName);
@@ -224,7 +224,7 @@ public class Users : IEndpointGroup
         return Convert.ToHexString(hashBytes);
     }
 
-    private static Dictionary<string, string[]> ToValidationErrors(IdentityResult result)
+    internal static Dictionary<string, string[]> ToValidationErrors(IdentityResult result)
     {
         return result.Errors
             .GroupBy(x => x.Code)

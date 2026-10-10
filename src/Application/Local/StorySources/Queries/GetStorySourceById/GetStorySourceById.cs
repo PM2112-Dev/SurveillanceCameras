@@ -27,12 +27,14 @@ public class GetStorySourceByIdQueryHandler : IRequestHandler<GetStorySourceById
 
     public async Task<StorySourceDto> Handle(GetStorySourceByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _context.StorySources
-            .Include(x => x.Categories)
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id, cancellationToken);
+        // ProjectTo để tính StoryId/Categories ngay trong query.
+        var dto = await _context.StorySources
+            .Where(x => x.Id == request.Id && x.CreatedBy == _user.Id)
+            .ProjectTo<StorySourceDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        Guard.Against.NotFound(request.Id, entity);
+        Guard.Against.NotFound(request.Id, dto);
 
-        return _mapper.Map<StorySourceDto>(entity);
+        return dto;
     }
 }

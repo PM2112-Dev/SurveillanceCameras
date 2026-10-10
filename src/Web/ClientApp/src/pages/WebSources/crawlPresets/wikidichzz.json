@@ -1,0 +1,40 @@
+{
+  "cacheBuster": "_",
+  "storyList": {
+    "item": "article.book-item",
+    "title": "h5.book-title",
+    "link": ".info-col > a@href",
+    "author": ".book-author a",
+    "cover": ".cover-wrapper img@src",
+    "status": ".label-status",
+    "chapterCount": ".label-chapter",
+    "pagination": {
+      "pageUrl": "{url}/trang-{page}",
+      "lastPage": "ul.pagination li a",
+      "nextPage": "ul.pagination a[rel=next]"
+    }
+  },
+  "story": {
+    "title": "h2.book-info-title",
+    "author": ".book-info-row[itemprop=author] [itemprop=name]",
+    "description": ".book-desc-detail > p",
+    "cover": ".detail-cover img@src",
+    "status": ".book-genre-tags .status-tag",
+    "genres": ".book-genre-tags a.genre-tag[href*='/the-loai/']",
+    "chapterCount": "#totalChapter"
+  },
+  "chapterList": {
+    "item": ".chapter-list-grid .chapter-item a",
+    "title": ".chapter-name",
+    "link": "@href",
+    "reverse": true,
+    "pagination": {
+      "pageUrl": "{url}/trang-{page}",
+      "lastPage": "ul.pagination li a"
+    }
+  },
+  "chapter": {
+    "title": "h2.book-title-chapter",
+    "content": "article.chapter-content"
+  }
+}

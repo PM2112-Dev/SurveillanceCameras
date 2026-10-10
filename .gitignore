@@ -493,3 +493,11 @@ $RECYCLE.BIN/
 
 # Chrome profiles holding logged-in sessions (contain credentials/cookies)
 **/data/browser-profiles/
+**/data/media/
+
+# Docker: bí mật và dữ liệu mang sang máy khác
+.env
+docker/initdb/*.sql
+docker/initdb/*.sql.gz
+docker/media/
+docker/export/

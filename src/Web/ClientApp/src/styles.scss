@@ -66,6 +66,16 @@ html {
   margin-bottom: var(--pico-spacing);
 }
 
+.app-nav-heading {
+  margin: calc(var(--pico-spacing) * 0.9) 0 0.3rem;
+  padding-inline: calc(var(--pico-spacing) * 0.6);
+  color: var(--pico-muted-color);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .app-nav-item {
   display: flex;
   align-items: center;
@@ -385,6 +395,369 @@ html {
   }
 }
 
+// ── Tiện ích dùng chung ───────────────────────────────────────────────────────
+.nowrap {
+  white-space: nowrap;
+}
+
+.clamp-2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.badge-row,
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.chip {
+  padding: 0.05rem 0.55rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: 999px;
+  color: var(--pico-muted-color);
+  font-size: 0.75rem;
+}
+
+.chip-button {
+  width: auto;
+  margin: 0;
+  padding: 0.15rem 0.7rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--pico-color);
+  font-size: 0.8rem;
+}
+
+.saved-channels {
+  margin-bottom: var(--pico-spacing);
+
+  > small {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--pico-muted-color);
+  }
+}
+
+// Avatar + tên + handle trong một ô bảng.
+.profile-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  small {
+    display: block;
+    color: var(--pico-muted-color);
+  }
+}
+
+.input-with-action {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  input {
+    flex: 1;
+    margin: 0;
+  }
+}
+
+textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+}
+
+// ── Danh sách drama TikTok ────────────────────────────────────────────────────
+.drama-section {
+  margin-top: calc(var(--pico-spacing) * 1.5);
+}
+
+.drama-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--pico-spacing);
+
+  h2 {
+    margin-bottom: var(--pico-spacing);
+  }
+}
+
+.drama-cover {
+  display: block;
+  width: 4.5rem;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--pico-border-radius);
+  object-fit: cover;
+  background: var(--pico-muted-border-color);
+}
+
+.drama-free {
+  margin-left: 0.5rem;
+}
+
+.load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--pico-spacing);
+
+  button {
+    width: auto;
+  }
+}
+
+// ── Truyện lấy từ trang nguồn (crawl) ─────────────────────────────────────────
+.crawl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--pico-spacing);
+  margin-bottom: var(--pico-spacing);
+}
+
+.chapter-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chapter-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: var(--pico-spacing);
+}
+
+.progress-bar {
+  display: flex;
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--pico-muted-border-color);
+
+  span {
+    height: 100%;
+  }
+
+  .ok { background: #2e9e5b; }
+  .warn { background: #c98a00; }
+  .danger { background: #d64545; }
+}
+
+.chapter-meta {
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+// Nội dung gốc và bản AI biên tập đặt cạnh nhau; màn hình hẹp thì xếp dọc.
+.chapter-compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: calc(var(--pico-spacing) * 1.5);
+
+  article {
+    margin: 0;
+    line-height: 1.8;
+  }
+
+  h3 small {
+    color: var(--pico-muted-color);
+    font-weight: normal;
+  }
+}
+
+.story-link-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: var(--pico-spacing);
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+
+  button {
+    width: auto;
+    margin: 0;
+  }
+
+  .error {
+    margin: 0;
+  }
+}
+
+.sync-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin-bottom: var(--pico-spacing);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+
+  .checkbox-item {
+    margin: 0;
+  }
+
+  button:not(.link-button) {
+    width: auto;
+    margin: 0 0 0 auto;
+  }
+}
+
+.sync-bar-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.link-button {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pico-primary);
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.success {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #2e9e5b;
+}
+
+// Ô chọn nằm ngoài link của thẻ để bấm chọn không mở trang truyện.
+.crawl-card-wrap > .crawl-card {
+  height: 100%;
+}
+
+.crawl-card-wrap {
+  position: relative;
+
+  &.is-selected .crawl-card {
+    border-color: var(--pico-primary);
+    box-shadow: 0 0 0 1px var(--pico-primary);
+  }
+}
+
+.crawl-card-check {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1;
+  margin: 0;
+}
+
+.crawl-card {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.6rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--pico-primary);
+  }
+
+  img,
+  .crawl-card-nocover {
+    flex: none;
+    width: 72px;
+    height: 100px;
+    border-radius: 4px;
+    object-fit: cover;
+    background: var(--pico-muted-border-color);
+  }
+
+  small {
+    display: block;
+    color: var(--pico-muted-color);
+  }
+}
+
+.crawl-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.crawl-story-cover {
+  width: 120px;
+  height: 170px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.crawl-story-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.2rem 0.75rem;
+  margin: 0.5rem 0;
+
+  dt {
+    color: var(--pico-muted-color);
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.crawl-story-desc {
+  margin-top: var(--pico-spacing);
+
+  p {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.crawl-section-title {
+  margin: calc(var(--pico-spacing) * 1.5) 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.crawl-chapters {
+  columns: 2 280px;
+  column-gap: 2rem;
+
+  li {
+    break-inside: avoid;
+  }
+}
+
+.crawl-reader {
+  max-width: 46rem;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.page-jump input {
+  width: 7rem;
+  margin: 0;
+  padding: 0.2rem 0.5rem;
+}
+
 // ── Forms ─────────────────────────────────────────────────────────────────────
 .form-card {
   max-width: 60rem;
@@ -416,6 +789,7 @@ html {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: 0.25rem 1rem;
+  margin-bottom: var(--pico-spacing);
 }
 
 .checkbox-item {

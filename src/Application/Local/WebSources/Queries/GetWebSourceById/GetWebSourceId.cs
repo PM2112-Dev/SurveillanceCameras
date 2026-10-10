@@ -20,11 +20,13 @@ public class GetWebSourceByIdQueryHandler : IRequestHandler<GetWebSourceIdQuery,
 
     public async Task<WebSourceDto> Handle(GetWebSourceIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _context.WebSources
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id, cancellationToken);
+        var dto = await _context.WebSources
+            .Where(x => x.Id == request.Id && x.CreatedBy == _user.Id)
+            .ProjectTo<WebSourceDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        Guard.Against.NotFound(request.Id, entity);
+        Guard.Against.NotFound(request.Id, dto);
 
-        return _mapper.Map<WebSourceDto>(entity);
+        return dto;
     }
 }

@@ -234,6 +234,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("timestamp with time zone");
 
@@ -242,6 +245,12 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.Property<string>("Model")
                         .HasColumnType("text");
+
+                    b.Property<string>("Project")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Provider")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .HasColumnType("text");
@@ -288,10 +297,52 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AccountTypeId");
+
                     b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AccountType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BaseUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LoginCookieName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AccountTypes");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppBookmark", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -320,9 +371,212 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<string>("Title")
                         .HasColumnType("text");
 
+                    b.Property<int>("WorkId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
-                    b.ToTable("AccountTypes");
+                    b.HasIndex("WorkId");
+
+                    b.HasIndex("CreatedBy", "WorkId")
+                        .IsUnique();
+
+                    b.ToTable("AppBookmarks");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthorName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.Property<int>("WorkId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("WorkId", "Created");
+
+                    b.ToTable("AppComments");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppEpisodeUnlock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("EpisodeId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EpisodeId");
+
+                    b.HasIndex("CreatedBy", "EpisodeId")
+                        .IsUnique();
+
+                    b.ToTable("AppEpisodeUnlocks");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppSubscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Plan")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("AppSubscriptions");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppWatchHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DurationSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EpisodeNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PositionSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("WatchedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("WorkId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkId");
+
+                    b.HasIndex("CreatedBy", "WorkId")
+                        .IsUnique();
+
+                    b.ToTable("AppWatchHistories");
                 });
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Category", b =>
@@ -359,7 +613,7 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Chapter", b =>
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Episode", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -368,9 +622,6 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BaseStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ChapterNumber")
                         .HasColumnType("integer");
 
                     b.Property<string>("Code")
@@ -388,6 +639,24 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("EditedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EpisodeNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExternalId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("FetchedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
@@ -400,17 +669,26 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("LinkRaw")
+                        .HasColumnType("text");
+
                     b.Property<string>("NameEdit")
                         .HasColumnType("text");
 
                     b.Property<string>("NameRaw")
                         .HasColumnType("text");
 
-                    b.Property<int>("PromptId")
+                    b.Property<int?>("PromptId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("StoryId")
+                    b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<string>("StreamUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .HasColumnType("text");
@@ -418,11 +696,29 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<string>("TytChapterId")
                         .HasColumnType("text");
 
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("text");
+
+                    b.Property<int>("WorkId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PromptId");
 
-                    b.ToTable("Chapters");
+                    b.HasIndex("WorkId", "EpisodeNumber");
+
+                    b.HasIndex("WorkId", "ExternalId")
+                        .IsUnique()
+                        .HasFilter("\"ExternalId\" IS NOT NULL");
+
+                    b.HasIndex("WorkId", "LinkRaw")
+                        .IsUnique()
+                        .HasFilter("\"LinkRaw\" IS NOT NULL");
+
+                    b.HasIndex("WorkId", "Status");
+
+                    b.ToTable("Episodes");
                 });
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Prompt", b =>
@@ -487,6 +783,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("timestamp with time zone");
 
@@ -499,84 +798,6 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PromptTypes");
-                });
-
-            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Story", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AccountId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("AdCount")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Author")
-                        .HasColumnType("text");
-
-                    b.Property<int>("BaseStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ChapterUploaded")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Code")
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("Created")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<int>("EarnCount")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("EarnNow")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsComment")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsEarning")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsFull")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTimeOffset>("LastModified")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("text");
-
-                    b.Property<int>("Paid")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("StorySourceId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .HasColumnType("text");
-
-                    b.Property<string>("TytStoryId")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StorySourceId");
-
-                    b.ToTable("Stories");
                 });
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.StorySource", b =>
@@ -626,6 +847,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("text");
 
+                    b.Property<string>("StoryCreationError")
+                        .HasColumnType("text");
+
                     b.Property<short>("StorySourceType")
                         .HasColumnType("smallint");
 
@@ -642,10 +866,12 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.HasIndex("WebSourceId");
 
+                    b.HasIndex("CreatedBy", "WebSourceId", "LinkRaw");
+
                     b.ToTable("StorySources");
                 });
 
-            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.WebSource", b =>
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.StoryVideoType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -655,9 +881,6 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.Property<int>("BaseStatus")
                         .HasColumnType("integer");
-
-                    b.Property<string>("BaseUrl")
-                        .HasColumnType("text");
 
                     b.Property<string>("Code")
                         .HasColumnType("text");
@@ -679,7 +902,296 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.ToTable("StoryVideoTypes");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.UserProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("text");
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<long>("FollowerCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FollowingCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("HeartCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("LastFetchedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SecUid")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Signature")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UniqueId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserProfileTypeId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Verified")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("VideoCount")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserProfileTypeId");
+
+                    b.HasIndex("CreatedBy", "UserProfileTypeId", "UserId");
+
+                    b.ToTable("UserProfiles");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.UserProfileType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserProfileTypes");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.WebSource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BaseUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CrawlConfig")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsCookie")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsNeedEdit")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("TytAccountId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("TytAccountId");
+
                     b.ToTable("WebSources");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Work", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AdCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Author")
+                        .HasColumnType("text");
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ChapterUploaded")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CoverUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<int>("EarnCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EarnNow")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EpisodeSyncError")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("EpisodesSyncedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExternalId")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsComment")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEarning")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFull")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Paid")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("StorySourceId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("StoryVideoTypeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("TytError")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TytStoryId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("TytUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("UserProfileId")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("ViewCount")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StorySourceId");
+
+                    b.HasIndex("StoryVideoTypeId");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("UserProfileId");
+
+                    b.HasIndex("CreatedBy", "Type", "ViewCount");
+
+                    b.HasIndex("CreatedBy", "UserProfileId", "ExternalId")
+                        .IsUnique()
+                        .HasFilter("\"ExternalId\" IS NOT NULL");
+
+                    b.ToTable("Works");
                 });
 
             modelBuilder.Entity("SurveillanceCameras.Infrastructure.Identity.ApplicationUser", b =>
@@ -692,6 +1204,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DisplayName")
                         .HasColumnType("text");
 
                     b.Property<string>("Email")
@@ -824,35 +1339,88 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Chapter", b =>
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Account", b =>
+                {
+                    b.HasOne("SurveillanceCameras.Domain.Entities.AccountType", "AccountType")
+                        .WithMany("Accounts")
+                        .HasForeignKey("AccountTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AccountType");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppBookmark", b =>
+                {
+                    b.HasOne("SurveillanceCameras.Domain.Entities.Work", "Work")
+                        .WithMany()
+                        .HasForeignKey("WorkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Work");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppComment", b =>
+                {
+                    b.HasOne("SurveillanceCameras.Domain.Entities.Work", "Work")
+                        .WithMany()
+                        .HasForeignKey("WorkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Work");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppEpisodeUnlock", b =>
+                {
+                    b.HasOne("SurveillanceCameras.Domain.Entities.Episode", "Episode")
+                        .WithMany()
+                        .HasForeignKey("EpisodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Episode");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppWatchHistory", b =>
+                {
+                    b.HasOne("SurveillanceCameras.Domain.Entities.Work", "Work")
+                        .WithMany()
+                        .HasForeignKey("WorkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Work");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Episode", b =>
                 {
                     b.HasOne("SurveillanceCameras.Domain.Entities.Prompt", "Prompt")
                         .WithMany()
                         .HasForeignKey("PromptId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SurveillanceCameras.Domain.Entities.Work", "Work")
+                        .WithMany("Episodes")
+                        .HasForeignKey("WorkId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Prompt");
+
+                    b.Navigation("Work");
                 });
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Prompt", b =>
                 {
-                    b.HasOne("SurveillanceCameras.Domain.Entities.PromptType", null)
+                    b.HasOne("SurveillanceCameras.Domain.Entities.PromptType", "PromptType")
                         .WithMany("Prompts")
                         .HasForeignKey("PromptTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
 
-            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Story", b =>
-                {
-                    b.HasOne("SurveillanceCameras.Domain.Entities.StorySource", "StorySource")
-                        .WithMany()
-                        .HasForeignKey("StorySourceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("StorySource");
+                    b.Navigation("PromptType");
                 });
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.StorySource", b =>
@@ -864,14 +1432,91 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.UserProfile", b =>
+                {
+                    b.HasOne("SurveillanceCameras.Domain.Entities.UserProfileType", "UserProfileType")
+                        .WithMany("UserProfiles")
+                        .HasForeignKey("UserProfileTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UserProfileType");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.WebSource", b =>
+                {
+                    b.HasOne("SurveillanceCameras.Domain.Entities.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SurveillanceCameras.Domain.Entities.Account", "TytAccount")
+                        .WithMany()
+                        .HasForeignKey("TytAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Account");
+
+                    b.Navigation("TytAccount");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Work", b =>
+                {
+                    b.HasOne("SurveillanceCameras.Domain.Entities.StorySource", "StorySource")
+                        .WithMany("Works")
+                        .HasForeignKey("StorySourceId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("SurveillanceCameras.Domain.Entities.StoryVideoType", "StoryVideoType")
+                        .WithMany("Works")
+                        .HasForeignKey("StoryVideoTypeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SurveillanceCameras.Domain.Entities.UserProfile", "UserProfile")
+                        .WithMany()
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("StorySource");
+
+                    b.Navigation("StoryVideoType");
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AccountType", b =>
+                {
+                    b.Navigation("Accounts");
+                });
+
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.PromptType", b =>
                 {
                     b.Navigation("Prompts");
                 });
 
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.StorySource", b =>
+                {
+                    b.Navigation("Works");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.StoryVideoType", b =>
+                {
+                    b.Navigation("Works");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.UserProfileType", b =>
+                {
+                    b.Navigation("UserProfiles");
+                });
+
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.WebSource", b =>
                 {
                     b.Navigation("StorySources");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Work", b =>
+                {
+                    b.Navigation("Episodes");
                 });
 #pragma warning restore 612, 618
         }

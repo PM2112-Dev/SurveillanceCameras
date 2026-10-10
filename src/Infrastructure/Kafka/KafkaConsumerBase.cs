@@ -51,7 +51,8 @@ public abstract class KafkaConsumerBase<TEvent> : BackgroundService
                 GroupId = _options.ConsumerGroupId,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 // Manual commit — only commit after successful processing
-                EnableAutoCommit = false
+                EnableAutoCommit = false,
+                MaxPollIntervalMs = _options.MaxPollIntervalMs
             };
             return new ConsumerBuilder<string, string>(consumerConfig)
                 .SetLogHandler((_, m) => _logger.LogDebug("[rdkafka:{Facility}] {Message}", m.Facility, m.Message))

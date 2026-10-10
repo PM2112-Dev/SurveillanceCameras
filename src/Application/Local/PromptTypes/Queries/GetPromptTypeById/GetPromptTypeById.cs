@@ -27,12 +27,13 @@ public class GetPromptTypeByIdQueryHandler : IRequestHandler<GetPromptTypeByIdQu
 
     public async Task<PromptTypeDto> Handle(GetPromptTypeByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _context.PromptTypes
-            .Include(x => x.Prompts)
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id, cancellationToken);
+        var dto = await _context.PromptTypes
+            .Where(x => x.Id == request.Id && x.CreatedBy == _user.Id)
+            .ProjectTo<PromptTypeDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        Guard.Against.NotFound(request.Id, entity);
-        
-        return _mapper.Map<PromptTypeDto>(entity);
+        Guard.Against.NotFound(request.Id, dto);
+
+        return dto;
     }
 }

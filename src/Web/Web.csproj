@@ -37,7 +37,8 @@
     <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
 
-  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
+  <!-- Docker build frontend ở stage Node riêng: publish với /p:SkipSpaBuild=true. -->
+  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish" Condition="'$(SkipSpaBuild)' != 'true'">
     <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />

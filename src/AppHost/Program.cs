@@ -43,7 +43,9 @@ if (builder.ExecutionContext.IsRunMode)
         .WithRunScript("start")
         .WithReference(web)
         .WaitFor(web)
-        .WithHttpEndpoint(env: "PORT")
+        // Cố định cổng: token đăng nhập lưu trong localStorage theo origin (localhost:<cổng>), cổng ngẫu nhiên
+        // mỗi lần chạy sẽ làm mất phiên đăng nhập. Không qua proxy để Vite nghe thẳng trên đúng cổng này.
+        .WithHttpEndpoint(port: 44447, env: "PORT", isProxied: false)
         .WithExternalHttpEndpoints();
 }
 

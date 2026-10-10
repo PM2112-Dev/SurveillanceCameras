@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.StorySources.Commands.CreateStorySource;
 using SurveillanceCameras.Application.Local.StorySources.Commands.DeleteStorySource;
+using SurveillanceCameras.Application.Local.StorySources.Commands.RefreshStorySource;
+using SurveillanceCameras.Application.Local.StorySources.Commands.RequestStoryCreation;
 using SurveillanceCameras.Application.Local.StorySources.Commands.UpdateStorySource;
 using SurveillanceCameras.Application.Local.StorySources.Queries.DTOs;
 using SurveillanceCameras.Application.Local.StorySources.Queries.GetStorySourceById;
@@ -20,6 +22,26 @@ public class StorySources : IEndpointGroup
         groupBuilder.MapPost(CreateStorySource);
         groupBuilder.MapPut(UpdateStorySource, "{id}");
         groupBuilder.MapDelete(DeleteStorySource, "{id}");
+        groupBuilder.MapPost(RefreshStorySource, "{id}/refresh");
+        groupBuilder.MapPost(RequestStoryCreation, "{id}/create-story");
+    }
+
+    [EndpointSummary("Request story creation")]
+    [EndpointDescription("Yêu cầu dùng AI biên tập tên/giới thiệu và tạo truyện từ nguồn truyện (chạy nền qua Kafka)")]
+    public static async Task<Accepted> RequestStoryCreation(ISender sender, int id)
+    {
+        await sender.Send(new RequestStoryCreationCommand(id));
+
+        return TypedResults.Accepted((string?)null);
+    }
+
+    [EndpointSummary("Refresh Story Source")]
+    [EndpointDescription("Lấy lại thông tin truyện (mô tả, ảnh bìa, tình trạng, số chương…) từ trang nguồn và cập nhật vào Story Source")]
+    public static async Task<NoContent> RefreshStorySource(ISender sender, int id)
+    {
+        await sender.Send(new RefreshStorySourceCommand(id));
+
+        return TypedResults.NoContent();
     }
 
     [EndpointSummary("Get Story Sources")]

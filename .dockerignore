@@ -1,0 +1,12 @@
+**/.git
+**/.vs
+**/.idea
+**/bin
+**/obj
+artifacts
+**/node_modules
+src/Web/ClientApp/build
+**/data
+docker/export
+*.tar
+*.tar.gz

@@ -1,3 +1,4 @@
+using SurveillanceCameras.Application.Repository.CrawlStory.Config;
 using FluentValidation;
 using SurveillanceCameras.Application.Local.WebSources.Commands.CreateWebSource;
 
@@ -18,6 +19,18 @@ public class CreateWebSourceCommandValidator : AbstractValidator<CreateWebSource
             .WithMessage("BaseUrl must not exceed 2000 characters")
             .Must(BeAValidUrl)
             .WithMessage("BaseUrl must be a valid URL");
+
+        RuleFor(x => x.Type).IsInEnum();
+
+        RuleFor(x => x.AccountId)
+            .NotNull()
+            .When(x => x.IsCookie)
+            .WithMessage("Nguồn web cần cookie thì phải chọn tài khoản cung cấp cookie.");
+
+        RuleFor(x => x.CrawlConfig)
+            .Must(json => CrawlConfig.GetError(json!) is null)
+            .When(x => !string.IsNullOrWhiteSpace(x.CrawlConfig))
+            .WithMessage((_, json) => $"Cấu hình crawl không hợp lệ: {CrawlConfig.GetError(json!)}");
     }
 
     private static bool BeAValidUrl(string? url)

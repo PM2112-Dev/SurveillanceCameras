@@ -60,6 +60,34 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
                 Title = "TikTok request failed.",
                 Detail = te.Message
             }),
+            CrawlException ce => (StatusCodes.Status502BadGateway, new ProblemDetails
+            {
+                Status = StatusCodes.Status502BadGateway,
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.6.3",
+                Title = "Không lấy được dữ liệu từ trang nguồn.",
+                Detail = ce.Message
+            }),
+            TytException te => (StatusCodes.Status502BadGateway, new ProblemDetails
+            {
+                Status = StatusCodes.Status502BadGateway,
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.6.3",
+                Title = "Thao tác trên TYT thất bại.",
+                Detail = te.Message
+            }),
+            BrowserFetchException be => (StatusCodes.Status502BadGateway, new ProblemDetails
+            {
+                Status = StatusCodes.Status502BadGateway,
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.6.3",
+                Title = "Trình duyệt của tài khoản không gửi được request.",
+                Detail = be.Message
+            }),
+            AIProviderException ae => (StatusCodes.Status502BadGateway, new ProblemDetails
+            {
+                Status = StatusCodes.Status502BadGateway,
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.6.3",
+                Title = "Nền tảng AI trả lỗi.",
+                Detail = ae.Message
+            }),
             _ => (-1, null)
         };
 

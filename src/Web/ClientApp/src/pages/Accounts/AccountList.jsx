@@ -6,7 +6,7 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { Pagination } from '../../components/common/Pagination';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { EmptyState, ErrorAlert, LoadingBlock } from '../../components/common/StateBlocks';
-import { SessionState, formatDateTime, getSessionInfo } from './tiktokSession';
+import { SessionState, formatDateTime, getSessionInfo, loginHost } from './accountSession';
 
 const PAGE_SIZE = 20;
 const STATUS_POLL_MS = 5000;
@@ -36,23 +36,23 @@ export function AccountList() {
 
   useEffect(load, [load]);
 
-  // Tên loại tài khoản chỉ để hiển thị; lỗi ở đây không được chặn danh sách.
+  // Loại tài khoản dùng để hiển thị tên và trang đăng nhập; lỗi ở đây không được chặn danh sách.
   useEffect(() => {
     accountTypesClient.getAccountTypes(undefined, 1, 100)
-      .then(types => setAccountTypes(Object.fromEntries((types.items ?? []).map(t => [t.id, t.title]))))
+      .then(types => setAccountTypes(Object.fromEntries((types.items ?? []).map(t => [t.id, t]))))
       .catch(() => {});
   }, []);
 
   const items = useMemo(() => result?.items ?? [], [result]);
 
-  // Trạng thái phiên TikTok thay đổi ở phía server (đăng nhập xong, bị đăng xuất, người dùng tắt Chrome…)
+  // Trạng thái phiên đăng nhập thay đổi ở phía server (đăng nhập xong, bị đăng xuất, người dùng tắt Chrome…)
   // nên phải hỏi lại định kỳ.
   useEffect(() => {
     if (items.length === 0) return undefined;
 
     let cancelled = false;
     const poll = () => {
-      Promise.allSettled(items.map(item => accountsClient.getTikTokSessionStatus(item.id)))
+      Promise.allSettled(items.map(item => accountsClient.getAccountSessionStatus(item.id)))
         .then(results => {
           if (cancelled) return;
           setSessions(prev => {
@@ -104,7 +104,7 @@ export function AccountList() {
     setError('');
 
     action(item.id)
-      .then(() => accountsClient.getTikTokSessionStatus(item.id))
+      .then(() => accountsClient.getAccountSessionStatus(item.id))
       .then(status => setSessions(prev => ({ ...prev, [item.id]: status })))
       .catch(err => setError(getErrorMessage(err)))
       .finally(() => setBusy(item.id, false));
@@ -114,7 +114,7 @@ export function AccountList() {
     <>
       <PageHeader
         title="Tài khoản"
-        description="Tài khoản nền tảng (TikTok…) và cookie đăng nhập dùng để đăng nội dung."
+        description="Tài khoản trên các nền tảng/trang web (TikTok, trang truyện…) và cookie đăng nhập của chúng."
         actions={
           <Link to="/accounts/new" role="button">
             <Plus size={16} aria-hidden="true" /> Thêm tài khoản
@@ -123,8 +123,9 @@ export function AccountList() {
       />
 
       <p className="hint">
-        Bấm <strong>Mở Chrome</strong> để máy chủ mở một cửa sổ Chrome trên TikTok, sau đó tự đăng nhập trong
-        cửa sổ đó. Chrome được giữ mở và cookie mới tự động được cập nhật vào tài khoản mỗi khi thay đổi.
+        Bấm <strong>Mở Chrome</strong> để máy chủ mở Chrome tại trang đăng nhập của loại tài khoản (Base URL của
+        loại tài khoản), sau đó tự đăng nhập trong cửa sổ đó. Chrome được giữ mở và cookie mới tự động được cập nhật
+        vào tài khoản mỗi khi thay đổi.
       </p>
 
       <form className="filter-bar" onSubmit={handleSearch}>
@@ -152,7 +153,7 @@ export function AccountList() {
               <tr>
                 <th>Tên</th>
                 <th>Loại</th>
-                <th>Phiên TikTok</th>
+                <th>Phiên đăng nhập</th>
                 <th className="col-actions">Thao tác</th>
               </tr>
             </thead>
@@ -163,11 +164,16 @@ export function AccountList() {
                 const running = (status?.state ?? SessionState.Stopped) !== SessionState.Stopped;
                 const busy = busyIds.has(item.id);
                 const updatedAt = formatDateTime(status?.cookieUpdatedAt);
+                const accountType = accountTypes[item.accountTypeId];
+                const host = loginHost(accountType?.baseUrl);
 
                 return (
                   <tr key={item.id}>
                     <td>{item.title || <em>(không tên)</em>}</td>
-                    <td>{accountTypes[item.accountTypeId] ?? (item.accountTypeId || '—')}</td>
+                    <td>
+                      {accountType?.title ?? (item.accountTypeId || '—')}
+                      {host && <span className="cell-sub">{host}</span>}
+                    </td>
                     <td>
                       <span className={`status-badge ${info.tone}`}>{info.label}</span>
                       <span className="cell-sub">
@@ -184,7 +190,7 @@ export function AccountList() {
                           title="Đóng Chrome"
                           disabled={busy}
                           aria-busy={busy}
-                          onClick={() => runSessionAction(item, id => accountsClient.stopTikTokSession(id))}
+                          onClick={() => runSessionAction(item, id => accountsClient.stopAccountSession(id))}
                         >
                           {!busy && <Square size={16} aria-hidden="true" />}
                         </button>
@@ -192,17 +198,19 @@ export function AccountList() {
                         <button
                           type="button"
                           className="icon-btn"
-                          title="Mở Chrome để đăng nhập TikTok"
-                          disabled={busy}
+                          title={host ? `Mở Chrome để đăng nhập ${host}` : 'Loại tài khoản chưa có Base URL (trang đăng nhập)'}
+                          disabled={busy || !host}
                           aria-busy={busy}
-                          onClick={() => runSessionAction(item, id => accountsClient.startTikTokSession(id))}
+                          onClick={() => runSessionAction(item, id => accountsClient.startAccountSession(id))}
                         >
                           {!busy && <LogIn size={16} aria-hidden="true" />}
                         </button>
                       )}
-                      <Link to={`/accounts/${item.id}/tiktok`} className="icon-btn" title="Tra cứu kênh TikTok">
-                        <UserSearch size={16} aria-hidden="true" />
-                      </Link>
+                      {host?.endsWith('tiktok.com') && (
+                        <Link to={`/accounts/${item.id}/tiktok`} className="icon-btn" title="Tra cứu kênh TikTok">
+                          <UserSearch size={16} aria-hidden="true" />
+                        </Link>
+                      )}
                       <Link to={`/accounts/${item.id}`} className="icon-btn" title="Sửa">
                         <Pencil size={16} aria-hidden="true" />
                       </Link>

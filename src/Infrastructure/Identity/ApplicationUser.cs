@@ -12,4 +12,7 @@ public class ApplicationUser : IdentityUser
     public decimal? TelegramChatId { get; set; }
     
     public short Status { get; set; }
+
+    /// <summary>Tên hiển thị của người xem trên app (bình luận, trang cá nhân).</summary>
+    public string? DisplayName { get; set; }
 }

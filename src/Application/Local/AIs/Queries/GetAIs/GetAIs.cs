@@ -1,3 +1,4 @@
+using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.AIs.Queries.DTOs;
@@ -7,6 +8,7 @@ namespace SurveillanceCameras.Application.Local.AIs.Queries.GetAIs;
 public record GetAIsQuery : IRequest<PaginatedList<AIDto>>
 {
     public string? Title { get; init; }
+    public AIProvider? Provider { get; init; }
     public int Page { get; init; } = 1;
     public int PageSize { get; init; } = 20;
 }
@@ -37,6 +39,9 @@ public class GetAIsQueryHandler : IRequestHandler<GetAIsQuery, PaginatedList<AID
 
         if (!string.IsNullOrWhiteSpace(request.Title))
             query = query.Where(x => x.Title != null && x.Title.Contains(request.Title));
+
+        if (request.Provider is { } provider)
+            query = query.Where(x => x.Provider == provider);
         
         return await PaginatedList<AIDto>.CreateAsync(
             query.OrderByDescending(x => x.Created).ProjectTo<AIDto>(_mapper.ConfigurationProvider),

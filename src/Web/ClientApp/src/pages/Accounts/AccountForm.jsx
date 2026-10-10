@@ -10,7 +10,7 @@ export function AccountForm() {
   const navigate = useNavigate();
   const isEdit = id !== undefined;
 
-  // cookie không có ô nhập: nó do phiên TikTok tự cập nhật. Giữ nguyên giá trị đã tải để
+  // cookie không có ô nhập: nó do phiên đăng nhập (Mở Chrome) tự cập nhật. Giữ nguyên giá trị đã tải để
   // UpdateAccountCommand (ghi đè toàn bộ trường) không xoá mất cookie khi chỉ sửa tên/loại.
   const [form, setForm] = useState({ title: '', accountTypeId: '', cookie: undefined });
   const [accountTypes, setAccountTypes] = useState([]);
@@ -94,7 +94,7 @@ export function AccountForm() {
         </label>
 
         <p className="hint">
-          Cookie không nhập tay ở đây. Sau khi lưu, vào danh sách tài khoản và bấm “Mở Chrome” để đăng nhập TikTok;
+          Cookie không nhập tay ở đây. Sau khi lưu, vào danh sách tài khoản và bấm “Mở Chrome” để đăng nhập trang của loại tài khoản;
           cookie sẽ được lấy và cập nhật tự động.
         </p>
 

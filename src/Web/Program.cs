@@ -2,6 +2,9 @@ using SurveillanceCameras.Infrastructure.Data;
 using Scalar.AspNetCore;
 using SurveillanceCameras.Application;
 using SurveillanceCameras.Infrastructure;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
+using SurveillanceCameras.Infrastructure.Repository.Media;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,11 +19,13 @@ builder.AddWebServices();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Development luôn tự áp migration + seed; môi trường khác (vd. Docker) bật bằng Database:InitialiseOnStartup = true.
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:InitialiseOnStartup"))
 {
     await app.InitialiseDatabaseAsync();
 }
-else
+
+if (!app.Environment.IsDevelopment())
 {
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
@@ -33,6 +38,16 @@ app.UseCors(static builder =>
         .AllowAnyOrigin());
 
 app.UseFileServer();
+
+// Ảnh đã lưu về kho (bìa phim…). Công khai vì thẻ <img> không gửi được JWT; tên file không đoán được nội dung riêng tư.
+var mediaRoot = Path.GetFullPath(app.Services.GetRequiredService<IOptions<MediaOptions>>().Value.RootDirectory);
+Directory.CreateDirectory(mediaRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(mediaRoot),
+    RequestPath = MediaOptions.RequestPath,
+    OnPrepareResponse = ctx => ctx.Context.Response.Headers.CacheControl = "public,max-age=86400"
+});
 
 app.MapOpenApi("/openapi/runtime/{documentName}.json");
 app.MapScalarApiReference(options =>

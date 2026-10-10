@@ -29,6 +29,13 @@ public sealed class KafkaOptions
     /// <summary>Base delay in ms for exponential back-off between retries.</summary>
     public int RetryBaseDelayMs { get; set; } = 500;
 
+    /// <summary>
+    /// Thời gian tối đa xử lý một message trước khi Kafka coi consumer đã chết và giao message cho lần khác
+    /// (<c>max.poll.interval.ms</c>, mặc định Kafka là 5 phút). AI biên tập một chương dài (nhiều đoạn, có thể phải đổi key)
+    /// có thể lâu hơn 5 phút — quá hạn sẽ bị xử lý trùng, nên để rộng.
+    /// </summary>
+    public int MaxPollIntervalMs { get; set; } = 30 * 60 * 1000;
+
     /// <summary>How often (in seconds) the OutboxProcessor polls for pending messages.</summary>
     public int OutboxPollingIntervalSeconds { get; set; } = 5;
 

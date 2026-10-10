@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using SurveillanceCameras.Application.Common.Interfaces;
-// using SurveillanceCameras.Infrastructure.Consumer;
+using SurveillanceCameras.Infrastructure.Consumer;
 using SurveillanceCameras.Infrastructure.Data;
 using SurveillanceCameras.Infrastructure.Kafka.Options;
 using SurveillanceCameras.Shared;
@@ -55,6 +55,11 @@ public static class KafkaDependencyInjection
         if (!IsDesignTimeTooling())
         {
             builder.Services.AddHostedService<OutboxProcessor>();
+            builder.Services.AddHostedService<StorySourceCreatedConsumer>();
+            builder.Services.AddHostedService<StoryChaptersSyncRequestedConsumer>();
+            builder.Services.AddHostedService<ChapterFetchRequestedConsumer>();
+            builder.Services.AddHostedService<ChapterEditRequestedConsumer>();
+            builder.Services.AddHostedService<TytStoryCreateRequestedConsumer>();
             // builder.Services.AddHostedService<FetchStoryWebSourceConsumer>();
             // builder.Services.AddHostedService<WikiDichCrawlConsumer>();
         }

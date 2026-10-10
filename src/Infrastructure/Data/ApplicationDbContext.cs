@@ -25,15 +25,31 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     
     public DbSet<Prompt> Prompts => Set<Prompt>();
     
-    public DbSet<Story> Stories => Set<Story>();
+    public DbSet<Work> Works => Set<Work>();
     
     public DbSet<AccountType> AccountTypes => Set<AccountType>();
     
     public DbSet<Account> Accounts => Set<Account>();
     
-    public DbSet<Chapter> Chapters => Set<Chapter>();
+    public DbSet<Episode> Episodes => Set<Episode>();
     
     public DbSet<AI> AIs => Set<AI>();
+
+    public DbSet<StoryVideoType> StoryVideoTypes => Set<StoryVideoType>();
+
+    public DbSet<UserProfileType> UserProfileTypes => Set<UserProfileType>();
+
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+
+    public DbSet<AppBookmark> AppBookmarks => Set<AppBookmark>();
+
+    public DbSet<AppWatchHistory> AppWatchHistories => Set<AppWatchHistory>();
+
+    public DbSet<AppComment> AppComments => Set<AppComment>();
+
+    public DbSet<AppEpisodeUnlock> AppEpisodeUnlocks => Set<AppEpisodeUnlock>();
+
+    public DbSet<AppSubscription> AppSubscriptions => Set<AppSubscription>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

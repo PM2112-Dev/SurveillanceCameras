@@ -1,5 +1,11 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using SurveillanceCameras.Application.Common.Models;
+using SurveillanceCameras.Application.Local.CrawlStories.Commands.SyncCrawledStories;
+using SurveillanceCameras.Application.Local.CrawlStories.Queries.GetCrawledChapter;
+using SurveillanceCameras.Application.Local.CrawlStories.Queries.GetCrawledChapters;
+using SurveillanceCameras.Application.Local.CrawlStories.Queries.GetCrawledStories;
+using SurveillanceCameras.Application.Local.CrawlStories.Queries.GetCrawledStory;
+using SurveillanceCameras.Application.Repository.CrawlStory.DTOs;
 using SurveillanceCameras.Application.Local.WebSources.Commands.CreateWebSource;
 using SurveillanceCameras.Application.Local.WebSources.Commands.DeleteWebSource;
 using SurveillanceCameras.Application.Local.WebSources.Commands.UpdateWebSource;
@@ -20,6 +26,62 @@ public class WebSources : IEndpointGroup
         groupBuilder.MapPost(CreateWebSource);
         groupBuilder.MapPost(UpdateWebSource, "{id}");
         groupBuilder.MapDelete(DeleteWebSource, "{id}");
+
+        // Đọc thẳng từ trang nguồn theo cấu hình crawl, không lưu DB.
+        groupBuilder.MapGet(GetCrawledStories, "{id}/crawl/stories");
+        groupBuilder.MapGet(GetCrawledStory, "{id}/crawl/story");
+        groupBuilder.MapGet(GetCrawledChapters, "{id}/crawl/chapters");
+        groupBuilder.MapGet(GetCrawledChapter, "{id}/crawl/chapter");
+        groupBuilder.MapPost(SyncCrawledStories, "{id}/crawl/sync");
+    }
+
+    [EndpointSummary("Sync crawled stories")]
+    [EndpointDescription("Lưu các truyện đã chọn từ danh sách crawl vào StorySource (đã có thì cập nhật, không tạo trùng)")]
+    public static async Task<Results<Ok<SyncCrawledStoriesResult>, BadRequest>> SyncCrawledStories(
+        ISender sender, int id, SyncCrawledStoriesCommand command)
+    {
+        if (id != command.WebSourceId) return TypedResults.BadRequest();
+
+        var result = await sender.Send(command);
+
+        return TypedResults.Ok(result);
+    }
+
+    [EndpointSummary("Get crawled stories")]
+    [EndpointDescription("Lấy một trang danh sách truyện trực tiếp từ trang nguồn của Web Source (không lưu DB)")]
+    public static async Task<Ok<CrawlPageDto<StoryCrawlDto>>> GetCrawledStories(ISender sender, int id, int page = 1)
+    {
+        var result = await sender.Send(new GetCrawledStoriesQuery { WebSourceId = id, Page = page });
+
+        return TypedResults.Ok(result);
+    }
+
+    [EndpointSummary("Get crawled story")]
+    [EndpointDescription("Lấy thông tin truyện trực tiếp từ trang nguồn (url phải thuộc host của Web Source)")]
+    public static async Task<Ok<StoryDataDto>> GetCrawledStory(ISender sender, int id, string url)
+    {
+        var result = await sender.Send(new GetCrawledStoryQuery { WebSourceId = id, Url = url });
+
+        return TypedResults.Ok(result);
+    }
+
+    [EndpointSummary("Get crawled chapters")]
+    [EndpointDescription("Lấy một trang mục lục chương của truyện trực tiếp từ trang nguồn")]
+    public static async Task<Ok<CrawlPageDto<ChapterDataDto>>> GetCrawledChapters(
+        ISender sender, int id, string url, int page = 1)
+    {
+        var result = await sender.Send(new GetCrawledChaptersQuery { WebSourceId = id, Url = url, Page = page });
+
+        return TypedResults.Ok(result);
+    }
+
+    [EndpointSummary("Get crawled chapter")]
+    [EndpointDescription("Lấy nội dung một chương trực tiếp từ trang nguồn")]
+    public static async Task<Ok<ChapterContentDto>> GetCrawledChapter(ISender sender, int id, string url)
+    {
+        var result = await sender.Send(new GetCrawledChapterQuery { WebSourceId = id, Url = url });
+
+        return TypedResults.Ok(result);
     }
     
     [EndpointSummary("Get WebSources")]

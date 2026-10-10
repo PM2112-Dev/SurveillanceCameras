@@ -1,9 +1,18 @@
 import {
   AccountsClient,
   AccountTypesClient,
+  AIsClient,
   CategoriesClient,
+  EpisodesClient,
+  MoviesClient,
+  PromptsClient,
+  PromptTypesClient,
   StorySourcesClient,
-  WebSourcesClient
+  StoryVideoTypesClient,
+  UserProfilesClient,
+  UserProfileTypesClient,
+  WebSourcesClient,
+  WorksClient
 } from '../web-api-client';
 import { authorizedHttp } from './httpClient.js';
 
@@ -11,8 +20,17 @@ import { authorizedHttp } from './httpClient.js';
 // JWT và mất luôn cơ chế tự refresh token khi gặp 401.
 export const accountsClient = new AccountsClient(undefined, authorizedHttp);
 export const accountTypesClient = new AccountTypesClient(undefined, authorizedHttp);
+export const aisClient = new AIsClient(undefined, authorizedHttp);
+export const promptTypesClient = new PromptTypesClient(undefined, authorizedHttp);
+export const promptsClient = new PromptsClient(undefined, authorizedHttp);
+export const worksClient = new WorksClient(undefined, authorizedHttp);
+export const moviesClient = new MoviesClient(undefined, authorizedHttp);
+export const episodesClient = new EpisodesClient(undefined, authorizedHttp);
 export const categoriesClient = new CategoriesClient(undefined, authorizedHttp);
 export const storySourcesClient = new StorySourcesClient(undefined, authorizedHttp);
+export const storyVideoTypesClient = new StoryVideoTypesClient(undefined, authorizedHttp);
+export const userProfilesClient = new UserProfilesClient(undefined, authorizedHttp);
+export const userProfileTypesClient = new UserProfileTypesClient(undefined, authorizedHttp);
 export const webSourcesClient = new WebSourcesClient(undefined, authorizedHttp);
 
 /** Lấy thông điệp lỗi dễ đọc từ SwaggerException / ProblemDetails trả về bởi API. */

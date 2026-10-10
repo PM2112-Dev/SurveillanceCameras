@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Library, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { webSourcesClient, getErrorMessage } from '../../api/clients';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Pagination } from '../../components/common/Pagination';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { EmptyState, ErrorAlert, LoadingBlock } from '../../components/common/StateBlocks';
+import { webSourceTypeLabel } from './webSourceTypes';
 
 const PAGE_SIZE = 20;
 
@@ -88,6 +89,10 @@ export function WebSourceList() {
               <tr>
                 <th>Tên</th>
                 <th>Base URL</th>
+                <th>Cách crawl</th>
+                <th>Cookie</th>
+                <th>AI biên tập</th>
+                <th>Đăng TYT</th>
                 <th>Trạng thái</th>
                 <th className="col-actions">Thao tác</th>
               </tr>
@@ -95,14 +100,30 @@ export function WebSourceList() {
             <tbody>
               {items.map(item => (
                 <tr key={item.id}>
-                  <td>{item.title || <em>(không tên)</em>}</td>
+                  <td>
+                    <Link to={`/web-sources/${item.id}/stories`} title="Xem truyện trên trang nguồn">
+                      {item.title || <em>(không tên)</em>}
+                    </Link>
+                    {!item.crawlConfig && <small className="cell-sub">Chưa có cấu hình crawl</small>}
+                  </td>
                   <td>
                     {item.baseUrl ? (
                       <a href={item.baseUrl} target="_blank" rel="noreferrer">{item.baseUrl}</a>
                     ) : '—'}
                   </td>
+                  <td>{webSourceTypeLabel(item.type) ?? '—'}</td>
+                  <td>
+                    {item.isCookie
+                      ? item.accountTitle || <span className="status-badge warn">Chưa chọn tài khoản</span>
+                      : 'Không cần'}
+                  </td>
+                  <td>{item.isNeedEdit ? 'Có' : 'Giữ nguyên gốc'}</td>
+                  <td>{item.tytAccountTitle || 'Không'}</td>
                   <td>{item.baseStatus}</td>
                   <td className="col-actions">
+                    <Link to={`/web-sources/${item.id}/stories`} className="icon-btn" title="Xem truyện trên trang nguồn">
+                      <Library size={16} aria-hidden="true" />
+                    </Link>
                     <Link to={`/web-sources/${item.id}`} className="icon-btn" title="Sửa">
                       <Pencil size={16} aria-hidden="true" />
                     </Link>

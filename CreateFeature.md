@@ -5,9 +5,9 @@ dotnet ef migrations add MigrationsV9 --project src/Infrastructure --startup-pro
 dotnet ef database update --project src/Infrastructure --startup-project src/Web
 
 
-dotnet new ca-usecase -n GetAIs -fn AIs -ut query -rt AIDto
-dotnet new ca-usecase -n FetchListStory -fn CrawlStories -ut query
+dotnet new ca-usecase -n GetStoryVideoTypes -fn StoryVideoTypes -ut query -rt StoryVideoTypeDto
+dotnet new ca-usecase -n GetStoryVideoTypeById -fn StoryVideoTypes -ut query -rt StoryVideoTypeDto
 
-dotnet new ca-usecase --name CreateAI --feature-name AIs --usecase-type command --return-type int
-dotnet new ca-usecase --name UpdateAI --feature-name AIs --usecase-type command
-dotnet new ca-usecase --name DeleteAI --feature-name AIs --usecase-type command
+dotnet new ca-usecase --name CreateStoryVideoType --feature-name StoryVideoTypes --usecase-type command --return-type int
+dotnet new ca-usecase --name UpdateStoryVideoType --feature-name StoryVideoTypes --usecase-type command
+dotnet new ca-usecase --name DeleteStoryVideoType --feature-name StoryVideoTypes --usecase-type command

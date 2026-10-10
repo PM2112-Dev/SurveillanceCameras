@@ -45,7 +45,9 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
                 var utcNow = _dateTime.GetUtcNow();
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedBy = _user.Id;
+                    // Tiến trình nền (consumer Kafka) không có user đăng nhập: giữ chủ sở hữu do code đặt sẵn
+                    // (vd. chủ của nguồn truyện), không ghi đè thành null làm bản ghi "mất chủ".
+                    entry.Entity.CreatedBy = _user.Id ?? entry.Entity.CreatedBy;
                     entry.Entity.Created = utcNow;
 
                     // Set default status to Active if not explicitly set
@@ -54,7 +56,7 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
                         entry.Entity.BaseStatus = BaseStatus.Active;
                     }
                 }
-                entry.Entity.LastModifiedBy = _user.Id;
+                entry.Entity.LastModifiedBy = _user.Id ?? entry.Entity.LastModifiedBy ?? entry.Entity.CreatedBy;
                 entry.Entity.LastModified = utcNow;
             }
         }

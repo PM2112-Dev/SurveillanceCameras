@@ -1,11 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BadgeCheck, Check, Copy, ExternalLink, UserSearch } from 'lucide-react';
-import { accountsClient, getErrorMessage } from '../../api/clients';
+import { accountsClient, getErrorMessage, userProfilesClient } from '../../api/clients';
 import { PageHeader } from '../../components/common/PageHeader';
 import { ErrorAlert } from '../../components/common/StateBlocks';
+import { DramaList } from './DramaList';
 
-const HANDLE_PATTERN = '@?[A-Za-z0-9._]{1,24}';
+// Nhập handle (@tên) hoặc secUid trực tiếp — secUid thì bỏ qua bước mở Chrome để tra handle.
+const SEC_UID_REGEX = /^MS4w[A-Za-z0-9_-]{20,}$/;
+const INPUT_PATTERN = '@?[A-Za-z0-9._]{1,24}|MS4w[A-Za-z0-9_\\-]{20,}';
+
+// Mã nền tảng TikTok, trùng với UserProfileTypeCodes.TikTok ở backend.
+const TIKTOK_TYPE_CODE = 'tiktok';
+const SAVED_CHANNEL_LIMIT = 12;
 
 const numberFormat = new Intl.NumberFormat('vi-VN');
 const formatCount = value => numberFormat.format(value ?? 0);
@@ -16,6 +23,9 @@ function describeError(err, handle) {
   return getErrorMessage(err);
 }
 
+/** Kênh đã lưu (UserProfileDto) có cùng dữ liệu với kết quả tra cứu, chỉ khác tên trường của tên kênh. */
+const savedToProfile = saved => ({ ...saved, nickname: saved.title });
+
 export function TikTokChannel() {
   const { id } = useParams();
   const accountId = Number(id);
@@ -23,12 +33,23 @@ export function TikTokChannel() {
   const [accountTitle, setAccountTitle] = useState('');
   const [handleInput, setHandleInput] = useState('');
   const [profile, setProfile] = useState(null);
+  const [secUid, setSecUid] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [savedChannels, setSavedChannels] = useState([]);
 
   // Chỉ nhận kết quả của lần tra cứu mới nhất (lần đầu mất vài giây, người dùng có thể bấm lại).
   const latestRequest = useRef(0);
+
+  // Lỗi tải kênh đã lưu được bỏ qua: đây chỉ là lối tắt, không được chặn việc tra cứu.
+  const loadSavedChannels = useCallback(() => {
+    userProfilesClient.getUserProfiles(undefined, undefined, TIKTOK_TYPE_CODE, 1, SAVED_CHANNEL_LIMIT)
+      .then(result => setSavedChannels(result.items ?? []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(loadSavedChannels, [loadSavedChannels]);
 
   useEffect(() => {
     accountsClient.getAccountById(accountId)
@@ -39,18 +60,31 @@ export function TikTokChannel() {
   const handleSubmit = event => {
     event.preventDefault();
 
-    const handle = handleInput.trim().replace(/^@/, '');
-    if (!handle) return;
+    const value = handleInput.trim().replace(/^@/, '');
+    if (!value) return;
 
     const requestId = ++latestRequest.current;
-    setLoading(true);
     setError('');
     setProfile(null);
+    setSecUid('');
     setCopied(false);
 
-    accountsClient.getTikTokUserProfile(accountId, handle)
+    if (SEC_UID_REGEX.test(value)) {
+      setLoading(false);
+      setSecUid(value);
+      return;
+    }
+
+    const handle = value;
+    setLoading(true);
+
+    accountsClient.searchTikTokUserProfile(accountId, handle)
       .then(result => {
-        if (requestId === latestRequest.current) setProfile(result);
+        if (requestId !== latestRequest.current) return;
+        setProfile(result);
+        setSecUid(result.secUid ?? '');
+        // Server vừa lưu/cập nhật kênh này.
+        loadSavedChannels();
       })
       .catch(err => {
         if (requestId === latestRequest.current) setError(describeError(err, handle));
@@ -58,6 +92,17 @@ export function TikTokChannel() {
       .finally(() => {
         if (requestId === latestRequest.current) setLoading(false);
       });
+  };
+
+  // Mở kênh đã lưu: dùng secUid có sẵn, không cần mở Chrome tra cứu lại.
+  const openSavedChannel = saved => {
+    latestRequest.current++;
+    setLoading(false);
+    setError('');
+    setCopied(false);
+    setHandleInput(saved.uniqueId ? `@${saved.uniqueId}` : '');
+    setProfile(savedToProfile(saved));
+    setSecUid(saved.secUid ?? '');
   };
 
   const copySecUid = () => {
@@ -85,18 +130,37 @@ export function TikTokChannel() {
         <input
           type="text"
           required
-          pattern={HANDLE_PATTERN}
-          maxLength={25}
-          title="Chỉ gồm chữ, số, dấu chấm và gạch dưới (tối đa 24 ký tự)"
-          placeholder="Handle TikTok, VD: @stardusttv_vietnam"
+          pattern={INPUT_PATTERN}
+          maxLength={120}
+          title="Handle (chữ, số, dấu chấm, gạch dưới; tối đa 24 ký tự) hoặc secUid bắt đầu bằng MS4w"
+          placeholder="Handle hoặc secUid, VD: @stardusttv_vietnam"
           value={handleInput}
           onChange={event => setHandleInput(event.target.value)}
           autoFocus
         />
         <button type="submit" disabled={loading} aria-busy={loading}>
-          {!loading && <UserSearch size={16} aria-hidden="true" />} Xem thông tin
+          {!loading && <UserSearch size={16} aria-hidden="true" />} Tra cứu
         </button>
       </form>
+
+      {savedChannels.length > 0 && (
+        <div className="saved-channels">
+          <small>Kênh đã tra cứu (bấm để mở lại, dữ liệu theo lần tra cứu gần nhất):</small>
+          <div className="chip-row">
+            {savedChannels.filter(saved => saved.secUid).map(saved => (
+              <button
+                key={saved.id}
+                type="button"
+                className="chip-button"
+                aria-pressed={saved.secUid === secUid}
+                onClick={() => openSavedChannel(saved)}
+              >
+                @{saved.uniqueId || saved.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading && (
         <p className="hint">
@@ -169,6 +233,8 @@ export function TikTokChannel() {
           </dl>
         </section>
       )}
+
+      {secUid && <DramaList accountId={accountId} secUid={secUid} />}
     </>
   );
 }

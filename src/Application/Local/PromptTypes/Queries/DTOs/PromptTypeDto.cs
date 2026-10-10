@@ -1,17 +1,20 @@
-using SurveillanceCameras.Application.Local.Prompts.Queries.DTOs;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.PromptTypes.Queries.DTOs;
 
 public class PromptTypeDto : BaseDto
 {
-    public IReadOnlyCollection<PromptDto>? Prompts { get; }
-    
+    public string? Description { get; init; }
+
+    /// <summary>Số prompt thuộc loại này.</summary>
+    public int PromptCount { get; init; }
+
     private class Mapping : Profile
     {
         public Mapping()
         {
-            CreateMap<PromptType, PromptTypeDto>().ForMember(dest => dest.Prompts, opt => opt.MapFrom(src => src.Prompts));
+            CreateMap<PromptType, PromptTypeDto>()
+                .ForMember(dest => dest.PromptCount, opt => opt.MapFrom(src => src.Prompts!.Count));
         }
     }
 }

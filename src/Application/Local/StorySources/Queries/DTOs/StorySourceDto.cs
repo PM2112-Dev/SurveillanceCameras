@@ -16,6 +16,12 @@ public class StorySourceDto : BaseDto
     public string? ImageUrl { get; init; }
     public int? TotalChapters { get; init; }
 
+    /// <summary>Truyện đã tạo từ nguồn này (AI biên tập); <c>null</c> khi chưa tạo.</summary>
+    public int? WorkId { get; init; }
+
+    /// <summary>Lỗi của lần tạo truyện bằng AI gần nhất.</summary>
+    public string? StoryCreationError { get; init; }
+
     public IReadOnlyCollection<CategorySummaryDto> Categories { get; init; } = new List<CategorySummaryDto>();
 
     private class Mapping : Profile
@@ -24,7 +30,9 @@ public class StorySourceDto : BaseDto
         {
             CreateMap<StorySource, StorySourceDto>()
                 .ForMember(dest => dest.Categories,
-                    opt => opt.MapFrom(src => src.Categories));
+                    opt => opt.MapFrom(src => src.Categories))
+                .ForMember(dest => dest.WorkId,
+                    opt => opt.MapFrom(src => src.Works!.OrderBy(x => x.Id).Select(x => (int?)x.Id).FirstOrDefault()));
         }
     }
 }

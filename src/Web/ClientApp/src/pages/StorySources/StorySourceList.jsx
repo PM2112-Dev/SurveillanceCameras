@@ -112,13 +112,18 @@ export function StorySourceList() {
                 <th>Số chương</th>
                 <th>Thể loại</th>
                 <th>Trạng thái</th>
+                <th>Truyện</th>
                 <th className="col-actions">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {items.map(item => (
                 <tr key={item.id}>
-                  <td>{item.title || <em>(không tên)</em>}</td>
+                  <td>
+                    <Link to={`/story-sources/${item.id}`} title="Xem chi tiết">
+                      {item.title || <em>(không tên)</em>}
+                    </Link>
+                  </td>
                   <td>{item.author || '—'}</td>
                   <td>{item.totalChapters ?? '—'}</td>
                   <td>
@@ -127,8 +132,17 @@ export function StorySourceList() {
                       : '—'}
                   </td>
                   <td>{item.status || item.baseStatus}</td>
+                  <td>
+                    {item.workId ? (
+                      <Link to={`/stories/${item.workId}`} className="status-badge ok">Đã tạo</Link>
+                    ) : item.storyCreationError ? (
+                      <span className="status-badge danger" title={item.storyCreationError}>Lỗi AI</span>
+                    ) : (
+                      <span className="status-badge">Chưa tạo</span>
+                    )}
+                  </td>
                   <td className="col-actions">
-                    <Link to={`/story-sources/${item.id}`} className="icon-btn" title="Sửa">
+                    <Link to={`/story-sources/${item.id}/edit`} className="icon-btn" title="Sửa">
                       <Pencil size={16} aria-hidden="true" />
                     </Link>
                     <button

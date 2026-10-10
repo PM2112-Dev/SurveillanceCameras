@@ -7,6 +7,9 @@
 
   <ItemGroup>
     <PackageReference Include="Confluent.Kafka" />
+    <PackageReference Include="Anthropic" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+    <PackageReference Include="AngleSharp" />
     <PackageReference Include="HtmlAgilityPack" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />

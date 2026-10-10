@@ -296,11 +296,11 @@ export class AccountsClient {
     }
 
     /**
-     * Start TikTok Session
+     * Start Account Session
      * @return No Content
      */
-    startTikTokSession(id: number): Promise<void> {
-        let url_ = this.baseUrl + "/api/Accounts/{id}/tiktok-session/start";
+    startAccountSession(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}/session/start";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -313,11 +313,11 @@ export class AccountsClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processStartTikTokSession(_response);
+            return this.processStartAccountSession(_response);
         });
     }
 
-    protected processStartTikTokSession(response: Response): Promise<void> {
+    protected processStartAccountSession(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 204) {
@@ -345,11 +345,11 @@ export class AccountsClient {
     }
 
     /**
-     * Stop TikTok Session
+     * Stop Account Session
      * @return No Content
      */
-    stopTikTokSession(id: number): Promise<void> {
-        let url_ = this.baseUrl + "/api/Accounts/{id}/tiktok-session/stop";
+    stopAccountSession(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}/session/stop";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -362,11 +362,11 @@ export class AccountsClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processStopTikTokSession(_response);
+            return this.processStopAccountSession(_response);
         });
     }
 
-    protected processStopTikTokSession(response: Response): Promise<void> {
+    protected processStopAccountSession(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 204) {
@@ -394,11 +394,11 @@ export class AccountsClient {
     }
 
     /**
-     * Get TikTok Session Status
+     * Get Account Session Status
      * @return OK
      */
-    getTikTokSessionStatus(id: number): Promise<TikTokSessionStatus> {
-        let url_ = this.baseUrl + "/api/Accounts/{id}/tiktok-session";
+    getAccountSessionStatus(id: number): Promise<AccountSessionStatus> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}/session";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -412,18 +412,18 @@ export class AccountsClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetTikTokSessionStatus(_response);
+            return this.processGetAccountSessionStatus(_response);
         });
     }
 
-    protected processGetTikTokSessionStatus(response: Response): Promise<TikTokSessionStatus> {
+    protected processGetAccountSessionStatus(response: Response): Promise<AccountSessionStatus> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = TikTokSessionStatus.fromJS(resultData200);
+            result200 = AccountSessionStatus.fromJS(resultData200);
             return result200;
             });
         } else if (status === 400) {
@@ -443,7 +443,7 @@ export class AccountsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<TikTokSessionStatus>(null as any);
+        return Promise.resolve<AccountSessionStatus>(null as any);
     }
 
     /**
@@ -514,11 +514,11 @@ export class AccountsClient {
     }
 
     /**
-     * Get TikTok User Profile
+     * Search TikTok User Profile
      * @return OK
      */
-    getTikTokUserProfile(id: number, handle: string): Promise<TikTokUserProfileDto> {
-        let url_ = this.baseUrl + "/api/Accounts/{id}/tiktok/users/{handle}";
+    searchTikTokUserProfile(id: number, handle: string): Promise<TikTokUserProfileDto> {
+        let url_ = this.baseUrl + "/api/Accounts/{id}/tiktok/users/{handle}/search";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -528,18 +528,18 @@ export class AccountsClient {
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
-            method: "GET",
+            method: "POST",
             headers: {
                 "Accept": "application/json"
             }
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetTikTokUserProfile(_response);
+            return this.processSearchTikTokUserProfile(_response);
         });
     }
 
-    protected processGetTikTokUserProfile(response: Response): Promise<TikTokUserProfileDto> {
+    protected processSearchTikTokUserProfile(response: Response): Promise<TikTokUserProfileDto> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -867,14 +867,19 @@ export class AIsClient {
     /**
      * Get AIs
      * @param title (optional) 
+     * @param provider (optional) 
      * @return OK
      */
-    getAIs(title: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfAIDto> {
+    getAIs(title: string | undefined, provider: number | undefined, page: number, pageSize: number): Promise<PaginatedListOfAIDto> {
         let url_ = this.baseUrl + "/api/AIs?";
         if (title === null)
             throw new globalThis.Error("The parameter 'title' cannot be null.");
         else if (title !== undefined)
             url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (provider === null)
+            throw new globalThis.Error("The parameter 'provider' cannot be null.");
+        else if (provider !== undefined)
+            url_ += "Provider=" + encodeURIComponent("" + provider) + "&";
         if (page === undefined || page === null)
             throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
         else
@@ -1135,6 +1140,67 @@ export class AIsClient {
             });
         }
         return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get provider models
+     * @return OK
+     */
+    getProviderModels(body: GetProviderModelsQuery): Promise<AIModelDto[]> {
+        let url_ = this.baseUrl + "/api/AIs/models";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProviderModels(_response);
+        });
+    }
+
+    protected processGetProviderModels(response: Response): Promise<AIModelDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(AIModelDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AIModelDto[]>(null as any);
     }
 }
 
@@ -1422,7 +1488,7 @@ export class CategoriesClient {
     }
 }
 
-export class ChaptersClient {
+export class EpisodesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -1433,31 +1499,25 @@ export class ChaptersClient {
     }
 
     /**
-     * Get Chapters
-     * @param storyId (optional) 
+     * Get Episodes
      * @param title (optional) 
-     * @param isUploaded (optional) 
-     * @param isPublished (optional) 
+     * @param status (optional) 
      * @return OK
      */
-    getChapters(storyId: number | undefined, title: string | undefined, isUploaded: boolean | undefined, isPublished: boolean | undefined, page: number, pageSize: number): Promise<PaginatedListOfChapterDto> {
-        let url_ = this.baseUrl + "/api/Chapters?";
-        if (storyId === null)
-            throw new globalThis.Error("The parameter 'storyId' cannot be null.");
-        else if (storyId !== undefined)
-            url_ += "StoryId=" + encodeURIComponent("" + storyId) + "&";
+    getEpisodes(workId: number, title: string | undefined, status: number | undefined, page: number, pageSize: number): Promise<PaginatedListOfEpisodeBriefDto> {
+        let url_ = this.baseUrl + "/api/Episodes?";
+        if (workId === undefined || workId === null)
+            throw new globalThis.Error("The parameter 'workId' must be defined and cannot be null.");
+        else
+            url_ += "WorkId=" + encodeURIComponent("" + workId) + "&";
         if (title === null)
             throw new globalThis.Error("The parameter 'title' cannot be null.");
         else if (title !== undefined)
             url_ += "Title=" + encodeURIComponent("" + title) + "&";
-        if (isUploaded === null)
-            throw new globalThis.Error("The parameter 'isUploaded' cannot be null.");
-        else if (isUploaded !== undefined)
-            url_ += "IsUploaded=" + encodeURIComponent("" + isUploaded) + "&";
-        if (isPublished === null)
-            throw new globalThis.Error("The parameter 'isPublished' cannot be null.");
-        else if (isPublished !== undefined)
-            url_ += "IsPublished=" + encodeURIComponent("" + isPublished) + "&";
+        if (status === null)
+            throw new globalThis.Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "Status=" + encodeURIComponent("" + status) + "&";
         if (page === undefined || page === null)
             throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
         else
@@ -1476,18 +1536,18 @@ export class ChaptersClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetChapters(_response);
+            return this.processGetEpisodes(_response);
         });
     }
 
-    protected processGetChapters(response: Response): Promise<PaginatedListOfChapterDto> {
+    protected processGetEpisodes(response: Response): Promise<PaginatedListOfEpisodeBriefDto> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = PaginatedListOfChapterDto.fromJS(resultData200);
+            result200 = PaginatedListOfEpisodeBriefDto.fromJS(resultData200);
             return result200;
             });
         } else if (status === 400) {
@@ -1507,15 +1567,15 @@ export class ChaptersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<PaginatedListOfChapterDto>(null as any);
+        return Promise.resolve<PaginatedListOfEpisodeBriefDto>(null as any);
     }
 
     /**
-     * Create Chapter
+     * Create Episode
      * @return Created
      */
-    createChapter(body: CreateChapterCommand): Promise<number> {
-        let url_ = this.baseUrl + "/api/Chapters";
+    createEpisode(body: CreateEpisodeCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/Episodes";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -1530,11 +1590,11 @@ export class ChaptersClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processCreateChapter(_response);
+            return this.processCreateEpisode(_response);
         });
     }
 
-    protected processCreateChapter(response: Response): Promise<number> {
+    protected processCreateEpisode(response: Response): Promise<number> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 201) {
@@ -1566,11 +1626,11 @@ export class ChaptersClient {
     }
 
     /**
-     * Get Chapter by Id
+     * Get Episode by Id
      * @return OK
      */
-    getChapterById(id: number): Promise<ChapterDto> {
-        let url_ = this.baseUrl + "/api/Chapters/{id}";
+    getEpisodeById(id: number): Promise<EpisodeDto> {
+        let url_ = this.baseUrl + "/api/Episodes/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -1584,18 +1644,18 @@ export class ChaptersClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetChapterById(_response);
+            return this.processGetEpisodeById(_response);
         });
     }
 
-    protected processGetChapterById(response: Response): Promise<ChapterDto> {
+    protected processGetEpisodeById(response: Response): Promise<EpisodeDto> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ChapterDto.fromJS(resultData200);
+            result200 = EpisodeDto.fromJS(resultData200);
             return result200;
             });
         } else if (status === 400) {
@@ -1615,15 +1675,15 @@ export class ChaptersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<ChapterDto>(null as any);
+        return Promise.resolve<EpisodeDto>(null as any);
     }
 
     /**
-     * Update Chapter
+     * Update Episode
      * @return No Content
      */
-    updateChapter(id: number, body: UpdateChapterCommand): Promise<void> {
-        let url_ = this.baseUrl + "/api/Chapters/{id}";
+    updateEpisode(id: number, body: UpdateEpisodeCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Episodes/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -1640,11 +1700,11 @@ export class ChaptersClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processUpdateChapter(_response);
+            return this.processUpdateEpisode(_response);
         });
     }
 
-    protected processUpdateChapter(response: Response): Promise<void> {
+    protected processUpdateEpisode(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 204) {
@@ -1672,11 +1732,11 @@ export class ChaptersClient {
     }
 
     /**
-     * Delete Chapter
+     * Delete Episode
      * @return No Content
      */
-    deleteChapter(id: number): Promise<void> {
-        let url_ = this.baseUrl + "/api/Chapters/{id}";
+    deleteEpisode(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Episodes/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -1689,11 +1749,11 @@ export class ChaptersClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processDeleteChapter(_response);
+            return this.processDeleteEpisode(_response);
         });
     }
 
-    protected processDeleteChapter(response: Response): Promise<void> {
+    protected processDeleteEpisode(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 204) {
@@ -1718,6 +1778,357 @@ export class ChaptersClient {
             });
         }
         return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Request episode AI edit
+     * @return Accepted
+     */
+    requestEpisodeEdit(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Episodes/{id}/ai-edit";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRequestEpisodeEdit(_response);
+        });
+    }
+
+    protected processRequestEpisodeEdit(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 202) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
+export class MoviesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get Movies
+     * @param title (optional) 
+     * @param userProfileId (optional) 
+     * @return OK
+     */
+    getMovies(title: string | undefined, userProfileId: number | undefined, sort: number, page: number, pageSize: number): Promise<PaginatedListOfMovieDto> {
+        let url_ = this.baseUrl + "/api/Movies?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (userProfileId === null)
+            throw new globalThis.Error("The parameter 'userProfileId' cannot be null.");
+        else if (userProfileId !== undefined)
+            url_ += "UserProfileId=" + encodeURIComponent("" + userProfileId) + "&";
+        if (sort === undefined || sort === null)
+            throw new globalThis.Error("The parameter 'sort' must be defined and cannot be null.");
+        else
+            url_ += "Sort=" + encodeURIComponent("" + sort) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMovies(_response);
+        });
+    }
+
+    protected processGetMovies(response: Response): Promise<PaginatedListOfMovieDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfMovieDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfMovieDto>(null as any);
+    }
+
+    /**
+     * Get Movie by Id
+     * @return OK
+     */
+    getMovieById(id: number): Promise<MovieDto> {
+        let url_ = this.baseUrl + "/api/Movies/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMovieById(_response);
+        });
+    }
+
+    protected processGetMovieById(response: Response): Promise<MovieDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MovieDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MovieDto>(null as any);
+    }
+
+    /**
+     * Delete Movie
+     * @return No Content
+     */
+    deleteMovie(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Movies/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteMovie(_response);
+        });
+    }
+
+    protected processDeleteMovie(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get Movie episodes
+     * @param page (optional) 
+     * @param pageSize (optional) 
+     * @return OK
+     */
+    getMovieEpisodes(id: number, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfMovieEpisodeDto> {
+        let url_ = this.baseUrl + "/api/Movies/{id}/episodes?";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMovieEpisodes(_response);
+        });
+    }
+
+    protected processGetMovieEpisodes(response: Response): Promise<PaginatedListOfMovieEpisodeDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfMovieEpisodeDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfMovieEpisodeDto>(null as any);
+    }
+
+    /**
+     * Sync TikTok dramas
+     * @return OK
+     */
+    syncTikTokDramas(body: SyncTikTokDramasCommand): Promise<SyncTikTokDramasResult> {
+        let url_ = this.baseUrl + "/api/Movies/sync-tiktok";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSyncTikTokDramas(_response);
+        });
+    }
+
+    protected processSyncTikTokDramas(response: Response): Promise<SyncTikTokDramasResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = SyncTikTokDramasResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<SyncTikTokDramasResult>(null as any);
     }
 }
 
@@ -2294,290 +2705,6 @@ export class PromptTypesClient {
     }
 }
 
-export class StoriesClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "";
-    }
-
-    /**
-     * Get Stories
-     * @param title (optional) 
-     * @return OK
-     */
-    getStories(title: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfStoryDto> {
-        let url_ = this.baseUrl + "/api/Stories?";
-        if (title === null)
-            throw new globalThis.Error("The parameter 'title' cannot be null.");
-        else if (title !== undefined)
-            url_ += "Title=" + encodeURIComponent("" + title) + "&";
-        if (page === undefined || page === null)
-            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
-        else
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (pageSize === undefined || pageSize === null)
-            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
-        else
-            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetStories(_response);
-        });
-    }
-
-    protected processGetStories(response: Response): Promise<PaginatedListOfStoryDto> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = PaginatedListOfStoryDto.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status === 400) {
-            return response.text().then((_responseText) => {
-            return throwException("Bad Request", status, _responseText, _headers);
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            return throwException("Unauthorized", status, _responseText, _headers);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            return throwException("Forbidden", status, _responseText, _headers);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<PaginatedListOfStoryDto>(null as any);
-    }
-
-    /**
-     * Create Story
-     * @return Created
-     */
-    createStory(body: CreateStoryCommand): Promise<number> {
-        let url_ = this.baseUrl + "/api/Stories";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processCreateStory(_response);
-        });
-    }
-
-    protected processCreateStory(response: Response): Promise<number> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 201) {
-            return response.text().then((_responseText) => {
-            let result201: any = null;
-            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result201 = resultData201 !== undefined ? resultData201 : null as any;
-    
-            return result201;
-            });
-        } else if (status === 400) {
-            return response.text().then((_responseText) => {
-            return throwException("Bad Request", status, _responseText, _headers);
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            return throwException("Unauthorized", status, _responseText, _headers);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            return throwException("Forbidden", status, _responseText, _headers);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<number>(null as any);
-    }
-
-    /**
-     * Get Story by Id
-     * @return OK
-     */
-    getStoryById(id: number): Promise<StoryDto> {
-        let url_ = this.baseUrl + "/api/Stories/{id}";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetStoryById(_response);
-        });
-    }
-
-    protected processGetStoryById(response: Response): Promise<StoryDto> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = StoryDto.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status === 400) {
-            return response.text().then((_responseText) => {
-            return throwException("Bad Request", status, _responseText, _headers);
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            return throwException("Unauthorized", status, _responseText, _headers);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            return throwException("Forbidden", status, _responseText, _headers);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<StoryDto>(null as any);
-    }
-
-    /**
-     * Update Story
-     * @return No Content
-     */
-    updateStory(id: number, body: UpdateStoryCommand): Promise<void> {
-        let url_ = this.baseUrl + "/api/Stories/{id}";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processUpdateStory(_response);
-        });
-    }
-
-    protected processUpdateStory(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 204) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status === 400) {
-            return response.text().then((_responseText) => {
-            return throwException("Bad Request", status, _responseText, _headers);
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            return throwException("Unauthorized", status, _responseText, _headers);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            return throwException("Forbidden", status, _responseText, _headers);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * Delete Story
-     * @return No Content
-     */
-    deleteStory(id: number): Promise<void> {
-        let url_ = this.baseUrl + "/api/Stories/{id}";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "DELETE",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processDeleteStory(_response);
-        });
-    }
-
-    protected processDeleteStory(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 204) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status === 400) {
-            return response.text().then((_responseText) => {
-            return throwException("Bad Request", status, _responseText, _headers);
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            return throwException("Unauthorized", status, _responseText, _headers);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            return throwException("Forbidden", status, _responseText, _headers);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-}
-
 export class StorySourcesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -2840,6 +2967,921 @@ export class StorySourcesClient {
     }
 
     protected processDeleteStorySource(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Refresh Story Source
+     * @return No Content
+     */
+    refreshStorySource(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/StorySources/{id}/refresh";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRefreshStorySource(_response);
+        });
+    }
+
+    protected processRefreshStorySource(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Request story creation
+     * @return Accepted
+     */
+    requestStoryCreation(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/StorySources/{id}/create-story";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRequestStoryCreation(_response);
+        });
+    }
+
+    protected processRequestStoryCreation(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 202) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
+export class StoryVideoTypesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get StoryVideoTypes
+     * @param title (optional) 
+     * @return OK
+     */
+    getStoryVideoTypes(title: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfStoryVideoTypeDto> {
+        let url_ = this.baseUrl + "/api/StoryVideoTypes?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetStoryVideoTypes(_response);
+        });
+    }
+
+    protected processGetStoryVideoTypes(response: Response): Promise<PaginatedListOfStoryVideoTypeDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfStoryVideoTypeDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfStoryVideoTypeDto>(null as any);
+    }
+
+    /**
+     * Create StoryVideoType
+     * @return Created
+     */
+    createStoryVideoType(body: CreateStoryVideoTypeCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/StoryVideoTypes";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateStoryVideoType(_response);
+        });
+    }
+
+    protected processCreateStoryVideoType(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get StoryVideoType by Id
+     * @return OK
+     */
+    getStoryVideoTypeById(id: number): Promise<StoryVideoTypeDto> {
+        let url_ = this.baseUrl + "/api/StoryVideoTypes/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetStoryVideoTypeById(_response);
+        });
+    }
+
+    protected processGetStoryVideoTypeById(response: Response): Promise<StoryVideoTypeDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = StoryVideoTypeDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<StoryVideoTypeDto>(null as any);
+    }
+
+    /**
+     * Update StoryVideoType
+     * @return No Content
+     */
+    updateStoryVideoType(id: number, body: UpdateStoryVideoTypeCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/StoryVideoTypes/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateStoryVideoType(_response);
+        });
+    }
+
+    protected processUpdateStoryVideoType(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete StoryVideoType
+     * @return No Content
+     */
+    deleteStoryVideoType(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/StoryVideoTypes/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteStoryVideoType(_response);
+        });
+    }
+
+    protected processDeleteStoryVideoType(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
+export class UserProfilesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get UserProfiles
+     * @param title (optional) 
+     * @param userProfileTypeId (optional) 
+     * @param userProfileTypeCode (optional) 
+     * @return OK
+     */
+    getUserProfiles(title: string | undefined, userProfileTypeId: number | undefined, userProfileTypeCode: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfUserProfileDto> {
+        let url_ = this.baseUrl + "/api/UserProfiles?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (userProfileTypeId === null)
+            throw new globalThis.Error("The parameter 'userProfileTypeId' cannot be null.");
+        else if (userProfileTypeId !== undefined)
+            url_ += "UserProfileTypeId=" + encodeURIComponent("" + userProfileTypeId) + "&";
+        if (userProfileTypeCode === null)
+            throw new globalThis.Error("The parameter 'userProfileTypeCode' cannot be null.");
+        else if (userProfileTypeCode !== undefined)
+            url_ += "UserProfileTypeCode=" + encodeURIComponent("" + userProfileTypeCode) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetUserProfiles(_response);
+        });
+    }
+
+    protected processGetUserProfiles(response: Response): Promise<PaginatedListOfUserProfileDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfUserProfileDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfUserProfileDto>(null as any);
+    }
+
+    /**
+     * Get UserProfile by Id
+     * @return OK
+     */
+    getUserProfileById(id: number): Promise<UserProfileDto> {
+        let url_ = this.baseUrl + "/api/UserProfiles/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetUserProfileById(_response);
+        });
+    }
+
+    protected processGetUserProfileById(response: Response): Promise<UserProfileDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UserProfileDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserProfileDto>(null as any);
+    }
+
+    /**
+     * Delete UserProfile
+     * @return No Content
+     */
+    deleteUserProfile(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/UserProfiles/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteUserProfile(_response);
+        });
+    }
+
+    protected processDeleteUserProfile(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get channel dramas
+     * @param cursor (optional) 
+     * @param count (optional) 
+     * @return OK
+     */
+    getChannelDramas(id: number, cursor: string | undefined, count: number | undefined): Promise<ChannelDramasDto> {
+        let url_ = this.baseUrl + "/api/UserProfiles/{id}/dramas?";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (cursor === null)
+            throw new globalThis.Error("The parameter 'cursor' cannot be null.");
+        else if (cursor !== undefined)
+            url_ += "cursor=" + encodeURIComponent("" + cursor) + "&";
+        if (count === null)
+            throw new globalThis.Error("The parameter 'count' cannot be null.");
+        else if (count !== undefined)
+            url_ += "count=" + encodeURIComponent("" + count) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetChannelDramas(_response);
+        });
+    }
+
+    protected processGetChannelDramas(response: Response): Promise<ChannelDramasDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ChannelDramasDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ChannelDramasDto>(null as any);
+    }
+}
+
+export class UserProfileTypesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get UserProfileTypes
+     * @param title (optional) 
+     * @return OK
+     */
+    getUserProfileTypes(title: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfUserProfileTypeDto> {
+        let url_ = this.baseUrl + "/api/UserProfileTypes?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetUserProfileTypes(_response);
+        });
+    }
+
+    protected processGetUserProfileTypes(response: Response): Promise<PaginatedListOfUserProfileTypeDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfUserProfileTypeDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfUserProfileTypeDto>(null as any);
+    }
+
+    /**
+     * Create UserProfileType
+     * @return Created
+     */
+    createUserProfileType(body: CreateUserProfileTypeCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/UserProfileTypes";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateUserProfileType(_response);
+        });
+    }
+
+    protected processCreateUserProfileType(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get UserProfileType by Id
+     * @return OK
+     */
+    getUserProfileTypeById(id: number): Promise<UserProfileTypeDto> {
+        let url_ = this.baseUrl + "/api/UserProfileTypes/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetUserProfileTypeById(_response);
+        });
+    }
+
+    protected processGetUserProfileTypeById(response: Response): Promise<UserProfileTypeDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UserProfileTypeDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserProfileTypeDto>(null as any);
+    }
+
+    /**
+     * Update UserProfileType
+     * @return No Content
+     */
+    updateUserProfileType(id: number, body: UpdateUserProfileTypeCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/UserProfileTypes/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateUserProfileType(_response);
+        });
+    }
+
+    protected processUpdateUserProfileType(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete UserProfileType
+     * @return No Content
+     */
+    deleteUserProfileType(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/UserProfileTypes/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteUserProfileType(_response);
+        });
+    }
+
+    protected processDeleteUserProfileType(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 204) {
@@ -3398,6 +4440,786 @@ export class WebSourcesClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    /**
+     * Get crawled stories
+     * @param page (optional) 
+     * @return OK
+     */
+    getCrawledStories(id: number, page: number | undefined): Promise<CrawlPageDtoOfStoryCrawlDto> {
+        let url_ = this.baseUrl + "/api/WebSources/{id}/crawl/stories?";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetCrawledStories(_response);
+        });
+    }
+
+    protected processGetCrawledStories(response: Response): Promise<CrawlPageDtoOfStoryCrawlDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CrawlPageDtoOfStoryCrawlDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CrawlPageDtoOfStoryCrawlDto>(null as any);
+    }
+
+    /**
+     * Get crawled story
+     * @return OK
+     */
+    getCrawledStory(id: number, url: string): Promise<StoryDataDto> {
+        let url_ = this.baseUrl + "/api/WebSources/{id}/crawl/story?";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (url === undefined || url === null)
+            throw new globalThis.Error("The parameter 'url' must be defined and cannot be null.");
+        else
+            url_ += "url=" + encodeURIComponent("" + url) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetCrawledStory(_response);
+        });
+    }
+
+    protected processGetCrawledStory(response: Response): Promise<StoryDataDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = StoryDataDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<StoryDataDto>(null as any);
+    }
+
+    /**
+     * Get crawled chapters
+     * @param page (optional) 
+     * @return OK
+     */
+    getCrawledChapters(id: number, url: string, page: number | undefined): Promise<CrawlPageDtoOfChapterDataDto> {
+        let url_ = this.baseUrl + "/api/WebSources/{id}/crawl/chapters?";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (url === undefined || url === null)
+            throw new globalThis.Error("The parameter 'url' must be defined and cannot be null.");
+        else
+            url_ += "url=" + encodeURIComponent("" + url) + "&";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetCrawledChapters(_response);
+        });
+    }
+
+    protected processGetCrawledChapters(response: Response): Promise<CrawlPageDtoOfChapterDataDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CrawlPageDtoOfChapterDataDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CrawlPageDtoOfChapterDataDto>(null as any);
+    }
+
+    /**
+     * Get crawled chapter
+     * @return OK
+     */
+    getCrawledChapter(id: number, url: string): Promise<ChapterContentDto> {
+        let url_ = this.baseUrl + "/api/WebSources/{id}/crawl/chapter?";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (url === undefined || url === null)
+            throw new globalThis.Error("The parameter 'url' must be defined and cannot be null.");
+        else
+            url_ += "url=" + encodeURIComponent("" + url) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetCrawledChapter(_response);
+        });
+    }
+
+    protected processGetCrawledChapter(response: Response): Promise<ChapterContentDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ChapterContentDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ChapterContentDto>(null as any);
+    }
+
+    /**
+     * Sync crawled stories
+     * @return OK
+     */
+    syncCrawledStories(id: number, body: SyncCrawledStoriesCommand): Promise<SyncCrawledStoriesResult> {
+        let url_ = this.baseUrl + "/api/WebSources/{id}/crawl/sync";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSyncCrawledStories(_response);
+        });
+    }
+
+    protected processSyncCrawledStories(response: Response): Promise<SyncCrawledStoriesResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = SyncCrawledStoriesResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<SyncCrawledStoriesResult>(null as any);
+    }
+}
+
+export class WorksClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get Works
+     * @param title (optional) 
+     * @return OK
+     */
+    getWorks(title: string | undefined, page: number, pageSize: number): Promise<PaginatedListOfWorkDto> {
+        let url_ = this.baseUrl + "/api/Works?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "Title=" + encodeURIComponent("" + title) + "&";
+        if (page === undefined || page === null)
+            throw new globalThis.Error("The parameter 'page' must be defined and cannot be null.");
+        else
+            url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === undefined || pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' must be defined and cannot be null.");
+        else
+            url_ += "PageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWorks(_response);
+        });
+    }
+
+    protected processGetWorks(response: Response): Promise<PaginatedListOfWorkDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfWorkDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfWorkDto>(null as any);
+    }
+
+    /**
+     * Create Work
+     * @return Created
+     */
+    createWork(body: CreateWorkCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/Works";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateWork(_response);
+        });
+    }
+
+    protected processCreateWork(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get Work by Id
+     * @return OK
+     */
+    getWorkById(id: number): Promise<WorkDto> {
+        let url_ = this.baseUrl + "/api/Works/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWorkById(_response);
+        });
+    }
+
+    protected processGetWorkById(response: Response): Promise<WorkDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = WorkDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<WorkDto>(null as any);
+    }
+
+    /**
+     * Update Work
+     * @return No Content
+     */
+    updateWork(id: number, body: UpdateWorkCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Works/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateWork(_response);
+        });
+    }
+
+    protected processUpdateWork(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete Work
+     * @return No Content
+     */
+    deleteWork(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Works/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteWork(_response);
+        });
+    }
+
+    protected processDeleteWork(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get work episode stats
+     * @return OK
+     */
+    getWorkEpisodeStats(id: number): Promise<WorkEpisodeStatsDto> {
+        let url_ = this.baseUrl + "/api/Works/{id}/episode-stats";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWorkEpisodeStats(_response);
+        });
+    }
+
+    protected processGetWorkEpisodeStats(response: Response): Promise<WorkEpisodeStatsDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = WorkEpisodeStatsDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<WorkEpisodeStatsDto>(null as any);
+    }
+
+    /**
+     * Request work episode sync
+     * @return Accepted
+     */
+    requestWorkEpisodeSync(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Works/{id}/sync-episodes";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRequestWorkEpisodeSync(_response);
+        });
+    }
+
+    protected processRequestWorkEpisodeSync(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 202) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Retry work episodes
+     * @return OK
+     */
+    retryWorkEpisodes(id: number): Promise<number> {
+        let url_ = this.baseUrl + "/api/Works/{id}/retry-episodes";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRetryWorkEpisodes(_response);
+        });
+    }
+
+    protected processRetryWorkEpisodes(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Request TYT story creation
+     * @return Accepted
+     */
+    requestTytStoryCreation(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Works/{id}/tyt";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRequestTytStoryCreation(_response);
+        });
+    }
+
+    protected processRequestTytStoryCreation(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 202) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
 }
 
 export class AccessTokenResponse implements IAccessTokenResponse {
@@ -3528,7 +5350,65 @@ export interface IAccountDto {
     [key: string]: any;
 }
 
+export class AccountSessionStatus implements IAccountSessionStatus {
+    accountId!: number;
+    state!: number;
+    cookieUpdatedAt?: Date | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAccountSessionStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.accountId = _data["accountId"];
+            this.state = _data["state"];
+            this.cookieUpdatedAt = _data["cookieUpdatedAt"] ? new Date(_data["cookieUpdatedAt"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): AccountSessionStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new AccountSessionStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["accountId"] = this.accountId;
+        data["state"] = this.state;
+        data["cookieUpdatedAt"] = this.cookieUpdatedAt ? this.cookieUpdatedAt.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface IAccountSessionStatus {
+    accountId: number;
+    state: number;
+    cookieUpdatedAt?: Date | undefined;
+
+    [key: string]: any;
+}
+
 export class AccountTypeDto implements IAccountTypeDto {
+    baseUrl?: string | undefined;
+    loginCookieName?: string | undefined;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
@@ -3551,6 +5431,8 @@ export class AccountTypeDto implements IAccountTypeDto {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.baseUrl = _data["baseUrl"];
+            this.loginCookieName = _data["loginCookieName"];
             this.id = _data["id"];
             this.title = _data["title"];
             this.code = _data["code"];
@@ -3571,6 +5453,8 @@ export class AccountTypeDto implements IAccountTypeDto {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["baseUrl"] = this.baseUrl;
+        data["loginCookieName"] = this.loginCookieName;
         data["id"] = this.id;
         data["title"] = this.title;
         data["code"] = this.code;
@@ -3580,6 +5464,8 @@ export class AccountTypeDto implements IAccountTypeDto {
 }
 
 export interface IAccountTypeDto {
+    baseUrl?: string | undefined;
+    loginCookieName?: string | undefined;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
@@ -3589,8 +5475,11 @@ export interface IAccountTypeDto {
 }
 
 export class AIDto implements IAIDto {
+    provider?: number;
     model?: string | undefined;
-    apiKey?: string | undefined;
+    apiKeyHint?: string | undefined;
+    project?: string | undefined;
+    email?: string | undefined;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
@@ -3613,8 +5502,11 @@ export class AIDto implements IAIDto {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.provider = _data["provider"];
             this.model = _data["model"];
-            this.apiKey = _data["apiKey"];
+            this.apiKeyHint = _data["apiKeyHint"];
+            this.project = _data["project"];
+            this.email = _data["email"];
             this.id = _data["id"];
             this.title = _data["title"];
             this.code = _data["code"];
@@ -3635,8 +5527,11 @@ export class AIDto implements IAIDto {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["provider"] = this.provider;
         data["model"] = this.model;
-        data["apiKey"] = this.apiKey;
+        data["apiKeyHint"] = this.apiKeyHint;
+        data["project"] = this.project;
+        data["email"] = this.email;
         data["id"] = this.id;
         data["title"] = this.title;
         data["code"] = this.code;
@@ -3646,8 +5541,11 @@ export class AIDto implements IAIDto {
 }
 
 export interface IAIDto {
+    provider?: number;
     model?: string | undefined;
-    apiKey?: string | undefined;
+    apiKeyHint?: string | undefined;
+    project?: string | undefined;
+    email?: string | undefined;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
@@ -3656,11 +5554,13 @@ export interface IAIDto {
     [key: string]: any;
 }
 
-export class BaseEvent implements IBaseEvent {
+export class AIModelDto implements IAIModelDto {
+    id!: string;
+    displayName!: string | undefined;
 
     [key: string]: any;
 
-    constructor(data?: IBaseEvent) {
+    constructor(data?: IAIModelDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -3675,12 +5575,14 @@ export class BaseEvent implements IBaseEvent {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.id = _data["id"];
+            this.displayName = _data["displayName"];
         }
     }
 
-    static fromJS(data: any): BaseEvent {
+    static fromJS(data: any): AIModelDto {
         data = typeof data === 'object' ? data : {};
-        let result = new BaseEvent();
+        let result = new AIModelDto();
         result.init(data);
         return result;
     }
@@ -3691,11 +5593,15 @@ export class BaseEvent implements IBaseEvent {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["id"] = this.id;
+        data["displayName"] = this.displayName;
         return data;
     }
 }
 
-export interface IBaseEvent {
+export interface IAIModelDto {
+    id: string;
+    displayName: string | undefined;
 
     [key: string]: any;
 }
@@ -3832,34 +5738,20 @@ export interface ICategorySummaryDto {
     [key: string]: any;
 }
 
-export class ChapterDto implements IChapterDto {
-    storyId?: number;
-    promptId?: number;
-    tytChapterId?: string | undefined;
-    nameRaw?: string | undefined;
-    nameEdit?: string | undefined;
-    chapterNumber?: number;
-    contentRaw?: string | undefined;
-    contentEdit?: string | undefined;
-    isUploaded?: boolean;
-    isPublished?: boolean;
-    prompt!: Prompt;
-    id?: number;
-    title?: string | undefined;
-    code?: string | undefined;
-    baseStatus?: string | undefined;
+export class ChannelDramasDto implements IChannelDramasDto {
+    cursor?: string | undefined;
+    hasMore?: boolean;
+    items?: DramaDto[];
+    movieIds?: { [key: string]: number; };
 
     [key: string]: any;
 
-    constructor(data?: IChapterDto) {
+    constructor(data?: IChannelDramasDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
                     (this as any)[property] = (data as any)[property];
             }
-        }
-        if (!data) {
-            this.prompt = new Prompt();
         }
     }
 
@@ -3869,27 +5761,26 @@ export class ChapterDto implements IChapterDto {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.storyId = _data["storyId"];
-            this.promptId = _data["promptId"];
-            this.tytChapterId = _data["tytChapterId"];
-            this.nameRaw = _data["nameRaw"];
-            this.nameEdit = _data["nameEdit"];
-            this.chapterNumber = _data["chapterNumber"];
-            this.contentRaw = _data["contentRaw"];
-            this.contentEdit = _data["contentEdit"];
-            this.isUploaded = _data["isUploaded"];
-            this.isPublished = _data["isPublished"];
-            this.prompt = _data["prompt"] ? Prompt.fromJS(_data["prompt"]) : new Prompt();
-            this.id = _data["id"];
-            this.title = _data["title"];
-            this.code = _data["code"];
-            this.baseStatus = _data["baseStatus"];
+            this.cursor = _data["cursor"];
+            this.hasMore = _data["hasMore"];
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(DramaDto.fromJS(item));
+            }
+            if (_data["movieIds"]) {
+                this.movieIds = {} as any;
+                for (let key in _data["movieIds"]) {
+                    if (_data["movieIds"].hasOwnProperty(key))
+                        (this.movieIds as any)![key] = _data["movieIds"][key];
+                }
+            }
         }
     }
 
-    static fromJS(data: any): ChapterDto {
+    static fromJS(data: any): ChannelDramasDto {
         data = typeof data === 'object' ? data : {};
-        let result = new ChapterDto();
+        let result = new ChannelDramasDto();
         result.init(data);
         return result;
     }
@@ -3900,41 +5791,297 @@ export class ChapterDto implements IChapterDto {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["storyId"] = this.storyId;
-        data["promptId"] = this.promptId;
-        data["tytChapterId"] = this.tytChapterId;
-        data["nameRaw"] = this.nameRaw;
-        data["nameEdit"] = this.nameEdit;
-        data["chapterNumber"] = this.chapterNumber;
-        data["contentRaw"] = this.contentRaw;
-        data["contentEdit"] = this.contentEdit;
-        data["isUploaded"] = this.isUploaded;
-        data["isPublished"] = this.isPublished;
-        data["prompt"] = this.prompt ? this.prompt.toJSON() : undefined as any;
-        data["id"] = this.id;
-        data["title"] = this.title;
-        data["code"] = this.code;
-        data["baseStatus"] = this.baseStatus;
+        data["cursor"] = this.cursor;
+        data["hasMore"] = this.hasMore;
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (this.movieIds) {
+            data["movieIds"] = {};
+            for (let key in this.movieIds) {
+                if (this.movieIds.hasOwnProperty(key))
+                    (data["movieIds"] as any)[key] = (this.movieIds as any)[key];
+            }
+        }
         return data;
     }
 }
 
-export interface IChapterDto {
-    storyId?: number;
-    promptId?: number;
-    tytChapterId?: string | undefined;
-    nameRaw?: string | undefined;
-    nameEdit?: string | undefined;
-    chapterNumber?: number;
-    contentRaw?: string | undefined;
-    contentEdit?: string | undefined;
-    isUploaded?: boolean;
-    isPublished?: boolean;
-    prompt: Prompt;
-    id?: number;
+export interface IChannelDramasDto {
+    cursor?: string | undefined;
+    hasMore?: boolean;
+    items?: DramaDto[];
+    movieIds?: { [key: string]: number; };
+
+    [key: string]: any;
+}
+
+export class ChapterContentDto implements IChapterContentDto {
+    url?: string | undefined;
     title?: string | undefined;
-    code?: string | undefined;
-    baseStatus?: string | undefined;
+    paragraphs?: string[];
+
+    [key: string]: any;
+
+    constructor(data?: IChapterContentDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.url = _data["url"];
+            this.title = _data["title"];
+            if (Array.isArray(_data["paragraphs"])) {
+                this.paragraphs = [] as any;
+                for (let item of _data["paragraphs"])
+                    this.paragraphs!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ChapterContentDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChapterContentDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["url"] = this.url;
+        data["title"] = this.title;
+        if (Array.isArray(this.paragraphs)) {
+            data["paragraphs"] = [];
+            for (let item of this.paragraphs)
+                data["paragraphs"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IChapterContentDto {
+    url?: string | undefined;
+    title?: string | undefined;
+    paragraphs?: string[];
+
+    [key: string]: any;
+}
+
+export class ChapterDataDto implements IChapterDataDto {
+    title?: string | undefined;
+    link?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IChapterDataDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+            this.link = _data["link"];
+        }
+    }
+
+    static fromJS(data: any): ChapterDataDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChapterDataDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        data["link"] = this.link;
+        return data;
+    }
+}
+
+export interface IChapterDataDto {
+    title?: string | undefined;
+    link?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CrawlPageDtoOfChapterDataDto implements ICrawlPageDtoOfChapterDataDto {
+    items?: ChapterDataDto[];
+    page?: number;
+    totalPages?: number | undefined;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+    sourceUrl?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICrawlPageDtoOfChapterDataDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(ChapterDataDto.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.totalPages = _data["totalPages"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+            this.sourceUrl = _data["sourceUrl"];
+        }
+    }
+
+    static fromJS(data: any): CrawlPageDtoOfChapterDataDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CrawlPageDtoOfChapterDataDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["page"] = this.page;
+        data["totalPages"] = this.totalPages;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        data["sourceUrl"] = this.sourceUrl;
+        return data;
+    }
+}
+
+export interface ICrawlPageDtoOfChapterDataDto {
+    items?: ChapterDataDto[];
+    page?: number;
+    totalPages?: number | undefined;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+    sourceUrl?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CrawlPageDtoOfStoryCrawlDto implements ICrawlPageDtoOfStoryCrawlDto {
+    items?: StoryCrawlDto[];
+    page?: number;
+    totalPages?: number | undefined;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+    sourceUrl?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICrawlPageDtoOfStoryCrawlDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(StoryCrawlDto.fromJS(item));
+            }
+            this.page = _data["page"];
+            this.totalPages = _data["totalPages"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+            this.sourceUrl = _data["sourceUrl"];
+        }
+    }
+
+    static fromJS(data: any): CrawlPageDtoOfStoryCrawlDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CrawlPageDtoOfStoryCrawlDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["page"] = this.page;
+        data["totalPages"] = this.totalPages;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        data["sourceUrl"] = this.sourceUrl;
+        return data;
+    }
+}
+
+export interface ICrawlPageDtoOfStoryCrawlDto {
+    items?: StoryCrawlDto[];
+    page?: number;
+    totalPages?: number | undefined;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+    sourceUrl?: string | undefined;
 
     [key: string]: any;
 }
@@ -3997,6 +6144,8 @@ export interface ICreateAccountCommand {
 
 export class CreateAccountTypeCommand implements ICreateAccountTypeCommand {
     title?: string | undefined;
+    baseUrl?: string | undefined;
+    loginCookieName?: string | undefined;
 
     [key: string]: any;
 
@@ -4016,6 +6165,8 @@ export class CreateAccountTypeCommand implements ICreateAccountTypeCommand {
                     this[property] = _data[property];
             }
             this.title = _data["title"];
+            this.baseUrl = _data["baseUrl"];
+            this.loginCookieName = _data["loginCookieName"];
         }
     }
 
@@ -4033,20 +6184,27 @@ export class CreateAccountTypeCommand implements ICreateAccountTypeCommand {
                 data[property] = this[property];
         }
         data["title"] = this.title;
+        data["baseUrl"] = this.baseUrl;
+        data["loginCookieName"] = this.loginCookieName;
         return data;
     }
 }
 
 export interface ICreateAccountTypeCommand {
     title?: string | undefined;
+    baseUrl?: string | undefined;
+    loginCookieName?: string | undefined;
 
     [key: string]: any;
 }
 
 export class CreateAICommand implements ICreateAICommand {
     title?: string | undefined;
+    provider?: number;
     model?: string | undefined;
     apiKey?: string | undefined;
+    project?: string | undefined;
+    email?: string | undefined;
 
     [key: string]: any;
 
@@ -4066,8 +6224,11 @@ export class CreateAICommand implements ICreateAICommand {
                     this[property] = _data[property];
             }
             this.title = _data["title"];
+            this.provider = _data["provider"];
             this.model = _data["model"];
             this.apiKey = _data["apiKey"];
+            this.project = _data["project"];
+            this.email = _data["email"];
         }
     }
 
@@ -4085,16 +6246,22 @@ export class CreateAICommand implements ICreateAICommand {
                 data[property] = this[property];
         }
         data["title"] = this.title;
+        data["provider"] = this.provider;
         data["model"] = this.model;
         data["apiKey"] = this.apiKey;
+        data["project"] = this.project;
+        data["email"] = this.email;
         return data;
     }
 }
 
 export interface ICreateAICommand {
     title?: string | undefined;
+    provider?: number;
     model?: string | undefined;
     apiKey?: string | undefined;
+    project?: string | undefined;
+    email?: string | undefined;
 
     [key: string]: any;
 }
@@ -4147,14 +6314,14 @@ export interface ICreateCategoryCommand {
     [key: string]: any;
 }
 
-export class CreateChapterCommand implements ICreateChapterCommand {
-    storyId?: number;
-    promptId?: number;
+export class CreateEpisodeCommand implements ICreateEpisodeCommand {
+    workId?: number;
+    promptId?: number | undefined;
     title?: string | undefined;
     tytChapterId?: string | undefined;
     nameRaw?: string | undefined;
     nameEdit?: string | undefined;
-    chapterNumber?: number;
+    episodeNumber?: number;
     contentRaw?: string | undefined;
     contentEdit?: string | undefined;
     isUploaded?: boolean;
@@ -4162,7 +6329,7 @@ export class CreateChapterCommand implements ICreateChapterCommand {
 
     [key: string]: any;
 
-    constructor(data?: ICreateChapterCommand) {
+    constructor(data?: ICreateEpisodeCommand) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -4177,13 +6344,13 @@ export class CreateChapterCommand implements ICreateChapterCommand {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.storyId = _data["storyId"];
+            this.workId = _data["workId"];
             this.promptId = _data["promptId"];
             this.title = _data["title"];
             this.tytChapterId = _data["tytChapterId"];
             this.nameRaw = _data["nameRaw"];
             this.nameEdit = _data["nameEdit"];
-            this.chapterNumber = _data["chapterNumber"];
+            this.episodeNumber = _data["episodeNumber"];
             this.contentRaw = _data["contentRaw"];
             this.contentEdit = _data["contentEdit"];
             this.isUploaded = _data["isUploaded"];
@@ -4191,9 +6358,9 @@ export class CreateChapterCommand implements ICreateChapterCommand {
         }
     }
 
-    static fromJS(data: any): CreateChapterCommand {
+    static fromJS(data: any): CreateEpisodeCommand {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateChapterCommand();
+        let result = new CreateEpisodeCommand();
         result.init(data);
         return result;
     }
@@ -4204,13 +6371,13 @@ export class CreateChapterCommand implements ICreateChapterCommand {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["storyId"] = this.storyId;
+        data["workId"] = this.workId;
         data["promptId"] = this.promptId;
         data["title"] = this.title;
         data["tytChapterId"] = this.tytChapterId;
         data["nameRaw"] = this.nameRaw;
         data["nameEdit"] = this.nameEdit;
-        data["chapterNumber"] = this.chapterNumber;
+        data["episodeNumber"] = this.episodeNumber;
         data["contentRaw"] = this.contentRaw;
         data["contentEdit"] = this.contentEdit;
         data["isUploaded"] = this.isUploaded;
@@ -4219,14 +6386,14 @@ export class CreateChapterCommand implements ICreateChapterCommand {
     }
 }
 
-export interface ICreateChapterCommand {
-    storyId?: number;
-    promptId?: number;
+export interface ICreateEpisodeCommand {
+    workId?: number;
+    promptId?: number | undefined;
     title?: string | undefined;
     tytChapterId?: string | undefined;
     nameRaw?: string | undefined;
     nameEdit?: string | undefined;
-    chapterNumber?: number;
+    episodeNumber?: number;
     contentRaw?: string | undefined;
     contentEdit?: string | undefined;
     isUploaded?: boolean;
@@ -4293,6 +6460,8 @@ export interface ICreatePromptCommand {
 
 export class CreatePromptTypeCommand implements ICreatePromptTypeCommand {
     title?: string | undefined;
+    code?: string | undefined;
+    description?: string | undefined;
 
     [key: string]: any;
 
@@ -4312,6 +6481,8 @@ export class CreatePromptTypeCommand implements ICreatePromptTypeCommand {
                     this[property] = _data[property];
             }
             this.title = _data["title"];
+            this.code = _data["code"];
+            this.description = _data["description"];
         }
     }
 
@@ -4329,116 +6500,16 @@ export class CreatePromptTypeCommand implements ICreatePromptTypeCommand {
                 data[property] = this[property];
         }
         data["title"] = this.title;
+        data["code"] = this.code;
+        data["description"] = this.description;
         return data;
     }
 }
 
 export interface ICreatePromptTypeCommand {
     title?: string | undefined;
-
-    [key: string]: any;
-}
-
-export class CreateStoryCommand implements ICreateStoryCommand {
-    title?: string | undefined;
-    storySourceId?: number;
-    accountId?: number;
-    tytStoryId?: string | undefined;
-    author?: string | undefined;
+    code?: string | undefined;
     description?: string | undefined;
-    isFull?: boolean;
-    isPublished?: boolean;
-    isEarning?: boolean;
-    isComment?: boolean;
-    chapterUploaded?: number;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
-
-    [key: string]: any;
-
-    constructor(data?: ICreateStoryCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.title = _data["title"];
-            this.storySourceId = _data["storySourceId"];
-            this.accountId = _data["accountId"];
-            this.tytStoryId = _data["tytStoryId"];
-            this.author = _data["author"];
-            this.description = _data["description"];
-            this.isFull = _data["isFull"];
-            this.isPublished = _data["isPublished"];
-            this.isEarning = _data["isEarning"];
-            this.isComment = _data["isComment"];
-            this.chapterUploaded = _data["chapterUploaded"];
-            this.earnCount = _data["earnCount"];
-            this.earnNow = _data["earnNow"];
-            this.adCount = _data["adCount"];
-            this.paid = _data["paid"];
-        }
-    }
-
-    static fromJS(data: any): CreateStoryCommand {
-        data = typeof data === 'object' ? data : {};
-        let result = new CreateStoryCommand();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["title"] = this.title;
-        data["storySourceId"] = this.storySourceId;
-        data["accountId"] = this.accountId;
-        data["tytStoryId"] = this.tytStoryId;
-        data["author"] = this.author;
-        data["description"] = this.description;
-        data["isFull"] = this.isFull;
-        data["isPublished"] = this.isPublished;
-        data["isEarning"] = this.isEarning;
-        data["isComment"] = this.isComment;
-        data["chapterUploaded"] = this.chapterUploaded;
-        data["earnCount"] = this.earnCount;
-        data["earnNow"] = this.earnNow;
-        data["adCount"] = this.adCount;
-        data["paid"] = this.paid;
-        return data;
-    }
-}
-
-export interface ICreateStoryCommand {
-    title?: string | undefined;
-    storySourceId?: number;
-    accountId?: number;
-    tytStoryId?: string | undefined;
-    author?: string | undefined;
-    description?: string | undefined;
-    isFull?: boolean;
-    isPublished?: boolean;
-    isEarning?: boolean;
-    isComment?: boolean;
-    chapterUploaded?: number;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
 
     [key: string]: any;
 }
@@ -4543,9 +6614,119 @@ export interface ICreateStorySourceCommand {
     [key: string]: any;
 }
 
+export class CreateStoryVideoTypeCommand implements ICreateStoryVideoTypeCommand {
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateStoryVideoTypeCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+            this.code = _data["code"];
+        }
+    }
+
+    static fromJS(data: any): CreateStoryVideoTypeCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateStoryVideoTypeCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        data["code"] = this.code;
+        return data;
+    }
+}
+
+export interface ICreateStoryVideoTypeCommand {
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CreateUserProfileTypeCommand implements ICreateUserProfileTypeCommand {
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateUserProfileTypeCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+            this.code = _data["code"];
+        }
+    }
+
+    static fromJS(data: any): CreateUserProfileTypeCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateUserProfileTypeCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        data["code"] = this.code;
+        return data;
+    }
+}
+
+export interface ICreateUserProfileTypeCommand {
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+}
+
 export class CreateWebSourceCommand implements ICreateWebSourceCommand {
     title?: string | undefined;
     baseUrl?: string | undefined;
+    type?: number | undefined;
+    isCookie?: boolean;
+    accountId?: number | undefined;
+    isNeedEdit?: boolean;
+    tytAccountId?: number | undefined;
+    crawlConfig?: string | undefined;
 
     [key: string]: any;
 
@@ -4566,6 +6747,12 @@ export class CreateWebSourceCommand implements ICreateWebSourceCommand {
             }
             this.title = _data["title"];
             this.baseUrl = _data["baseUrl"];
+            this.type = _data["type"];
+            this.isCookie = _data["isCookie"];
+            this.accountId = _data["accountId"];
+            this.isNeedEdit = _data["isNeedEdit"];
+            this.tytAccountId = _data["tytAccountId"];
+            this.crawlConfig = _data["crawlConfig"];
         }
     }
 
@@ -4584,6 +6771,12 @@ export class CreateWebSourceCommand implements ICreateWebSourceCommand {
         }
         data["title"] = this.title;
         data["baseUrl"] = this.baseUrl;
+        data["type"] = this.type;
+        data["isCookie"] = this.isCookie;
+        data["accountId"] = this.accountId;
+        data["isNeedEdit"] = this.isNeedEdit;
+        data["tytAccountId"] = this.tytAccountId;
+        data["crawlConfig"] = this.crawlConfig;
         return data;
     }
 }
@@ -4591,6 +6784,120 @@ export class CreateWebSourceCommand implements ICreateWebSourceCommand {
 export interface ICreateWebSourceCommand {
     title?: string | undefined;
     baseUrl?: string | undefined;
+    type?: number | undefined;
+    isCookie?: boolean;
+    accountId?: number | undefined;
+    isNeedEdit?: boolean;
+    tytAccountId?: number | undefined;
+    crawlConfig?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CreateWorkCommand implements ICreateWorkCommand {
+    title?: string | undefined;
+    storySourceId?: number;
+    accountId?: number | undefined;
+    storyVideoTypeId?: number | undefined;
+    tytStoryId?: string | undefined;
+    author?: string | undefined;
+    description?: string | undefined;
+    isFull?: boolean;
+    isPublished?: boolean;
+    isEarning?: boolean;
+    isComment?: boolean;
+    chapterUploaded?: number;
+    earnCount?: number;
+    earnNow?: number;
+    adCount?: number;
+    paid?: number;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateWorkCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+            this.storySourceId = _data["storySourceId"];
+            this.accountId = _data["accountId"];
+            this.storyVideoTypeId = _data["storyVideoTypeId"];
+            this.tytStoryId = _data["tytStoryId"];
+            this.author = _data["author"];
+            this.description = _data["description"];
+            this.isFull = _data["isFull"];
+            this.isPublished = _data["isPublished"];
+            this.isEarning = _data["isEarning"];
+            this.isComment = _data["isComment"];
+            this.chapterUploaded = _data["chapterUploaded"];
+            this.earnCount = _data["earnCount"];
+            this.earnNow = _data["earnNow"];
+            this.adCount = _data["adCount"];
+            this.paid = _data["paid"];
+        }
+    }
+
+    static fromJS(data: any): CreateWorkCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateWorkCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        data["storySourceId"] = this.storySourceId;
+        data["accountId"] = this.accountId;
+        data["storyVideoTypeId"] = this.storyVideoTypeId;
+        data["tytStoryId"] = this.tytStoryId;
+        data["author"] = this.author;
+        data["description"] = this.description;
+        data["isFull"] = this.isFull;
+        data["isPublished"] = this.isPublished;
+        data["isEarning"] = this.isEarning;
+        data["isComment"] = this.isComment;
+        data["chapterUploaded"] = this.chapterUploaded;
+        data["earnCount"] = this.earnCount;
+        data["earnNow"] = this.earnNow;
+        data["adCount"] = this.adCount;
+        data["paid"] = this.paid;
+        return data;
+    }
+}
+
+export interface ICreateWorkCommand {
+    title?: string | undefined;
+    storySourceId?: number;
+    accountId?: number | undefined;
+    storyVideoTypeId?: number | undefined;
+    tytStoryId?: string | undefined;
+    author?: string | undefined;
+    description?: string | undefined;
+    isFull?: boolean;
+    isPublished?: boolean;
+    isEarning?: boolean;
+    isComment?: boolean;
+    chapterUploaded?: number;
+    earnCount?: number;
+    earnNow?: number;
+    adCount?: number;
+    paid?: number;
 
     [key: string]: any;
 }
@@ -4883,6 +7190,310 @@ export interface IDramaThemeDto {
     [key: string]: any;
 }
 
+export class EpisodeBriefDto implements IEpisodeBriefDto {
+    workId?: number;
+    episodeNumber?: number;
+    linkRaw?: string | undefined;
+    nameRaw?: string | undefined;
+    nameEdit?: string | undefined;
+    status?: number;
+    error?: string | undefined;
+    promptId?: number | undefined;
+    rawLength?: number | undefined;
+    editLength?: number | undefined;
+    fetchedAt?: Date | undefined;
+    editedAt?: Date | undefined;
+    isUploaded?: boolean;
+    isPublished?: boolean;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IEpisodeBriefDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.workId = _data["workId"];
+            this.episodeNumber = _data["episodeNumber"];
+            this.linkRaw = _data["linkRaw"];
+            this.nameRaw = _data["nameRaw"];
+            this.nameEdit = _data["nameEdit"];
+            this.status = _data["status"];
+            this.error = _data["error"];
+            this.promptId = _data["promptId"];
+            this.rawLength = _data["rawLength"];
+            this.editLength = _data["editLength"];
+            this.fetchedAt = _data["fetchedAt"] ? new Date(_data["fetchedAt"].toString()) : undefined as any;
+            this.editedAt = _data["editedAt"] ? new Date(_data["editedAt"].toString()) : undefined as any;
+            this.isUploaded = _data["isUploaded"];
+            this.isPublished = _data["isPublished"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): EpisodeBriefDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new EpisodeBriefDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["workId"] = this.workId;
+        data["episodeNumber"] = this.episodeNumber;
+        data["linkRaw"] = this.linkRaw;
+        data["nameRaw"] = this.nameRaw;
+        data["nameEdit"] = this.nameEdit;
+        data["status"] = this.status;
+        data["error"] = this.error;
+        data["promptId"] = this.promptId;
+        data["rawLength"] = this.rawLength;
+        data["editLength"] = this.editLength;
+        data["fetchedAt"] = this.fetchedAt ? this.fetchedAt.toISOString() : undefined as any;
+        data["editedAt"] = this.editedAt ? this.editedAt.toISOString() : undefined as any;
+        data["isUploaded"] = this.isUploaded;
+        data["isPublished"] = this.isPublished;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IEpisodeBriefDto {
+    workId?: number;
+    episodeNumber?: number;
+    linkRaw?: string | undefined;
+    nameRaw?: string | undefined;
+    nameEdit?: string | undefined;
+    status?: number;
+    error?: string | undefined;
+    promptId?: number | undefined;
+    rawLength?: number | undefined;
+    editLength?: number | undefined;
+    fetchedAt?: Date | undefined;
+    editedAt?: Date | undefined;
+    isUploaded?: boolean;
+    isPublished?: boolean;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class EpisodeDto implements IEpisodeDto {
+    tytChapterId?: string | undefined;
+    contentRaw?: string | undefined;
+    contentEdit?: string | undefined;
+    promptTitle?: string | undefined;
+    workId?: number;
+    episodeNumber?: number;
+    linkRaw?: string | undefined;
+    nameRaw?: string | undefined;
+    nameEdit?: string | undefined;
+    status?: number;
+    error?: string | undefined;
+    promptId?: number | undefined;
+    rawLength?: number | undefined;
+    editLength?: number | undefined;
+    fetchedAt?: Date | undefined;
+    editedAt?: Date | undefined;
+    isUploaded?: boolean;
+    isPublished?: boolean;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IEpisodeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.tytChapterId = _data["tytChapterId"];
+            this.contentRaw = _data["contentRaw"];
+            this.contentEdit = _data["contentEdit"];
+            this.promptTitle = _data["promptTitle"];
+            this.workId = _data["workId"];
+            this.episodeNumber = _data["episodeNumber"];
+            this.linkRaw = _data["linkRaw"];
+            this.nameRaw = _data["nameRaw"];
+            this.nameEdit = _data["nameEdit"];
+            this.status = _data["status"];
+            this.error = _data["error"];
+            this.promptId = _data["promptId"];
+            this.rawLength = _data["rawLength"];
+            this.editLength = _data["editLength"];
+            this.fetchedAt = _data["fetchedAt"] ? new Date(_data["fetchedAt"].toString()) : undefined as any;
+            this.editedAt = _data["editedAt"] ? new Date(_data["editedAt"].toString()) : undefined as any;
+            this.isUploaded = _data["isUploaded"];
+            this.isPublished = _data["isPublished"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): EpisodeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new EpisodeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["tytChapterId"] = this.tytChapterId;
+        data["contentRaw"] = this.contentRaw;
+        data["contentEdit"] = this.contentEdit;
+        data["promptTitle"] = this.promptTitle;
+        data["workId"] = this.workId;
+        data["episodeNumber"] = this.episodeNumber;
+        data["linkRaw"] = this.linkRaw;
+        data["nameRaw"] = this.nameRaw;
+        data["nameEdit"] = this.nameEdit;
+        data["status"] = this.status;
+        data["error"] = this.error;
+        data["promptId"] = this.promptId;
+        data["rawLength"] = this.rawLength;
+        data["editLength"] = this.editLength;
+        data["fetchedAt"] = this.fetchedAt ? this.fetchedAt.toISOString() : undefined as any;
+        data["editedAt"] = this.editedAt ? this.editedAt.toISOString() : undefined as any;
+        data["isUploaded"] = this.isUploaded;
+        data["isPublished"] = this.isPublished;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IEpisodeDto {
+    tytChapterId?: string | undefined;
+    contentRaw?: string | undefined;
+    contentEdit?: string | undefined;
+    promptTitle?: string | undefined;
+    workId?: number;
+    episodeNumber?: number;
+    linkRaw?: string | undefined;
+    nameRaw?: string | undefined;
+    nameEdit?: string | undefined;
+    status?: number;
+    error?: string | undefined;
+    promptId?: number | undefined;
+    rawLength?: number | undefined;
+    editLength?: number | undefined;
+    fetchedAt?: Date | undefined;
+    editedAt?: Date | undefined;
+    isUploaded?: boolean;
+    isPublished?: boolean;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class GetProviderModelsQuery implements IGetProviderModelsQuery {
+    provider?: number;
+    apiKey?: string | undefined;
+    aiId?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IGetProviderModelsQuery) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.provider = _data["provider"];
+            this.apiKey = _data["apiKey"];
+            this.aiId = _data["aiId"];
+        }
+    }
+
+    static fromJS(data: any): GetProviderModelsQuery {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetProviderModelsQuery();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["provider"] = this.provider;
+        data["apiKey"] = this.apiKey;
+        data["aiId"] = this.aiId;
+        return data;
+    }
+}
+
+export interface IGetProviderModelsQuery {
+    provider?: number;
+    apiKey?: string | undefined;
+    aiId?: number | undefined;
+
+    [key: string]: any;
+}
+
 export class HttpValidationProblemDetails implements IHttpValidationProblemDetails {
     type?: string | undefined;
     title?: string | undefined;
@@ -5015,62 +7626,6 @@ export interface IInfoResponse {
     [key: string]: any;
 }
 
-export class IntegrationEvent implements IIntegrationEvent {
-    eventId?: string;
-    occurredOn?: Date;
-    eventType?: string;
-
-    [key: string]: any;
-
-    constructor(data?: IIntegrationEvent) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.eventId = _data["eventId"];
-            this.occurredOn = _data["occurredOn"] ? new Date(_data["occurredOn"].toString()) : undefined as any;
-            this.eventType = _data["eventType"];
-        }
-    }
-
-    static fromJS(data: any): IntegrationEvent {
-        data = typeof data === 'object' ? data : {};
-        let result = new IntegrationEvent();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["eventId"] = this.eventId;
-        data["occurredOn"] = this.occurredOn ? this.occurredOn.toISOString() : undefined as any;
-        data["eventType"] = this.eventType;
-        return data;
-    }
-}
-
-export interface IIntegrationEvent {
-    eventId?: string;
-    occurredOn?: Date;
-    eventType?: string;
-
-    [key: string]: any;
-}
-
 export class LoginRequest implements ILoginRequest {
     email!: string;
     password!: string;
@@ -5119,6 +7674,194 @@ export class LoginRequest implements ILoginRequest {
 export interface ILoginRequest {
     email: string;
     password: string;
+
+    [key: string]: any;
+}
+
+export class MovieDto implements IMovieDto {
+    description?: string | undefined;
+    coverUrl?: string | undefined;
+    externalId?: string | undefined;
+    userProfileId?: number | undefined;
+    userProfileTitle?: string | undefined;
+    userProfileUniqueId?: string | undefined;
+    viewCount?: number | undefined;
+    isFull?: boolean;
+    episodeCount?: number;
+    totalDurationSeconds?: number;
+    episodesSyncedAt?: Date | undefined;
+    episodeSyncError?: string | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IMovieDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.description = _data["description"];
+            this.coverUrl = _data["coverUrl"];
+            this.externalId = _data["externalId"];
+            this.userProfileId = _data["userProfileId"];
+            this.userProfileTitle = _data["userProfileTitle"];
+            this.userProfileUniqueId = _data["userProfileUniqueId"];
+            this.viewCount = _data["viewCount"];
+            this.isFull = _data["isFull"];
+            this.episodeCount = _data["episodeCount"];
+            this.totalDurationSeconds = _data["totalDurationSeconds"];
+            this.episodesSyncedAt = _data["episodesSyncedAt"] ? new Date(_data["episodesSyncedAt"].toString()) : undefined as any;
+            this.episodeSyncError = _data["episodeSyncError"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): MovieDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new MovieDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["description"] = this.description;
+        data["coverUrl"] = this.coverUrl;
+        data["externalId"] = this.externalId;
+        data["userProfileId"] = this.userProfileId;
+        data["userProfileTitle"] = this.userProfileTitle;
+        data["userProfileUniqueId"] = this.userProfileUniqueId;
+        data["viewCount"] = this.viewCount;
+        data["isFull"] = this.isFull;
+        data["episodeCount"] = this.episodeCount;
+        data["totalDurationSeconds"] = this.totalDurationSeconds;
+        data["episodesSyncedAt"] = this.episodesSyncedAt ? this.episodesSyncedAt.toISOString() : undefined as any;
+        data["episodeSyncError"] = this.episodeSyncError;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IMovieDto {
+    description?: string | undefined;
+    coverUrl?: string | undefined;
+    externalId?: string | undefined;
+    userProfileId?: number | undefined;
+    userProfileTitle?: string | undefined;
+    userProfileUniqueId?: string | undefined;
+    viewCount?: number | undefined;
+    isFull?: boolean;
+    episodeCount?: number;
+    totalDurationSeconds?: number;
+    episodesSyncedAt?: Date | undefined;
+    episodeSyncError?: string | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class MovieEpisodeDto implements IMovieEpisodeDto {
+    episodeNumber?: number;
+    externalId?: string | undefined;
+    videoUrl?: string | undefined;
+    thumbnailUrl?: string | undefined;
+    durationSeconds?: number | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IMovieEpisodeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.episodeNumber = _data["episodeNumber"];
+            this.externalId = _data["externalId"];
+            this.videoUrl = _data["videoUrl"];
+            this.thumbnailUrl = _data["thumbnailUrl"];
+            this.durationSeconds = _data["durationSeconds"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): MovieEpisodeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new MovieEpisodeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["episodeNumber"] = this.episodeNumber;
+        data["externalId"] = this.externalId;
+        data["videoUrl"] = this.videoUrl;
+        data["thumbnailUrl"] = this.thumbnailUrl;
+        data["durationSeconds"] = this.durationSeconds;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IMovieEpisodeDto {
+    episodeNumber?: number;
+    externalId?: string | undefined;
+    videoUrl?: string | undefined;
+    thumbnailUrl?: string | undefined;
+    durationSeconds?: number | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
 
     [key: string]: any;
 }
@@ -5427,8 +8170,8 @@ export interface IPaginatedListOfCategoryDto {
     [key: string]: any;
 }
 
-export class PaginatedListOfChapterDto implements IPaginatedListOfChapterDto {
-    items?: ChapterDto[] | undefined;
+export class PaginatedListOfEpisodeBriefDto implements IPaginatedListOfEpisodeBriefDto {
+    items?: EpisodeBriefDto[] | undefined;
     pageNumber!: number;
     totalPages?: number;
     totalCount?: number;
@@ -5437,7 +8180,7 @@ export class PaginatedListOfChapterDto implements IPaginatedListOfChapterDto {
 
     [key: string]: any;
 
-    constructor(data?: IPaginatedListOfChapterDto) {
+    constructor(data?: IPaginatedListOfEpisodeBriefDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5455,7 +8198,7 @@ export class PaginatedListOfChapterDto implements IPaginatedListOfChapterDto {
             if (Array.isArray(_data["items"])) {
                 this.items = [] as any;
                 for (let item of _data["items"])
-                    this.items!.push(ChapterDto.fromJS(item));
+                    this.items!.push(EpisodeBriefDto.fromJS(item));
             }
             this.pageNumber = _data["pageNumber"];
             this.totalPages = _data["totalPages"];
@@ -5465,9 +8208,9 @@ export class PaginatedListOfChapterDto implements IPaginatedListOfChapterDto {
         }
     }
 
-    static fromJS(data: any): PaginatedListOfChapterDto {
+    static fromJS(data: any): PaginatedListOfEpisodeBriefDto {
         data = typeof data === 'object' ? data : {};
-        let result = new PaginatedListOfChapterDto();
+        let result = new PaginatedListOfEpisodeBriefDto();
         result.init(data);
         return result;
     }
@@ -5492,8 +8235,160 @@ export class PaginatedListOfChapterDto implements IPaginatedListOfChapterDto {
     }
 }
 
-export interface IPaginatedListOfChapterDto {
-    items?: ChapterDto[] | undefined;
+export interface IPaginatedListOfEpisodeBriefDto {
+    items?: EpisodeBriefDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfMovieDto implements IPaginatedListOfMovieDto {
+    items?: MovieDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfMovieDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(MovieDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfMovieDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfMovieDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfMovieDto {
+    items?: MovieDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfMovieEpisodeDto implements IPaginatedListOfMovieEpisodeDto {
+    items?: MovieEpisodeDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfMovieEpisodeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(MovieEpisodeDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfMovieEpisodeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfMovieEpisodeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfMovieEpisodeDto {
+    items?: MovieEpisodeDto[] | undefined;
     pageNumber: number;
     totalPages?: number;
     totalCount?: number;
@@ -5655,82 +8550,6 @@ export interface IPaginatedListOfPromptTypeDto {
     [key: string]: any;
 }
 
-export class PaginatedListOfStoryDto implements IPaginatedListOfStoryDto {
-    items?: StoryDto[] | undefined;
-    pageNumber!: number;
-    totalPages?: number;
-    totalCount?: number;
-    hasPreviousPage?: boolean;
-    hasNextPage?: boolean;
-
-    [key: string]: any;
-
-    constructor(data?: IPaginatedListOfStoryDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            if (Array.isArray(_data["items"])) {
-                this.items = [] as any;
-                for (let item of _data["items"])
-                    this.items!.push(StoryDto.fromJS(item));
-            }
-            this.pageNumber = _data["pageNumber"];
-            this.totalPages = _data["totalPages"];
-            this.totalCount = _data["totalCount"];
-            this.hasPreviousPage = _data["hasPreviousPage"];
-            this.hasNextPage = _data["hasNextPage"];
-        }
-    }
-
-    static fromJS(data: any): PaginatedListOfStoryDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new PaginatedListOfStoryDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        if (Array.isArray(this.items)) {
-            data["items"] = [];
-            for (let item of this.items)
-                data["items"].push(item ? item.toJSON() : undefined as any);
-        }
-        data["pageNumber"] = this.pageNumber;
-        data["totalPages"] = this.totalPages;
-        data["totalCount"] = this.totalCount;
-        data["hasPreviousPage"] = this.hasPreviousPage;
-        data["hasNextPage"] = this.hasNextPage;
-        return data;
-    }
-}
-
-export interface IPaginatedListOfStoryDto {
-    items?: StoryDto[] | undefined;
-    pageNumber: number;
-    totalPages?: number;
-    totalCount?: number;
-    hasPreviousPage?: boolean;
-    hasNextPage?: boolean;
-
-    [key: string]: any;
-}
-
 export class PaginatedListOfStorySourceDto implements IPaginatedListOfStorySourceDto {
     items?: StorySourceDto[] | undefined;
     pageNumber!: number;
@@ -5798,6 +8617,234 @@ export class PaginatedListOfStorySourceDto implements IPaginatedListOfStorySourc
 
 export interface IPaginatedListOfStorySourceDto {
     items?: StorySourceDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfStoryVideoTypeDto implements IPaginatedListOfStoryVideoTypeDto {
+    items?: StoryVideoTypeDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfStoryVideoTypeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(StoryVideoTypeDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfStoryVideoTypeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfStoryVideoTypeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfStoryVideoTypeDto {
+    items?: StoryVideoTypeDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfUserProfileDto implements IPaginatedListOfUserProfileDto {
+    items?: UserProfileDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfUserProfileDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(UserProfileDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfUserProfileDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfUserProfileDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfUserProfileDto {
+    items?: UserProfileDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfUserProfileTypeDto implements IPaginatedListOfUserProfileTypeDto {
+    items?: UserProfileTypeDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfUserProfileTypeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(UserProfileTypeDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfUserProfileTypeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfUserProfileTypeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfUserProfileTypeDto {
+    items?: UserProfileTypeDto[] | undefined;
     pageNumber: number;
     totalPages?: number;
     totalCount?: number;
@@ -5883,23 +8930,17 @@ export interface IPaginatedListOfWebSourceDto {
     [key: string]: any;
 }
 
-export class Prompt implements IPrompt {
-    promptTypeId?: number;
-    content?: string | undefined;
-    baseStatus?: number;
-    created?: Date;
-    createdBy?: string | undefined;
-    lastModified?: Date;
-    lastModifiedBy?: string | undefined;
-    id?: number;
-    title?: string | undefined;
-    code?: string | undefined;
-    domainEvents?: BaseEvent[] | undefined;
-    integrationEvents?: IntegrationEvent[] | undefined;
+export class PaginatedListOfWorkDto implements IPaginatedListOfWorkDto {
+    items?: WorkDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
 
     [key: string]: any;
 
-    constructor(data?: IPrompt) {
+    constructor(data?: IPaginatedListOfWorkDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5914,32 +8955,22 @@ export class Prompt implements IPrompt {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.promptTypeId = _data["promptTypeId"];
-            this.content = _data["content"];
-            this.baseStatus = _data["baseStatus"];
-            this.created = _data["created"] ? new Date(_data["created"].toString()) : undefined as any;
-            this.createdBy = _data["createdBy"];
-            this.lastModified = _data["lastModified"] ? new Date(_data["lastModified"].toString()) : undefined as any;
-            this.lastModifiedBy = _data["lastModifiedBy"];
-            this.id = _data["id"];
-            this.title = _data["title"];
-            this.code = _data["code"];
-            if (Array.isArray(_data["domainEvents"])) {
-                this.domainEvents = [] as any;
-                for (let item of _data["domainEvents"])
-                    this.domainEvents!.push(BaseEvent.fromJS(item));
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(WorkDto.fromJS(item));
             }
-            if (Array.isArray(_data["integrationEvents"])) {
-                this.integrationEvents = [] as any;
-                for (let item of _data["integrationEvents"])
-                    this.integrationEvents!.push(IntegrationEvent.fromJS(item));
-            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
         }
     }
 
-    static fromJS(data: any): Prompt {
+    static fromJS(data: any): PaginatedListOfWorkDto {
         data = typeof data === 'object' ? data : {};
-        let result = new Prompt();
+        let result = new PaginatedListOfWorkDto();
         result.init(data);
         return result;
     }
@@ -5950,48 +8981,35 @@ export class Prompt implements IPrompt {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["promptTypeId"] = this.promptTypeId;
-        data["content"] = this.content;
-        data["baseStatus"] = this.baseStatus;
-        data["created"] = this.created ? this.created.toISOString() : undefined as any;
-        data["createdBy"] = this.createdBy;
-        data["lastModified"] = this.lastModified ? this.lastModified.toISOString() : undefined as any;
-        data["lastModifiedBy"] = this.lastModifiedBy;
-        data["id"] = this.id;
-        data["title"] = this.title;
-        data["code"] = this.code;
-        if (Array.isArray(this.domainEvents)) {
-            data["domainEvents"] = [];
-            for (let item of this.domainEvents)
-                data["domainEvents"].push(item ? item.toJSON() : undefined as any);
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
         }
-        if (Array.isArray(this.integrationEvents)) {
-            data["integrationEvents"] = [];
-            for (let item of this.integrationEvents)
-                data["integrationEvents"].push(item ? item.toJSON() : undefined as any);
-        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
         return data;
     }
 }
 
-export interface IPrompt {
-    promptTypeId?: number;
-    content?: string | undefined;
-    baseStatus?: number;
-    created?: Date;
-    createdBy?: string | undefined;
-    lastModified?: Date;
-    lastModifiedBy?: string | undefined;
-    id?: number;
-    title?: string | undefined;
-    code?: string | undefined;
-    domainEvents?: BaseEvent[] | undefined;
-    integrationEvents?: IntegrationEvent[] | undefined;
+export interface IPaginatedListOfWorkDto {
+    items?: WorkDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
 
     [key: string]: any;
 }
 
 export class PromptDto implements IPromptDto {
+    promptTypeId?: number;
+    promptTypeTitle?: string | undefined;
+    promptTypeCode?: string | undefined;
     content?: string | undefined;
     id?: number;
     title?: string | undefined;
@@ -6015,6 +9033,9 @@ export class PromptDto implements IPromptDto {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.promptTypeId = _data["promptTypeId"];
+            this.promptTypeTitle = _data["promptTypeTitle"];
+            this.promptTypeCode = _data["promptTypeCode"];
             this.content = _data["content"];
             this.id = _data["id"];
             this.title = _data["title"];
@@ -6036,6 +9057,9 @@ export class PromptDto implements IPromptDto {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["promptTypeId"] = this.promptTypeId;
+        data["promptTypeTitle"] = this.promptTypeTitle;
+        data["promptTypeCode"] = this.promptTypeCode;
         data["content"] = this.content;
         data["id"] = this.id;
         data["title"] = this.title;
@@ -6046,6 +9070,9 @@ export class PromptDto implements IPromptDto {
 }
 
 export interface IPromptDto {
+    promptTypeId?: number;
+    promptTypeTitle?: string | undefined;
+    promptTypeCode?: string | undefined;
     content?: string | undefined;
     id?: number;
     title?: string | undefined;
@@ -6056,7 +9083,8 @@ export interface IPromptDto {
 }
 
 export class PromptTypeDto implements IPromptTypeDto {
-    prompts?: PromptDto[] | undefined;
+    description?: string | undefined;
+    promptCount?: number;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
@@ -6079,11 +9107,8 @@ export class PromptTypeDto implements IPromptTypeDto {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            if (Array.isArray(_data["prompts"])) {
-                this.prompts = [] as any;
-                for (let item of _data["prompts"])
-                    this.prompts!.push(PromptDto.fromJS(item));
-            }
+            this.description = _data["description"];
+            this.promptCount = _data["promptCount"];
             this.id = _data["id"];
             this.title = _data["title"];
             this.code = _data["code"];
@@ -6104,11 +9129,8 @@ export class PromptTypeDto implements IPromptTypeDto {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        if (Array.isArray(this.prompts)) {
-            data["prompts"] = [];
-            for (let item of this.prompts)
-                data["prompts"].push(item ? item.toJSON() : undefined as any);
-        }
+        data["description"] = this.description;
+        data["promptCount"] = this.promptCount;
         data["id"] = this.id;
         data["title"] = this.title;
         data["code"] = this.code;
@@ -6118,7 +9140,8 @@ export class PromptTypeDto implements IPromptTypeDto {
 }
 
 export interface IPromptTypeDto {
-    prompts?: PromptDto[] | undefined;
+    description?: string | undefined;
+    promptCount?: number;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
@@ -6227,30 +9250,18 @@ export interface IRegisterRequest {
     [key: string]: any;
 }
 
-export class StoryDto implements IStoryDto {
-    storySourceId?: number;
-    accountId?: number;
-    tytStoryId?: string | undefined;
-    description?: string | undefined;
-    author?: string | undefined;
-    isFull?: boolean;
-    isPublished?: boolean;
-    isEarning?: boolean;
-    isComment?: boolean;
-    chapterUploaded?: number;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
-    storySource?: StorySourceDto | undefined;
-    id?: number;
+export class StoryCrawlDto implements IStoryCrawlDto {
     title?: string | undefined;
-    code?: string | undefined;
-    baseStatus?: string | undefined;
+    link?: string | undefined;
+    author?: string | undefined;
+    coverUrl?: string | undefined;
+    status?: string | undefined;
+    chapterCount?: number | undefined;
+    isSynced?: boolean;
 
     [key: string]: any;
 
-    constructor(data?: IStoryDto) {
+    constructor(data?: IStoryCrawlDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6265,31 +9276,19 @@ export class StoryDto implements IStoryDto {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.storySourceId = _data["storySourceId"];
-            this.accountId = _data["accountId"];
-            this.tytStoryId = _data["tytStoryId"];
-            this.description = _data["description"];
-            this.author = _data["author"];
-            this.isFull = _data["isFull"];
-            this.isPublished = _data["isPublished"];
-            this.isEarning = _data["isEarning"];
-            this.isComment = _data["isComment"];
-            this.chapterUploaded = _data["chapterUploaded"];
-            this.earnCount = _data["earnCount"];
-            this.earnNow = _data["earnNow"];
-            this.adCount = _data["adCount"];
-            this.paid = _data["paid"];
-            this.storySource = _data["storySource"] ? StorySourceDto.fromJS(_data["storySource"]) : undefined as any;
-            this.id = _data["id"];
             this.title = _data["title"];
-            this.code = _data["code"];
-            this.baseStatus = _data["baseStatus"];
+            this.link = _data["link"];
+            this.author = _data["author"];
+            this.coverUrl = _data["coverUrl"];
+            this.status = _data["status"];
+            this.chapterCount = _data["chapterCount"];
+            this.isSynced = _data["isSynced"];
         }
     }
 
-    static fromJS(data: any): StoryDto {
+    static fromJS(data: any): StoryCrawlDto {
         data = typeof data === 'object' ? data : {};
-        let result = new StoryDto();
+        let result = new StoryCrawlDto();
         result.init(data);
         return result;
     }
@@ -6300,49 +9299,109 @@ export class StoryDto implements IStoryDto {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["storySourceId"] = this.storySourceId;
-        data["accountId"] = this.accountId;
-        data["tytStoryId"] = this.tytStoryId;
-        data["description"] = this.description;
-        data["author"] = this.author;
-        data["isFull"] = this.isFull;
-        data["isPublished"] = this.isPublished;
-        data["isEarning"] = this.isEarning;
-        data["isComment"] = this.isComment;
-        data["chapterUploaded"] = this.chapterUploaded;
-        data["earnCount"] = this.earnCount;
-        data["earnNow"] = this.earnNow;
-        data["adCount"] = this.adCount;
-        data["paid"] = this.paid;
-        data["storySource"] = this.storySource ? this.storySource.toJSON() : undefined as any;
-        data["id"] = this.id;
         data["title"] = this.title;
-        data["code"] = this.code;
-        data["baseStatus"] = this.baseStatus;
+        data["link"] = this.link;
+        data["author"] = this.author;
+        data["coverUrl"] = this.coverUrl;
+        data["status"] = this.status;
+        data["chapterCount"] = this.chapterCount;
+        data["isSynced"] = this.isSynced;
         return data;
     }
 }
 
-export interface IStoryDto {
-    storySourceId?: number;
-    accountId?: number;
-    tytStoryId?: string | undefined;
-    description?: string | undefined;
-    author?: string | undefined;
-    isFull?: boolean;
-    isPublished?: boolean;
-    isEarning?: boolean;
-    isComment?: boolean;
-    chapterUploaded?: number;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
-    storySource?: StorySourceDto | undefined;
-    id?: number;
+export interface IStoryCrawlDto {
     title?: string | undefined;
-    code?: string | undefined;
-    baseStatus?: string | undefined;
+    link?: string | undefined;
+    author?: string | undefined;
+    coverUrl?: string | undefined;
+    status?: string | undefined;
+    chapterCount?: number | undefined;
+    isSynced?: boolean;
+
+    [key: string]: any;
+}
+
+export class StoryDataDto implements IStoryDataDto {
+    url?: string | undefined;
+    title?: string | undefined;
+    author?: string | undefined;
+    description?: string | undefined;
+    coverUrl?: string | undefined;
+    status?: string | undefined;
+    genres?: string[];
+    chapterCount?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IStoryDataDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.url = _data["url"];
+            this.title = _data["title"];
+            this.author = _data["author"];
+            this.description = _data["description"];
+            this.coverUrl = _data["coverUrl"];
+            this.status = _data["status"];
+            if (Array.isArray(_data["genres"])) {
+                this.genres = [] as any;
+                for (let item of _data["genres"])
+                    this.genres!.push(item);
+            }
+            this.chapterCount = _data["chapterCount"];
+        }
+    }
+
+    static fromJS(data: any): StoryDataDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new StoryDataDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["url"] = this.url;
+        data["title"] = this.title;
+        data["author"] = this.author;
+        data["description"] = this.description;
+        data["coverUrl"] = this.coverUrl;
+        data["status"] = this.status;
+        if (Array.isArray(this.genres)) {
+            data["genres"] = [];
+            for (let item of this.genres)
+                data["genres"].push(item);
+        }
+        data["chapterCount"] = this.chapterCount;
+        return data;
+    }
+}
+
+export interface IStoryDataDto {
+    url?: string | undefined;
+    title?: string | undefined;
+    author?: string | undefined;
+    description?: string | undefined;
+    coverUrl?: string | undefined;
+    status?: string | undefined;
+    genres?: string[];
+    chapterCount?: number | undefined;
 
     [key: string]: any;
 }
@@ -6358,6 +9417,8 @@ export class StorySourceDto implements IStorySourceDto {
     lastUpdate?: string | undefined;
     imageUrl?: string | undefined;
     totalChapters?: number | undefined;
+    workId?: number | undefined;
+    storyCreationError?: string | undefined;
     categories?: CategorySummaryDto[];
     id?: number;
     title?: string | undefined;
@@ -6391,6 +9452,8 @@ export class StorySourceDto implements IStorySourceDto {
             this.lastUpdate = _data["lastUpdate"];
             this.imageUrl = _data["imageUrl"];
             this.totalChapters = _data["totalChapters"];
+            this.workId = _data["workId"];
+            this.storyCreationError = _data["storyCreationError"];
             if (Array.isArray(_data["categories"])) {
                 this.categories = [] as any;
                 for (let item of _data["categories"])
@@ -6426,6 +9489,8 @@ export class StorySourceDto implements IStorySourceDto {
         data["lastUpdate"] = this.lastUpdate;
         data["imageUrl"] = this.imageUrl;
         data["totalChapters"] = this.totalChapters;
+        data["workId"] = this.workId;
+        data["storyCreationError"] = this.storyCreationError;
         if (Array.isArray(this.categories)) {
             data["categories"] = [];
             for (let item of this.categories)
@@ -6450,6 +9515,8 @@ export interface IStorySourceDto {
     lastUpdate?: string | undefined;
     imageUrl?: string | undefined;
     totalChapters?: number | undefined;
+    workId?: number | undefined;
+    storyCreationError?: string | undefined;
     categories?: CategorySummaryDto[];
     id?: number;
     title?: string | undefined;
@@ -6459,14 +9526,15 @@ export interface IStorySourceDto {
     [key: string]: any;
 }
 
-export class TikTokSessionStatus implements ITikTokSessionStatus {
-    accountId!: number;
-    state!: number;
-    cookieUpdatedAt?: Date | undefined;
+export class StoryVideoTypeDto implements IStoryVideoTypeDto {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
 
     [key: string]: any;
 
-    constructor(data?: ITikTokSessionStatus) {
+    constructor(data?: IStoryVideoTypeDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6481,15 +9549,16 @@ export class TikTokSessionStatus implements ITikTokSessionStatus {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.accountId = _data["accountId"];
-            this.state = _data["state"];
-            this.cookieUpdatedAt = _data["cookieUpdatedAt"] ? new Date(_data["cookieUpdatedAt"].toString()) : undefined as any;
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
         }
     }
 
-    static fromJS(data: any): TikTokSessionStatus {
+    static fromJS(data: any): StoryVideoTypeDto {
         data = typeof data === 'object' ? data : {};
-        let result = new TikTokSessionStatus();
+        let result = new StoryVideoTypeDto();
         result.init(data);
         return result;
     }
@@ -6500,17 +9569,351 @@ export class TikTokSessionStatus implements ITikTokSessionStatus {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["accountId"] = this.accountId;
-        data["state"] = this.state;
-        data["cookieUpdatedAt"] = this.cookieUpdatedAt ? this.cookieUpdatedAt.toISOString() : undefined as any;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
         return data;
     }
 }
 
-export interface ITikTokSessionStatus {
-    accountId: number;
-    state: number;
-    cookieUpdatedAt?: Date | undefined;
+export interface IStoryVideoTypeDto {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class SyncCrawledStoriesCommand implements ISyncCrawledStoriesCommand {
+    webSourceId?: number;
+    stories?: SyncCrawledStoryItem[];
+
+    [key: string]: any;
+
+    constructor(data?: ISyncCrawledStoriesCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.webSourceId = _data["webSourceId"];
+            if (Array.isArray(_data["stories"])) {
+                this.stories = [] as any;
+                for (let item of _data["stories"])
+                    this.stories!.push(SyncCrawledStoryItem.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): SyncCrawledStoriesCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new SyncCrawledStoriesCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["webSourceId"] = this.webSourceId;
+        if (Array.isArray(this.stories)) {
+            data["stories"] = [];
+            for (let item of this.stories)
+                data["stories"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface ISyncCrawledStoriesCommand {
+    webSourceId?: number;
+    stories?: SyncCrawledStoryItem[];
+
+    [key: string]: any;
+}
+
+export class SyncCrawledStoriesResult implements ISyncCrawledStoriesResult {
+    created!: number;
+    updated!: number;
+    detailFailed!: number;
+    detailError!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISyncCrawledStoriesResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.created = _data["created"];
+            this.updated = _data["updated"];
+            this.detailFailed = _data["detailFailed"];
+            this.detailError = _data["detailError"];
+        }
+    }
+
+    static fromJS(data: any): SyncCrawledStoriesResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new SyncCrawledStoriesResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["created"] = this.created;
+        data["updated"] = this.updated;
+        data["detailFailed"] = this.detailFailed;
+        data["detailError"] = this.detailError;
+        return data;
+    }
+}
+
+export interface ISyncCrawledStoriesResult {
+    created: number;
+    updated: number;
+    detailFailed: number;
+    detailError: string | undefined;
+
+    [key: string]: any;
+}
+
+export class SyncCrawledStoryItem implements ISyncCrawledStoryItem {
+    link!: string;
+    title?: string | undefined;
+    author?: string | undefined;
+    coverUrl?: string | undefined;
+    status?: string | undefined;
+    chapterCount?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISyncCrawledStoryItem) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.link = _data["link"];
+            this.title = _data["title"];
+            this.author = _data["author"];
+            this.coverUrl = _data["coverUrl"];
+            this.status = _data["status"];
+            this.chapterCount = _data["chapterCount"];
+        }
+    }
+
+    static fromJS(data: any): SyncCrawledStoryItem {
+        data = typeof data === 'object' ? data : {};
+        let result = new SyncCrawledStoryItem();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["link"] = this.link;
+        data["title"] = this.title;
+        data["author"] = this.author;
+        data["coverUrl"] = this.coverUrl;
+        data["status"] = this.status;
+        data["chapterCount"] = this.chapterCount;
+        return data;
+    }
+}
+
+export interface ISyncCrawledStoryItem {
+    link: string;
+    title?: string | undefined;
+    author?: string | undefined;
+    coverUrl?: string | undefined;
+    status?: string | undefined;
+    chapterCount?: number | undefined;
+
+    [key: string]: any;
+}
+
+export class SyncTikTokDramasCommand implements ISyncTikTokDramasCommand {
+    userProfileId?: number;
+    dramaIds?: string[];
+
+    [key: string]: any;
+
+    constructor(data?: ISyncTikTokDramasCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.userProfileId = _data["userProfileId"];
+            if (Array.isArray(_data["dramaIds"])) {
+                this.dramaIds = [] as any;
+                for (let item of _data["dramaIds"])
+                    this.dramaIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): SyncTikTokDramasCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new SyncTikTokDramasCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["userProfileId"] = this.userProfileId;
+        if (Array.isArray(this.dramaIds)) {
+            data["dramaIds"] = [];
+            for (let item of this.dramaIds)
+                data["dramaIds"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ISyncTikTokDramasCommand {
+    userProfileId?: number;
+    dramaIds?: string[];
+
+    [key: string]: any;
+}
+
+export class SyncTikTokDramasResult implements ISyncTikTokDramasResult {
+    created!: number;
+    updated!: number;
+    episodesAdded!: number;
+    errors!: string[];
+    movieIds!: number[];
+
+    [key: string]: any;
+
+    constructor(data?: ISyncTikTokDramasResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.errors = [];
+            this.movieIds = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.created = _data["created"];
+            this.updated = _data["updated"];
+            this.episodesAdded = _data["episodesAdded"];
+            if (Array.isArray(_data["errors"])) {
+                this.errors = [] as any;
+                for (let item of _data["errors"])
+                    this.errors!.push(item);
+            }
+            if (Array.isArray(_data["movieIds"])) {
+                this.movieIds = [] as any;
+                for (let item of _data["movieIds"])
+                    this.movieIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): SyncTikTokDramasResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new SyncTikTokDramasResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["created"] = this.created;
+        data["updated"] = this.updated;
+        data["episodesAdded"] = this.episodesAdded;
+        if (Array.isArray(this.errors)) {
+            data["errors"] = [];
+            for (let item of this.errors)
+                data["errors"].push(item);
+        }
+        if (Array.isArray(this.movieIds)) {
+            data["movieIds"] = [];
+            for (let item of this.movieIds)
+                data["movieIds"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ISyncTikTokDramasResult {
+    created: number;
+    updated: number;
+    episodesAdded: number;
+    errors: string[];
+    movieIds: number[];
 
     [key: string]: any;
 }
@@ -6666,6 +10069,8 @@ export interface IUpdateAccountCommand {
 export class UpdateAccountTypeCommand implements IUpdateAccountTypeCommand {
     id?: number;
     title?: string | undefined;
+    baseUrl?: string | undefined;
+    loginCookieName?: string | undefined;
 
     [key: string]: any;
 
@@ -6686,6 +10091,8 @@ export class UpdateAccountTypeCommand implements IUpdateAccountTypeCommand {
             }
             this.id = _data["id"];
             this.title = _data["title"];
+            this.baseUrl = _data["baseUrl"];
+            this.loginCookieName = _data["loginCookieName"];
         }
     }
 
@@ -6704,6 +10111,8 @@ export class UpdateAccountTypeCommand implements IUpdateAccountTypeCommand {
         }
         data["id"] = this.id;
         data["title"] = this.title;
+        data["baseUrl"] = this.baseUrl;
+        data["loginCookieName"] = this.loginCookieName;
         return data;
     }
 }
@@ -6711,6 +10120,8 @@ export class UpdateAccountTypeCommand implements IUpdateAccountTypeCommand {
 export interface IUpdateAccountTypeCommand {
     id?: number;
     title?: string | undefined;
+    baseUrl?: string | undefined;
+    loginCookieName?: string | undefined;
 
     [key: string]: any;
 }
@@ -6718,8 +10129,11 @@ export interface IUpdateAccountTypeCommand {
 export class UpdateAICommand implements IUpdateAICommand {
     id?: number;
     title?: string | undefined;
+    provider?: number;
     model?: string | undefined;
     apiKey?: string | undefined;
+    project?: string | undefined;
+    email?: string | undefined;
 
     [key: string]: any;
 
@@ -6740,8 +10154,11 @@ export class UpdateAICommand implements IUpdateAICommand {
             }
             this.id = _data["id"];
             this.title = _data["title"];
+            this.provider = _data["provider"];
             this.model = _data["model"];
             this.apiKey = _data["apiKey"];
+            this.project = _data["project"];
+            this.email = _data["email"];
         }
     }
 
@@ -6760,8 +10177,11 @@ export class UpdateAICommand implements IUpdateAICommand {
         }
         data["id"] = this.id;
         data["title"] = this.title;
+        data["provider"] = this.provider;
         data["model"] = this.model;
         data["apiKey"] = this.apiKey;
+        data["project"] = this.project;
+        data["email"] = this.email;
         return data;
     }
 }
@@ -6769,8 +10189,11 @@ export class UpdateAICommand implements IUpdateAICommand {
 export interface IUpdateAICommand {
     id?: number;
     title?: string | undefined;
+    provider?: number;
     model?: string | undefined;
     apiKey?: string | undefined;
+    project?: string | undefined;
+    email?: string | undefined;
 
     [key: string]: any;
 }
@@ -6827,15 +10250,15 @@ export interface IUpdateCategoryCommand {
     [key: string]: any;
 }
 
-export class UpdateChapterCommand implements IUpdateChapterCommand {
+export class UpdateEpisodeCommand implements IUpdateEpisodeCommand {
     id?: number;
-    storyId?: number;
-    promptId?: number;
+    workId?: number;
+    promptId?: number | undefined;
     title?: string | undefined;
     tytChapterId?: string | undefined;
     nameRaw?: string | undefined;
     nameEdit?: string | undefined;
-    chapterNumber?: number;
+    episodeNumber?: number;
     contentRaw?: string | undefined;
     contentEdit?: string | undefined;
     isUploaded?: boolean;
@@ -6843,7 +10266,7 @@ export class UpdateChapterCommand implements IUpdateChapterCommand {
 
     [key: string]: any;
 
-    constructor(data?: IUpdateChapterCommand) {
+    constructor(data?: IUpdateEpisodeCommand) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6859,13 +10282,13 @@ export class UpdateChapterCommand implements IUpdateChapterCommand {
                     this[property] = _data[property];
             }
             this.id = _data["id"];
-            this.storyId = _data["storyId"];
+            this.workId = _data["workId"];
             this.promptId = _data["promptId"];
             this.title = _data["title"];
             this.tytChapterId = _data["tytChapterId"];
             this.nameRaw = _data["nameRaw"];
             this.nameEdit = _data["nameEdit"];
-            this.chapterNumber = _data["chapterNumber"];
+            this.episodeNumber = _data["episodeNumber"];
             this.contentRaw = _data["contentRaw"];
             this.contentEdit = _data["contentEdit"];
             this.isUploaded = _data["isUploaded"];
@@ -6873,9 +10296,9 @@ export class UpdateChapterCommand implements IUpdateChapterCommand {
         }
     }
 
-    static fromJS(data: any): UpdateChapterCommand {
+    static fromJS(data: any): UpdateEpisodeCommand {
         data = typeof data === 'object' ? data : {};
-        let result = new UpdateChapterCommand();
+        let result = new UpdateEpisodeCommand();
         result.init(data);
         return result;
     }
@@ -6887,13 +10310,13 @@ export class UpdateChapterCommand implements IUpdateChapterCommand {
                 data[property] = this[property];
         }
         data["id"] = this.id;
-        data["storyId"] = this.storyId;
+        data["workId"] = this.workId;
         data["promptId"] = this.promptId;
         data["title"] = this.title;
         data["tytChapterId"] = this.tytChapterId;
         data["nameRaw"] = this.nameRaw;
         data["nameEdit"] = this.nameEdit;
-        data["chapterNumber"] = this.chapterNumber;
+        data["episodeNumber"] = this.episodeNumber;
         data["contentRaw"] = this.contentRaw;
         data["contentEdit"] = this.contentEdit;
         data["isUploaded"] = this.isUploaded;
@@ -6902,15 +10325,15 @@ export class UpdateChapterCommand implements IUpdateChapterCommand {
     }
 }
 
-export interface IUpdateChapterCommand {
+export interface IUpdateEpisodeCommand {
     id?: number;
-    storyId?: number;
-    promptId?: number;
+    workId?: number;
+    promptId?: number | undefined;
     title?: string | undefined;
     tytChapterId?: string | undefined;
     nameRaw?: string | undefined;
     nameEdit?: string | undefined;
-    chapterNumber?: number;
+    episodeNumber?: number;
     contentRaw?: string | undefined;
     contentEdit?: string | undefined;
     isUploaded?: boolean;
@@ -6982,6 +10405,8 @@ export interface IUpdatePromptCommand {
 export class UpdatePromptTypeCommand implements IUpdatePromptTypeCommand {
     id?: number;
     title?: string | undefined;
+    code?: string | undefined;
+    description?: string | undefined;
 
     [key: string]: any;
 
@@ -7002,6 +10427,8 @@ export class UpdatePromptTypeCommand implements IUpdatePromptTypeCommand {
             }
             this.id = _data["id"];
             this.title = _data["title"];
+            this.code = _data["code"];
+            this.description = _data["description"];
         }
     }
 
@@ -7020,6 +10447,8 @@ export class UpdatePromptTypeCommand implements IUpdatePromptTypeCommand {
         }
         data["id"] = this.id;
         data["title"] = this.title;
+        data["code"] = this.code;
+        data["description"] = this.description;
         return data;
     }
 }
@@ -7027,106 +10456,8 @@ export class UpdatePromptTypeCommand implements IUpdatePromptTypeCommand {
 export interface IUpdatePromptTypeCommand {
     id?: number;
     title?: string | undefined;
-
-    [key: string]: any;
-}
-
-export class UpdateStoryCommand implements IUpdateStoryCommand {
-    id?: number;
-    title?: string | undefined;
-    tytStoryId?: string | undefined;
-    author?: string | undefined;
+    code?: string | undefined;
     description?: string | undefined;
-    isFull?: boolean;
-    isPublished?: boolean;
-    isEarning?: boolean;
-    isComment?: boolean;
-    chapterUploaded?: number;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
-
-    [key: string]: any;
-
-    constructor(data?: IUpdateStoryCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.id = _data["id"];
-            this.title = _data["title"];
-            this.tytStoryId = _data["tytStoryId"];
-            this.author = _data["author"];
-            this.description = _data["description"];
-            this.isFull = _data["isFull"];
-            this.isPublished = _data["isPublished"];
-            this.isEarning = _data["isEarning"];
-            this.isComment = _data["isComment"];
-            this.chapterUploaded = _data["chapterUploaded"];
-            this.earnCount = _data["earnCount"];
-            this.earnNow = _data["earnNow"];
-            this.adCount = _data["adCount"];
-            this.paid = _data["paid"];
-        }
-    }
-
-    static fromJS(data: any): UpdateStoryCommand {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdateStoryCommand();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["id"] = this.id;
-        data["title"] = this.title;
-        data["tytStoryId"] = this.tytStoryId;
-        data["author"] = this.author;
-        data["description"] = this.description;
-        data["isFull"] = this.isFull;
-        data["isPublished"] = this.isPublished;
-        data["isEarning"] = this.isEarning;
-        data["isComment"] = this.isComment;
-        data["chapterUploaded"] = this.chapterUploaded;
-        data["earnCount"] = this.earnCount;
-        data["earnNow"] = this.earnNow;
-        data["adCount"] = this.adCount;
-        data["paid"] = this.paid;
-        return data;
-    }
-}
-
-export interface IUpdateStoryCommand {
-    id?: number;
-    title?: string | undefined;
-    tytStoryId?: string | undefined;
-    author?: string | undefined;
-    description?: string | undefined;
-    isFull?: boolean;
-    isPublished?: boolean;
-    isEarning?: boolean;
-    isComment?: boolean;
-    chapterUploaded?: number;
-    earnCount?: number;
-    earnNow?: number;
-    adCount?: number;
-    paid?: number;
 
     [key: string]: any;
 }
@@ -7235,10 +10566,128 @@ export interface IUpdateStorySourceCommand {
     [key: string]: any;
 }
 
+export class UpdateStoryVideoTypeCommand implements IUpdateStoryVideoTypeCommand {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateStoryVideoTypeCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+        }
+    }
+
+    static fromJS(data: any): UpdateStoryVideoTypeCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateStoryVideoTypeCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        return data;
+    }
+}
+
+export interface IUpdateStoryVideoTypeCommand {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class UpdateUserProfileTypeCommand implements IUpdateUserProfileTypeCommand {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateUserProfileTypeCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+        }
+    }
+
+    static fromJS(data: any): UpdateUserProfileTypeCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateUserProfileTypeCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        return data;
+    }
+}
+
+export interface IUpdateUserProfileTypeCommand {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+}
+
 export class UpdateWebSourceCommand implements IUpdateWebSourceCommand {
     id?: number;
     title?: string | undefined;
     baseUrl?: string | undefined;
+    type?: number | undefined;
+    isCookie?: boolean;
+    accountId?: number | undefined;
+    isNeedEdit?: boolean;
+    tytAccountId?: number | undefined;
+    crawlConfig?: string | undefined;
 
     [key: string]: any;
 
@@ -7260,6 +10709,12 @@ export class UpdateWebSourceCommand implements IUpdateWebSourceCommand {
             this.id = _data["id"];
             this.title = _data["title"];
             this.baseUrl = _data["baseUrl"];
+            this.type = _data["type"];
+            this.isCookie = _data["isCookie"];
+            this.accountId = _data["accountId"];
+            this.isNeedEdit = _data["isNeedEdit"];
+            this.tytAccountId = _data["tytAccountId"];
+            this.crawlConfig = _data["crawlConfig"];
         }
     }
 
@@ -7279,6 +10734,12 @@ export class UpdateWebSourceCommand implements IUpdateWebSourceCommand {
         data["id"] = this.id;
         data["title"] = this.title;
         data["baseUrl"] = this.baseUrl;
+        data["type"] = this.type;
+        data["isCookie"] = this.isCookie;
+        data["accountId"] = this.accountId;
+        data["isNeedEdit"] = this.isNeedEdit;
+        data["tytAccountId"] = this.tytAccountId;
+        data["crawlConfig"] = this.crawlConfig;
         return data;
     }
 }
@@ -7287,12 +10748,306 @@ export interface IUpdateWebSourceCommand {
     id?: number;
     title?: string | undefined;
     baseUrl?: string | undefined;
+    type?: number | undefined;
+    isCookie?: boolean;
+    accountId?: number | undefined;
+    isNeedEdit?: boolean;
+    tytAccountId?: number | undefined;
+    crawlConfig?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class UpdateWorkCommand implements IUpdateWorkCommand {
+    id?: number;
+    title?: string | undefined;
+    storyVideoTypeId?: number | undefined;
+    accountId?: number | undefined;
+    tytStoryId?: string | undefined;
+    author?: string | undefined;
+    description?: string | undefined;
+    isFull?: boolean;
+    isPublished?: boolean;
+    isEarning?: boolean;
+    isComment?: boolean;
+    chapterUploaded?: number;
+    earnCount?: number;
+    earnNow?: number;
+    adCount?: number;
+    paid?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateWorkCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.storyVideoTypeId = _data["storyVideoTypeId"];
+            this.accountId = _data["accountId"];
+            this.tytStoryId = _data["tytStoryId"];
+            this.author = _data["author"];
+            this.description = _data["description"];
+            this.isFull = _data["isFull"];
+            this.isPublished = _data["isPublished"];
+            this.isEarning = _data["isEarning"];
+            this.isComment = _data["isComment"];
+            this.chapterUploaded = _data["chapterUploaded"];
+            this.earnCount = _data["earnCount"];
+            this.earnNow = _data["earnNow"];
+            this.adCount = _data["adCount"];
+            this.paid = _data["paid"];
+        }
+    }
+
+    static fromJS(data: any): UpdateWorkCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateWorkCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["storyVideoTypeId"] = this.storyVideoTypeId;
+        data["accountId"] = this.accountId;
+        data["tytStoryId"] = this.tytStoryId;
+        data["author"] = this.author;
+        data["description"] = this.description;
+        data["isFull"] = this.isFull;
+        data["isPublished"] = this.isPublished;
+        data["isEarning"] = this.isEarning;
+        data["isComment"] = this.isComment;
+        data["chapterUploaded"] = this.chapterUploaded;
+        data["earnCount"] = this.earnCount;
+        data["earnNow"] = this.earnNow;
+        data["adCount"] = this.adCount;
+        data["paid"] = this.paid;
+        return data;
+    }
+}
+
+export interface IUpdateWorkCommand {
+    id?: number;
+    title?: string | undefined;
+    storyVideoTypeId?: number | undefined;
+    accountId?: number | undefined;
+    tytStoryId?: string | undefined;
+    author?: string | undefined;
+    description?: string | undefined;
+    isFull?: boolean;
+    isPublished?: boolean;
+    isEarning?: boolean;
+    isComment?: boolean;
+    chapterUploaded?: number;
+    earnCount?: number;
+    earnNow?: number;
+    adCount?: number;
+    paid?: number;
+
+    [key: string]: any;
+}
+
+export class UserProfileDto implements IUserProfileDto {
+    userProfileTypeId?: number;
+    userId?: string | undefined;
+    uniqueId?: string | undefined;
+    secUid?: string | undefined;
+    signature?: string | undefined;
+    avatarUrl?: string | undefined;
+    verified?: boolean;
+    followerCount?: number;
+    followingCount?: number;
+    heartCount?: number;
+    videoCount?: number;
+    lastFetchedAt?: Date | undefined;
+    userProfileType?: UserProfileTypeDto | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUserProfileDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.userProfileTypeId = _data["userProfileTypeId"];
+            this.userId = _data["userId"];
+            this.uniqueId = _data["uniqueId"];
+            this.secUid = _data["secUid"];
+            this.signature = _data["signature"];
+            this.avatarUrl = _data["avatarUrl"];
+            this.verified = _data["verified"];
+            this.followerCount = _data["followerCount"];
+            this.followingCount = _data["followingCount"];
+            this.heartCount = _data["heartCount"];
+            this.videoCount = _data["videoCount"];
+            this.lastFetchedAt = _data["lastFetchedAt"] ? new Date(_data["lastFetchedAt"].toString()) : undefined as any;
+            this.userProfileType = _data["userProfileType"] ? UserProfileTypeDto.fromJS(_data["userProfileType"]) : undefined as any;
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): UserProfileDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserProfileDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["userProfileTypeId"] = this.userProfileTypeId;
+        data["userId"] = this.userId;
+        data["uniqueId"] = this.uniqueId;
+        data["secUid"] = this.secUid;
+        data["signature"] = this.signature;
+        data["avatarUrl"] = this.avatarUrl;
+        data["verified"] = this.verified;
+        data["followerCount"] = this.followerCount;
+        data["followingCount"] = this.followingCount;
+        data["heartCount"] = this.heartCount;
+        data["videoCount"] = this.videoCount;
+        data["lastFetchedAt"] = this.lastFetchedAt ? this.lastFetchedAt.toISOString() : undefined as any;
+        data["userProfileType"] = this.userProfileType ? this.userProfileType.toJSON() : undefined as any;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IUserProfileDto {
+    userProfileTypeId?: number;
+    userId?: string | undefined;
+    uniqueId?: string | undefined;
+    secUid?: string | undefined;
+    signature?: string | undefined;
+    avatarUrl?: string | undefined;
+    verified?: boolean;
+    followerCount?: number;
+    followingCount?: number;
+    heartCount?: number;
+    videoCount?: number;
+    lastFetchedAt?: Date | undefined;
+    userProfileType?: UserProfileTypeDto | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class UserProfileTypeDto implements IUserProfileTypeDto {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUserProfileTypeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): UserProfileTypeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserProfileTypeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IUserProfileTypeDto {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
 
     [key: string]: any;
 }
 
 export class WebSourceDto implements IWebSourceDto {
     baseUrl?: string | undefined;
+    type?: number | undefined;
+    isCookie?: boolean;
+    isNeedEdit?: boolean;
+    tytAccountId?: number | undefined;
+    tytAccountTitle?: string | undefined;
+    accountId?: number | undefined;
+    accountTitle?: string | undefined;
+    crawlConfig?: string | undefined;
     storySources?: StorySourceDto[] | undefined;
     id?: number;
     title?: string | undefined;
@@ -7317,6 +11072,14 @@ export class WebSourceDto implements IWebSourceDto {
                     this[property] = _data[property];
             }
             this.baseUrl = _data["baseUrl"];
+            this.type = _data["type"];
+            this.isCookie = _data["isCookie"];
+            this.isNeedEdit = _data["isNeedEdit"];
+            this.tytAccountId = _data["tytAccountId"];
+            this.tytAccountTitle = _data["tytAccountTitle"];
+            this.accountId = _data["accountId"];
+            this.accountTitle = _data["accountTitle"];
+            this.crawlConfig = _data["crawlConfig"];
             if (Array.isArray(_data["storySources"])) {
                 this.storySources = [] as any;
                 for (let item of _data["storySources"])
@@ -7343,6 +11106,14 @@ export class WebSourceDto implements IWebSourceDto {
                 data[property] = this[property];
         }
         data["baseUrl"] = this.baseUrl;
+        data["type"] = this.type;
+        data["isCookie"] = this.isCookie;
+        data["isNeedEdit"] = this.isNeedEdit;
+        data["tytAccountId"] = this.tytAccountId;
+        data["tytAccountTitle"] = this.tytAccountTitle;
+        data["accountId"] = this.accountId;
+        data["accountTitle"] = this.accountTitle;
+        data["crawlConfig"] = this.crawlConfig;
         if (Array.isArray(this.storySources)) {
             data["storySources"] = [];
             for (let item of this.storySources)
@@ -7358,11 +11129,235 @@ export class WebSourceDto implements IWebSourceDto {
 
 export interface IWebSourceDto {
     baseUrl?: string | undefined;
+    type?: number | undefined;
+    isCookie?: boolean;
+    isNeedEdit?: boolean;
+    tytAccountId?: number | undefined;
+    tytAccountTitle?: string | undefined;
+    accountId?: number | undefined;
+    accountTitle?: string | undefined;
+    crawlConfig?: string | undefined;
     storySources?: StorySourceDto[] | undefined;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
     baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class WorkDto implements IWorkDto {
+    storySourceId?: number | undefined;
+    accountId?: number | undefined;
+    storyVideoTypeId?: number | undefined;
+    storyVideoType?: StoryVideoTypeDto | undefined;
+    tytStoryId?: string | undefined;
+    tytError?: string | undefined;
+    tytUpdatedAt?: Date | undefined;
+    description?: string | undefined;
+    author?: string | undefined;
+    isFull?: boolean;
+    isPublished?: boolean;
+    isEarning?: boolean;
+    isComment?: boolean;
+    chapterUploaded?: number;
+    earnCount?: number;
+    earnNow?: number;
+    adCount?: number;
+    paid?: number;
+    storySource?: StorySourceDto | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IWorkDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.storySourceId = _data["storySourceId"];
+            this.accountId = _data["accountId"];
+            this.storyVideoTypeId = _data["storyVideoTypeId"];
+            this.storyVideoType = _data["storyVideoType"] ? StoryVideoTypeDto.fromJS(_data["storyVideoType"]) : undefined as any;
+            this.tytStoryId = _data["tytStoryId"];
+            this.tytError = _data["tytError"];
+            this.tytUpdatedAt = _data["tytUpdatedAt"] ? new Date(_data["tytUpdatedAt"].toString()) : undefined as any;
+            this.description = _data["description"];
+            this.author = _data["author"];
+            this.isFull = _data["isFull"];
+            this.isPublished = _data["isPublished"];
+            this.isEarning = _data["isEarning"];
+            this.isComment = _data["isComment"];
+            this.chapterUploaded = _data["chapterUploaded"];
+            this.earnCount = _data["earnCount"];
+            this.earnNow = _data["earnNow"];
+            this.adCount = _data["adCount"];
+            this.paid = _data["paid"];
+            this.storySource = _data["storySource"] ? StorySourceDto.fromJS(_data["storySource"]) : undefined as any;
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): WorkDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new WorkDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["storySourceId"] = this.storySourceId;
+        data["accountId"] = this.accountId;
+        data["storyVideoTypeId"] = this.storyVideoTypeId;
+        data["storyVideoType"] = this.storyVideoType ? this.storyVideoType.toJSON() : undefined as any;
+        data["tytStoryId"] = this.tytStoryId;
+        data["tytError"] = this.tytError;
+        data["tytUpdatedAt"] = this.tytUpdatedAt ? this.tytUpdatedAt.toISOString() : undefined as any;
+        data["description"] = this.description;
+        data["author"] = this.author;
+        data["isFull"] = this.isFull;
+        data["isPublished"] = this.isPublished;
+        data["isEarning"] = this.isEarning;
+        data["isComment"] = this.isComment;
+        data["chapterUploaded"] = this.chapterUploaded;
+        data["earnCount"] = this.earnCount;
+        data["earnNow"] = this.earnNow;
+        data["adCount"] = this.adCount;
+        data["paid"] = this.paid;
+        data["storySource"] = this.storySource ? this.storySource.toJSON() : undefined as any;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IWorkDto {
+    storySourceId?: number | undefined;
+    accountId?: number | undefined;
+    storyVideoTypeId?: number | undefined;
+    storyVideoType?: StoryVideoTypeDto | undefined;
+    tytStoryId?: string | undefined;
+    tytError?: string | undefined;
+    tytUpdatedAt?: Date | undefined;
+    description?: string | undefined;
+    author?: string | undefined;
+    isFull?: boolean;
+    isPublished?: boolean;
+    isEarning?: boolean;
+    isComment?: boolean;
+    chapterUploaded?: number;
+    earnCount?: number;
+    earnNow?: number;
+    adCount?: number;
+    paid?: number;
+    storySource?: StorySourceDto | undefined;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class WorkEpisodeStatsDto implements IWorkEpisodeStatsDto {
+    total?: number;
+    listed?: number;
+    fetched?: number;
+    edited?: number;
+    fetchFailed?: number;
+    editFailed?: number;
+    waitingForPrompt?: number;
+    episodesSyncedAt?: Date | undefined;
+    episodeSyncError?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IWorkEpisodeStatsDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.total = _data["total"];
+            this.listed = _data["listed"];
+            this.fetched = _data["fetched"];
+            this.edited = _data["edited"];
+            this.fetchFailed = _data["fetchFailed"];
+            this.editFailed = _data["editFailed"];
+            this.waitingForPrompt = _data["waitingForPrompt"];
+            this.episodesSyncedAt = _data["episodesSyncedAt"] ? new Date(_data["episodesSyncedAt"].toString()) : undefined as any;
+            this.episodeSyncError = _data["episodeSyncError"];
+        }
+    }
+
+    static fromJS(data: any): WorkEpisodeStatsDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new WorkEpisodeStatsDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["total"] = this.total;
+        data["listed"] = this.listed;
+        data["fetched"] = this.fetched;
+        data["edited"] = this.edited;
+        data["fetchFailed"] = this.fetchFailed;
+        data["editFailed"] = this.editFailed;
+        data["waitingForPrompt"] = this.waitingForPrompt;
+        data["episodesSyncedAt"] = this.episodesSyncedAt ? this.episodesSyncedAt.toISOString() : undefined as any;
+        data["episodeSyncError"] = this.episodeSyncError;
+        return data;
+    }
+}
+
+export interface IWorkEpisodeStatsDto {
+    total?: number;
+    listed?: number;
+    fetched?: number;
+    edited?: number;
+    fetchFailed?: number;
+    editFailed?: number;
+    waitingForPrompt?: number;
+    episodesSyncedAt?: Date | undefined;
+    episodeSyncError?: string | undefined;
 
     [key: string]: any;
 }

@@ -3,14 +3,10 @@ using SurveillanceCameras.Domain.Common;
 namespace SurveillanceCameras.Application.Local.StorySources.IntegrationEvents;
 
 /// <summary>
-/// Raised when a new StorySource is created. Consumed by <c>WikiDichCrawlConsumer</c>
-/// (Infrastructure) to trigger the WikiDich crawl for its enrichment data.
+/// Phát khi có nguồn truyện mới (đồng bộ từ trang nguồn) hoặc khi người dùng yêu cầu tạo truyện bằng AI.
+/// Consumer <c>StorySourceCreatedConsumer</c> (Infrastructure) dùng AI biên tập tên và giới thiệu rồi tạo Story.
 ///
-/// Lives in Application, not Domain: nothing in Domain ever references this concrete type —
-/// only CreateStorySourceCommandHandler constructs it (Domain only needs the abstract
-/// IntegrationEvent base, which BaseEntity.AddIntegrationEvent already depends on). Its payload
-/// is a boundary contract for external consumers, decided by the use case — the same reason
-/// DTOs like StorySourceDto live here rather than in Domain, not a domain invariant.
+/// Nằm ở Application, không ở Domain: payload là hợp đồng với consumer do use case quyết định, giống DTO.
 /// </summary>
 public sealed class StorySourceCreatedIntegrationEvent : IntegrationEvent
 {

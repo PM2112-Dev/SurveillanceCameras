@@ -21,6 +21,8 @@ const emptyForm = {
 export function StorySourceForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // Sửa được mở từ trang chi tiết nên quay lại đó; thêm mới thì về danh sách.
+  const backTo = id !== undefined ? `/story-sources/${id}` : '/story-sources';
   const isEdit = id !== undefined;
 
   const [form, setForm] = useState(emptyForm);
@@ -98,7 +100,7 @@ export function StorySourceForm() {
       : storySourcesClient.createStorySource(new CreateStorySourceCommand(payload));
 
     request
-      .then(() => navigate('/story-sources'))
+      .then(() => navigate(backTo))
       .catch(err => setError(getErrorMessage(err)))
       .finally(() => setSaving(false));
   };
@@ -227,7 +229,7 @@ export function StorySourceForm() {
         </fieldset>
 
         <div className="form-actions">
-          <button type="button" className="secondary" onClick={() => navigate('/story-sources')}>
+          <button type="button" className="secondary" onClick={() => navigate(backTo)}>
             Huỷ
           </button>
           <button type="submit" disabled={saving} aria-busy={saving}>
