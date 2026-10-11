@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SurveillanceCameras.Application.Common.Exceptions;
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Common.Models.TikTok;
 using SurveillanceCameras.Application.Repository.TikTok;
 using SurveillanceCameras.Application.Repository.VideoStorage;
 using SurveillanceCameras.Domain.Entities;
@@ -17,6 +18,10 @@ namespace SurveillanceCameras.Application.Local.Movies.Commands.StoreEpisodeVide
 public class EpisodeVideoStorer
 {
     private const int MaxErrorLength = 2000;
+    private const int EpisodePageSize = 30;
+
+    /// <summary>Chặn vòng lặp nếu TikTok trả hasMore mãi.</summary>
+    private const int MaxEpisodePages = 50;
 
     private readonly IApplicationDbContext _context;
     private readonly ITikTokRepository _tikTok;
@@ -27,6 +32,9 @@ public class EpisodeVideoStorer
 
     // Cookie TikTok theo chủ phim, đọc một lần cho mỗi lượt (đối tượng sống theo scope).
     private readonly Dictionary<string, string?> _cookies = [];
+
+    // Link file các tập theo (chủ phim, drama), đọc một lần cho mỗi lượt — link sống khoảng 48 giờ.
+    private readonly Dictionary<(string? Owner, string DramaId), Dictionary<string, List<string>>> _dramaFiles = [];
 
     public EpisodeVideoStorer(IApplicationDbContext context, ITikTokRepository tikTok, IVideoStorageRepository storage,
         ISecretProtector protector, IOptions<EpisodeVideoStoreOptions> options, ILogger<EpisodeVideoStorer> logger)
@@ -78,8 +86,7 @@ public class EpisodeVideoStorer
         var temp = Path.Combine(Path.GetTempPath(), $"episode-{episode.Id}-{Guid.NewGuid():N}.mp4");
         try
         {
-            var cookie = await TikTokCookieAsync(episode.Work!.CreatedBy, cancellationToken);
-            var size = await _tikTok.DownloadVideoAsync(cookie, episode.VideoUrl!, temp, _options.MaxVideoBytes, cancellationToken);
+            var size = await DownloadAsync(episode, temp, cancellationToken);
             var account = await UploadAsync(episode, temp, size, cancellationToken);
 
             episode.StreamUrl = account.PublicUrl(episode.StorageKey!);
@@ -120,8 +127,66 @@ public class EpisodeVideoStorer
     }
 
     /// <summary>
+    /// Tải file video của tập về <paramref name="filePath"/>. Tập của drama: lấy link file từ API danh sách tập của TikTok
+    /// bằng cookie tài khoản (TikTok chỉ trả link cho phiên đã đăng nhập — khảo sát 2026-10-11) rồi tải bằng chính cookie
+    /// đó. Tập không thuộc drama: mở trang video.
+    /// </summary>
+    private async Task<long> DownloadAsync(Episode episode, string filePath, CancellationToken cancellationToken)
+    {
+        var owner = episode.Work!.CreatedBy;
+        var cookie = await TikTokCookieAsync(owner, cancellationToken);
+        var dramaId = episode.Work.ExternalId;
+
+        if (string.IsNullOrEmpty(dramaId) || string.IsNullOrEmpty(episode.ExternalId))
+            return await _tikTok.DownloadVideoAsync(cookie, episode.VideoUrl!, filePath, _options.MaxVideoBytes, cancellationToken);
+
+        if (string.IsNullOrEmpty(cookie))
+        {
+            throw new TikTokBlockedException(
+                "Chưa có tài khoản TikTok nào đang đăng nhập — TikTok chỉ cấp file tập drama cho phiên đã đăng nhập. Vào mục Tài khoản, bấm “Mở Chrome” và đăng nhập TikTok.");
+        }
+
+        var files = await DramaFilesAsync(owner, cookie, dramaId, cancellationToken);
+        if (!files.TryGetValue(episode.ExternalId, out var urls) || urls.Count == 0)
+            throw new TikTokVideoUnavailableException("TikTok không cấp link tải cho tập này (tập đã bị gỡ hoặc tài khoản không xem được).");
+
+        return await _tikTok.DownloadVideoFileAsync(cookie, urls, filePath, _options.MaxVideoBytes, cancellationToken);
+    }
+
+    /// <summary>Link file của mọi tập trong một drama (id video → các link), đọc một lần cho mỗi lượt.</summary>
+    /// <exception cref="TikTokBlockedException">TikTok không trả link file cho tập nào: cookie đã hết hạn/bị đăng xuất.</exception>
+    private async Task<Dictionary<string, List<string>>> DramaFilesAsync(string? owner, string cookie, string dramaId,
+        CancellationToken cancellationToken)
+    {
+        if (_dramaFiles.TryGetValue((owner, dramaId), out var cached)) return cached;
+
+        var files = new Dictionary<string, List<string>>();
+        var cursor = "0";
+        for (var page = 0; page < MaxEpisodePages; page++)
+        {
+            var result = await _tikTok.FetchDramaEpisodes(cookie, dramaId, EpisodePageSize, cursor, cancellationToken);
+            var added = 0;
+            foreach (var item in result.ItemList.Where(x => x.Id is not null))
+            {
+                if (files.TryAdd(item.Id!, item.Video?.DownloadUrls() ?? [])) added++;
+            }
+
+            if (!result.HasMore || added == 0 || string.IsNullOrEmpty(result.Cursor) || result.Cursor == cursor) break;
+            cursor = result.Cursor;
+        }
+
+        if (files.Count > 0 && files.Values.All(x => x.Count == 0))
+        {
+            throw new TikTokBlockedException(
+                "TikTok không cấp link file cho tài khoản đang lưu (cookie đã hết hạn hoặc bị đăng xuất). Vào mục Tài khoản, bấm “Mở Chrome” và đăng nhập TikTok lại.");
+        }
+
+        return _dramaFiles[(owner, dramaId)] = files;
+    }
+
+    /// <summary>
     /// Cookie của tài khoản TikTok mà chủ phim đăng nhập gần nhất (loại tài khoản có trang đăng nhập thuộc TikTok);
-    /// <c>null</c> khi chưa có — khi đó chỉ tải được video TikTok thường, không tải được tập drama.
+    /// <c>null</c> khi chưa có.
     /// </summary>
     private async Task<string?> TikTokCookieAsync(string? owner, CancellationToken cancellationToken)
     {

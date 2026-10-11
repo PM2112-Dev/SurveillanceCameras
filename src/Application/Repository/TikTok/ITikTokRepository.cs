@@ -23,4 +23,14 @@ public interface ITikTokRepository
     /// <exception cref="Common.Exceptions.TikTokApiException">Video không công khai, bị chặn, hoặc lớn hơn <paramref name="maxBytes"/>.</exception>
     Task<long> DownloadVideoAsync(string? cookie, string videoUrl, string destinationPath, long maxBytes,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Tải file video từ các link file TikTok đã có (vd. <c>DramaEpisodeVideoDto.DownloadUrls()</c>) về
+    /// <paramref name="destinationPath"/>: thử lần lượt từng link cho tới khi một link tải được. Link file của TikTok chỉ
+    /// tải được kèm cookie của phiên đã lấy ra nó.
+    /// </summary>
+    /// <returns>Kích thước file (byte).</returns>
+    /// <exception cref="Common.Exceptions.TikTokApiException">Không link nào tải được, hoặc file lớn hơn <paramref name="maxBytes"/>.</exception>
+    Task<long> DownloadVideoFileAsync(string? cookie, IReadOnlyList<string> fileUrls, string destinationPath, long maxBytes,
+        CancellationToken cancellationToken = default);
 }

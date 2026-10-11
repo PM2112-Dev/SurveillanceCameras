@@ -20,61 +20,77 @@ public sealed partial class TikTokRepository
         // Link file video chỉ tải được kèm cookie phiên (tt_chain_token) mà TikTok cấp khi mở trang video, nên mỗi lần tải
         // dùng một phiên cookie riêng: mở trang lấy link + cookie, rồi tải file bằng chính phiên đó. Cookie của tài khoản
         // (nếu có) được nạp sẵn vào phiên để TikTok trả trang của người đã đăng nhập.
+        return await WithDownloadSessionAsync(cookie, async (client, token) =>
+        {
+            string html;
+            using (var page = await client.GetAsync(pageUri, token))
+            {
+                if (page.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.TooManyRequests)
+                    throw new TikTokBlockedException($"TikTok chặn máy chủ (HTTP {(int)page.StatusCode}) khi mở trang video.");
+                if (!page.IsSuccessStatusCode)
+                    throw new TikTokApiException($"TikTok trả về HTTP {(int)page.StatusCode} khi mở trang video.");
+                html = await page.Content.ReadAsStringAsync(token);
+            }
+
+            return await DownloadToFileAsync(client, ParseVideoPlayUrl(html), destinationPath, maxBytes, token);
+        }, cancellationToken);
+    }
+
+    public async Task<long> DownloadVideoFileAsync(string? cookie, IReadOnlyList<string> fileUrls, string destinationPath,
+        long maxBytes, CancellationToken cancellationToken = default)
+    {
+        var urls = fileUrls
+            .Select(x => Uri.TryCreate(x, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps ? uri : null)
+            .Where(x => x is not null)
+            .ToList();
+        if (urls.Count == 0) throw new TikTokVideoUnavailableException("TikTok không cấp link tải cho video này.");
+
+        return await WithDownloadSessionAsync(cookie, async (client, token) =>
+        {
+            TikTokApiException? last = null;
+            foreach (var url in urls)
+            {
+                try
+                {
+                    return await DownloadToFileAsync(client, url!, destinationPath, maxBytes, token);
+                }
+                // Mỗi video có vài link trên các máy chủ khác nhau; một link bị từ chối thì thử link kế tiếp.
+                catch (TikTokApiException ex)
+                {
+                    last = ex;
+                }
+                catch (HttpRequestException ex)
+                {
+                    last = new TikTokApiException("Không tải được video từ TikTok: " + ex.Message, ex);
+                }
+            }
+
+            throw last!;
+        }, cancellationToken);
+    }
+
+    /// <summary>Chạy <paramref name="download"/> với một phiên HTTP riêng (đã nạp cookie tài khoản) và giới hạn thời gian tải.</summary>
+    private async Task<long> WithDownloadSessionAsync(string? cookie, Func<HttpClient, CancellationToken, Task<long>> download,
+        CancellationToken cancellationToken)
+    {
+        var baseUri = new Uri(_options.BaseUrl.TrimEnd('/') + "/");
         using var handler = new SocketsHttpHandler
         {
-            CookieContainer = SessionCookies(cookie, pageUri),
+            CookieContainer = SessionCookies(cookie, baseUri),
             UseCookies = true,
             AutomaticDecompression = DecompressionMethods.All
         };
         using var client = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
         client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", _options.UserAgent);
         client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Language", _options.Language);
-        client.DefaultRequestHeaders.Referrer = new Uri(_options.BaseUrl.TrimEnd('/') + "/");
+        client.DefaultRequestHeaders.Referrer = baseUri;
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(_options.VideoDownloadTimeoutSeconds));
 
         try
         {
-            string html;
-            using (var page = await client.GetAsync(pageUri, timeout.Token))
-            {
-                if (page.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.TooManyRequests)
-                    throw new TikTokBlockedException($"TikTok chặn máy chủ (HTTP {(int)page.StatusCode}) khi mở trang video.");
-                if (!page.IsSuccessStatusCode)
-                    throw new TikTokApiException($"TikTok trả về HTTP {(int)page.StatusCode} khi mở trang video.");
-                html = await page.Content.ReadAsStringAsync(timeout.Token);
-            }
-
-            var playUrl = ParseVideoPlayUrl(html);
-
-            using var response = await client.GetAsync(playUrl, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
-            if (!response.IsSuccessStatusCode)
-                throw new TikTokApiException($"TikTok trả về HTTP {(int)response.StatusCode} khi tải file video.");
-
-            var contentType = response.Content.Headers.ContentType?.MediaType ?? "";
-            if (!contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
-                throw new TikTokApiException($"Link tải của TikTok không trả về video (Content-Type: {contentType}).");
-            if (response.Content.Headers.ContentLength > maxBytes)
-                throw new TikTokApiException("File video lớn hơn mức cho phép.");
-
-            long total = 0;
-            await using (var input = await response.Content.ReadAsStreamAsync(timeout.Token))
-            await using (var output = File.Create(destinationPath))
-            {
-                var buffer = new byte[81920];
-                int read;
-                while ((read = await input.ReadAsync(buffer, timeout.Token)) > 0)
-                {
-                    total += read;
-                    if (total > maxBytes) throw new TikTokApiException("File video lớn hơn mức cho phép.");
-                    await output.WriteAsync(buffer.AsMemory(0, read), timeout.Token);
-                }
-            }
-
-            if (total == 0) throw new TikTokApiException("TikTok trả về file video rỗng.");
-
-            return total;
+            return await download(client, timeout.Token);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -84,6 +100,38 @@ public sealed partial class TikTokRepository
         {
             throw new TikTokApiException("Không tải được video từ TikTok: " + ex.Message, ex);
         }
+    }
+
+    private static async Task<long> DownloadToFileAsync(HttpClient client, Uri fileUrl, string destinationPath, long maxBytes,
+        CancellationToken cancellationToken)
+    {
+        using var response = await client.GetAsync(fileUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw new TikTokApiException($"TikTok trả về HTTP {(int)response.StatusCode} khi tải file video.");
+
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "";
+        if (!contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+            throw new TikTokApiException($"Link tải của TikTok không trả về video (Content-Type: {contentType}).");
+        if (response.Content.Headers.ContentLength > maxBytes)
+            throw new TikTokApiException("File video lớn hơn mức cho phép.");
+
+        long total = 0;
+        await using (var input = await response.Content.ReadAsStreamAsync(cancellationToken))
+        await using (var output = File.Create(destinationPath))
+        {
+            var buffer = new byte[81920];
+            int read;
+            while ((read = await input.ReadAsync(buffer, cancellationToken)) > 0)
+            {
+                total += read;
+                if (total > maxBytes) throw new TikTokApiException("File video lớn hơn mức cho phép.");
+                await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            }
+        }
+
+        if (total == 0) throw new TikTokApiException("TikTok trả về file video rỗng.");
+
+        return total;
     }
 
     /// <summary>Phiên cookie mới, nạp sẵn cookie đã lưu của tài khoản cho tên miền TikTok và các tên miền con.</summary>
