@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.Movies.Commands.DeleteMovie;
+using SurveillanceCameras.Application.Local.Movies.Commands.RetryMovieVideoStorage;
 using SurveillanceCameras.Application.Local.Movies.Commands.SetMovieEpisodeStream;
 using SurveillanceCameras.Application.Local.Movies.Commands.SetMoviePublished;
+using SurveillanceCameras.Application.Local.Movies.Commands.StoreMovieEpisodeVideo;
 using SurveillanceCameras.Application.Local.Movies.Commands.SyncTikTokDramas;
 using SurveillanceCameras.Application.Local.Movies.Queries.DTOs;
 using SurveillanceCameras.Application.Local.Movies.Queries.GetMovieById;
@@ -25,6 +27,8 @@ public class Movies : IEndpointGroup
         groupBuilder.MapDelete(DeleteMovie, "{id}");
         groupBuilder.MapPost(SetMoviesPublished, "published");
         groupBuilder.MapPut(SetMovieEpisodeStream, "{id}/episodes/{episodeId}/stream");
+        groupBuilder.MapPost(RetryMovieVideoStorage, "{id}/video-storage/retry");
+        groupBuilder.MapPost(StoreMovieEpisodeVideo, "{id}/episodes/{episodeId}/video-storage/store");
     }
 
     public sealed record SetMoviesPublishedRequest(bool IsPublished, List<int>? Ids);
@@ -45,6 +49,16 @@ public class Movies : IEndpointGroup
 
         return TypedResults.NoContent();
     }
+
+    [EndpointSummary("Retry Movie video storage")]
+    [EndpointDescription("Cho hệ thống thử tải lại video của các tập đã lưu lỗi trong phim. Trả về số tập được đưa lại vào hàng chờ")]
+    public static async Task<Ok<int>> RetryMovieVideoStorage(ISender sender, int id)
+        => TypedResults.Ok(await sender.Send(new RetryMovieVideoStorageCommand(id)));
+
+    [EndpointSummary("Store Movie episode video")]
+    [EndpointDescription("Tải video của một tập từ TikTok (bằng cookie tài khoản TikTok) và lưu vào kho ngay; trả về link phát hoặc lý do lỗi")]
+    public static async Task<Ok<StoreMovieEpisodeVideoResult>> StoreMovieEpisodeVideo(ISender sender, int id, int episodeId)
+        => TypedResults.Ok(await sender.Send(new StoreMovieEpisodeVideoCommand(id, episodeId)));
 
     [EndpointSummary("Get Movies")]
     [EndpointDescription("Lấy danh sách phim (lọc theo tên, kênh; có phân trang)")]

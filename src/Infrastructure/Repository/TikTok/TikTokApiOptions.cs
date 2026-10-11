@@ -18,6 +18,9 @@ public class TikTokApiOptions
 
     public int TimeoutSeconds { get; set; } = 30;
 
+    /// <summary>Thời gian tối đa để tải xong file video của một tập (giây).</summary>
+    public int VideoDownloadTimeoutSeconds { get; set; } = 600;
+
     /// <summary>"chrome" dùng Google Chrome đã cài trên máy; để trống để dùng Chromium của Playwright.</summary>
     public string? BrowserChannel { get; set; } = "chrome";
 

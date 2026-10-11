@@ -684,6 +684,21 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("StorageAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StorageAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StorageError")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StorageKey")
+                        .HasColumnType("text");
+
+                    b.Property<long?>("StorageSizeBytes")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("StreamUrl")
                         .HasColumnType("text");
 
@@ -705,6 +720,8 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PromptId");
+
+                    b.HasIndex("StorageAccountId");
 
                     b.HasIndex("WorkId", "EpisodeNumber");
 
@@ -798,6 +815,79 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PromptTypes");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.StorageAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccessKeyId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Bucket")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CloudflareAccountId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastCheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PublicBaseUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<long>("QuotaBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SecretAccessKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.Property<long>("UsedBytes")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy", "IsEnabled", "Priority");
+
+                    b.ToTable("StorageAccounts");
                 });
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.StorySource", b =>
@@ -1401,6 +1491,11 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                         .HasForeignKey("PromptId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("SurveillanceCameras.Domain.Entities.StorageAccount", "StorageAccount")
+                        .WithMany()
+                        .HasForeignKey("StorageAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("SurveillanceCameras.Domain.Entities.Work", "Work")
                         .WithMany("Episodes")
                         .HasForeignKey("WorkId")
@@ -1408,6 +1503,8 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Prompt");
+
+                    b.Navigation("StorageAccount");
 
                     b.Navigation("Work");
                 });

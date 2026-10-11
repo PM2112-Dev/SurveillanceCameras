@@ -13,4 +13,14 @@ public interface ITikTokRepository
     /// <summary>Một trang các tập của drama <paramref name="dramaId"/> (không cần cookie).</summary>
     Task<DramaEpisodeListDto> FetchDramaEpisodes(string? cookie, string dramaId, int count = 30, string cursor = "0",
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Tải file video của một video TikTok công khai (<paramref name="videoUrl"/> là link trang video) về
+    /// <paramref name="destinationPath"/>. Video thường tải được không cần cookie; tập drama thì TikTok chỉ cấp file cho
+    /// phiên đã đăng nhập, nên truyền <paramref name="cookie"/> của tài khoản TikTok (<c>Account.Cookie</c>).
+    /// </summary>
+    /// <returns>Kích thước file (byte).</returns>
+    /// <exception cref="Common.Exceptions.TikTokApiException">Video không công khai, bị chặn, hoặc lớn hơn <paramref name="maxBytes"/>.</exception>
+    Task<long> DownloadVideoAsync(string? cookie, string videoUrl, string destinationPath, long maxBytes,
+        CancellationToken cancellationToken = default);
 }

@@ -13,7 +13,8 @@ import {
   Clapperboard,
   Contact,
   Shapes,
-  Film
+  Film,
+  HardDrive
 } from 'lucide-react';
 
 const menuSections = [
@@ -43,7 +44,8 @@ const menuSections = [
     heading: 'Tài khoản',
     items: [
       { to: '/accounts', label: 'Tài khoản', icon: Users },
-      { to: '/account-types', label: 'Loại tài khoản', icon: UserCog }
+      { to: '/account-types', label: 'Loại tài khoản', icon: UserCog },
+      { to: '/storage-accounts', label: 'Tài khoản lưu trữ', icon: HardDrive }
     ]
   },
   {

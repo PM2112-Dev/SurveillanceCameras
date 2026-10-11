@@ -94,7 +94,8 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
         if (problemDetails is null) return false;
 
         httpContext.Response.StatusCode = statusCode;
-        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+        // Ghi theo kiểu thật của đối tượng: ghi theo kiểu ProblemDetails thì mất "errors" của ValidationProblemDetails.
+        await httpContext.Response.WriteAsJsonAsync<object>(problemDetails, cancellationToken);
         return true;
     }
 }
