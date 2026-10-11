@@ -5,6 +5,7 @@ using Moq;
 using NUnit.Framework;
 using Shouldly;
 using SurveillanceCameras.Application.Common.Exceptions;
+using SurveillanceCameras.Application.Common.Models.TikTok;
 using SurveillanceCameras.Application.Local.Movies.Commands.StoreEpisodeVideos;
 using SurveillanceCameras.Application.Repository.TikTok;
 using SurveillanceCameras.Application.Repository.VideoStorage;
@@ -119,6 +120,106 @@ public class EpisodeVideoStorerTests
 
         _tikTok.Verify(x => x.DownloadVideoAsync("sessionid=moi", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private const string DramaId = "7689353658332910600";
+
+    /// <summary>Biến phim thành drama TikTok và thêm tài khoản TikTok đang đăng nhập (nếu có cookie).</summary>
+    private async Task MakeDrama(string? cookie)
+    {
+        _movie.ExternalId = DramaId;
+        if (cookie is not null)
+        {
+            _db.Accounts.Add(new Account
+            {
+                Title = "TikTok", Cookie = cookie, CreatedBy = Owner,
+                AccountType = new AccountType { Title = "TikTok", BaseUrl = "https://www.tiktok.com/login", CreatedBy = Owner }
+            });
+        }
+
+        await _db.SaveChangesAsync();
+    }
+
+    private static DramaEpisodeDto Item(string id, params string[] h264Urls) => new()
+    {
+        Id = id,
+        Video = new DramaEpisodeVideoDto
+        {
+            PlayAddr = h264Urls.Length > 0 ? "https://v16.tiktok.com/default.mp4" : null,
+            BitrateInfo = h264Urls.Length > 0
+                ? [new DramaVideoBitrateDto { CodecType = "h264", Bitrate = 900_000, PlayAddr = new DramaVideoPlayAddrDto { UrlList = [.. h264Urls] } }]
+                : []
+        }
+    };
+
+    private void SetupEpisodeList(string? cookie, params DramaEpisodeDto[] items)
+        => _tikTok.Setup(x => x.FetchDramaEpisodes(cookie, DramaId, It.IsAny<int>(), "0", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DramaEpisodeListDto { ItemList = [.. items], HasMore = false });
+
+    [Test]
+    public async Task Store_DramaEpisode_GetsFileLinksFromTheEpisodeApi_WithTheAccountCookie()
+    {
+        await AddAccount("a", priority: 1, quota: 100 * Mb);
+        await MakeDrama("sessionid=abc");
+        var first = await AddEpisode(1);
+        var second = await AddEpisode(2);
+        SetupEpisodeList("sessionid=abc", Item(first.ExternalId!, "https://v16.tiktok.com/1.mp4"), Item(second.ExternalId!, "https://v16.tiktok.com/2.mp4"));
+        _tikTok.Setup(x => x.DownloadVideoFileAsync(It.IsAny<string?>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => _videoSize);
+
+        (await _storer.StoreNextBatchAsync(CancellationToken.None)).ShouldBe(2);
+
+        first.StreamUrl.ShouldNotBeNull();
+        second.StreamUrl.ShouldNotBeNull();
+        _tikTok.Verify(x => x.DownloadVideoFileAsync("sessionid=abc",
+            It.Is<IReadOnlyList<string>>(urls => urls[0] == "https://v16.tiktok.com/1.mp4"), It.IsAny<string>(), It.IsAny<long>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // Danh sách tập chỉ đọc một lần cho cả lô; không mở trang video.
+        _tikTok.Verify(x => x.FetchDramaEpisodes(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _tikTok.Verify(x => x.DownloadVideoAsync(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task Store_DramaEpisode_StopsWithoutCountingAnAttempt_WhenNoTikTokAccountIsLoggedIn()
+    {
+        await AddAccount("a", priority: 1, quota: 100 * Mb);
+        await MakeDrama(cookie: null);
+        var episode = await AddEpisode(1);
+
+        await Should.ThrowAsync<TikTokBlockedException>(() => _storer.StoreNextBatchAsync(CancellationToken.None));
+
+        episode.StorageAttempts.ShouldBe(0);
+        episode.StorageError.ShouldNotBeNull().ShouldContain("đăng nhập");
+        _tikTok.Verify(x => x.FetchDramaEpisodes(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task Store_DramaEpisode_StopsWithoutCountingAnAttempt_WhenTheCookieHasExpired()
+    {
+        await AddAccount("a", priority: 1, quota: 100 * Mb);
+        await MakeDrama("sessionid=het-han");
+        var episode = await AddEpisode(1);
+        // Cookie hết hạn: TikTok vẫn trả danh sách tập nhưng không tập nào có link file.
+        SetupEpisodeList("sessionid=het-han", Item(episode.ExternalId!), Item("khac"));
+
+        await Should.ThrowAsync<TikTokBlockedException>(() => _storer.StoreNextBatchAsync(CancellationToken.None));
+
+        episode.StorageAttempts.ShouldBe(0);
+        episode.StorageError.ShouldNotBeNull().ShouldContain("hết hạn");
+    }
+
+    [Test]
+    public async Task Store_DramaEpisode_GivesUp_WhenOnlyThatEpisodeHasNoFile()
+    {
+        await AddAccount("a", priority: 1, quota: 100 * Mb);
+        await MakeDrama("sessionid=abc");
+        var episode = await AddEpisode(1);
+        SetupEpisodeList("sessionid=abc", Item(episode.ExternalId!), Item("khac", "https://v16.tiktok.com/khac.mp4"));
+
+        await _storer.StoreNextBatchAsync(CancellationToken.None);
+
+        episode.StorageAttempts.ShouldBe(3);
+        episode.StreamUrl.ShouldBeNull();
     }
 
     [Test]

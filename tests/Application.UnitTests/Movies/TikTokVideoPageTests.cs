@@ -1,6 +1,8 @@
 using NUnit.Framework;
 using Shouldly;
+using System.Text.Json;
 using SurveillanceCameras.Application.Common.Exceptions;
+using SurveillanceCameras.Application.Common.Models.TikTok;
 using SurveillanceCameras.Infrastructure.Repository.TikTok;
 
 namespace SurveillanceCameras.Application.UnitTests.Movies;
@@ -23,6 +25,25 @@ public class TikTokVideoPageTests
         cookies.GetCookieHeader(new Uri("https://example.com/")).ShouldBeEmpty();
         TikTokRepository.SessionCookies(null, new Uri("https://www.tiktok.com/")).Count.ShouldBe(0);
         TikTokRepository.SessionCookies("a=1; b=2", new Uri("https://www.tiktok.com/")).Count.ShouldBe(2);
+    }
+
+    // Dạng phản hồi của /api/drama/episode/item_list/ khi đã đăng nhập (khảo sát 2026-10-11).
+    [Test]
+    public void DownloadUrls_PrefersTheBestH264Rendition_ThenTheDefaultLink_ThenOtherCodecs()
+    {
+        var video = JsonSerializer.Deserialize<DramaEpisodeVideoDto>("""
+            {"duration":99,"playAddr":"https://v45.tiktokcdn.com/default","bitrateInfo":[
+              {"CodecType":"bytevc1","Bitrate":971746,"PlayAddr":{"UrlList":["https://v16.tiktok.com/hevc-hi"]}},
+              {"CodecType":"h264","Bitrate":"704587","PlayAddr":{"UrlList":["https://v16.tiktok.com/h264-lo"]}},
+              {"CodecType":"h264","Bitrate":1002054,"PlayAddr":{"UrlList":["https://v16.tiktok.com/h264-hi","https://v19.tiktok.com/h264-hi","http://khong-an-toan/x"]}}]}
+            """)!;
+
+        video.DownloadUrls().ShouldBe([
+            "https://v16.tiktok.com/h264-hi", "https://v19.tiktok.com/h264-hi", "https://v16.tiktok.com/h264-lo",
+            "https://v45.tiktokcdn.com/default", "https://v16.tiktok.com/hevc-hi"
+        ]);
+        // Chưa đăng nhập: TikTok không trả link nào.
+        JsonSerializer.Deserialize<DramaEpisodeVideoDto>("""{"duration":49,"cover":"https://img/x.jpg"}""")!.DownloadUrls().ShouldBeEmpty();
     }
 
     [Test]

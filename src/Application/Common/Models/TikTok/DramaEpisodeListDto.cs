@@ -60,6 +60,53 @@ public class DramaEpisodeVideoDto
 
     [JsonPropertyName("cover")]
     public string? Cover { get; init; }
+
+    /// <summary>Link file video (hết hạn sau khoảng 48 giờ). TikTok chỉ trả khi gọi bằng cookie của tài khoản đã đăng nhập.</summary>
+    [JsonPropertyName("playAddr")]
+    public string? PlayAddr { get; init; }
+
+    /// <summary>Các bản mã hoá của video (codec, bitrate khác nhau); cũng chỉ có khi đã đăng nhập.</summary>
+    [JsonPropertyName("bitrateInfo")]
+    public List<DramaVideoBitrateDto> BitrateInfo { get; init; } = [];
+
+    /// <summary>
+    /// Các link tải file theo thứ tự nên thử: bản H.264 bitrate cao nhất trước (H.265/bytevc1 nhẹ hơn nhưng nhiều máy
+    /// Android không phát được trong WebView), rồi link mặc định, rồi các bản còn lại.
+    /// </summary>
+    public List<string> DownloadUrls()
+    {
+        var ordered = BitrateInfo.OrderByDescending(x => x.Bitrate).ToList();
+        var urls = ordered.Where(x => string.Equals(x.CodecType, "h264", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(x => x.PlayAddr?.UrlList ?? [])
+            .Append(PlayAddr)
+            .Concat(ordered.SelectMany(x => x.PlayAddr?.UrlList ?? []));
+
+        return urls
+            .Where(x => Uri.TryCreate(x, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
+            .Select(x => x!)
+            .Distinct()
+            .ToList();
+    }
+}
+
+public class DramaVideoBitrateDto
+{
+    /// <summary><c>h264</c> hoặc <c>bytevc1</c> (H.265).</summary>
+    [JsonPropertyName("CodecType")]
+    public string? CodecType { get; init; }
+
+    [JsonPropertyName("Bitrate")]
+    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
+    public long Bitrate { get; init; }
+
+    [JsonPropertyName("PlayAddr")]
+    public DramaVideoPlayAddrDto? PlayAddr { get; init; }
+}
+
+public class DramaVideoPlayAddrDto
+{
+    [JsonPropertyName("UrlList")]
+    public List<string> UrlList { get; init; } = [];
 }
 
 /// <summary>Thông tin drama gắn trên từng tập (giống một mục của drama_list) kèm số tập.</summary>
