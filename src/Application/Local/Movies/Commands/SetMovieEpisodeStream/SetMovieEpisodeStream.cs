@@ -1,11 +1,13 @@
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Local.Movies.Commands.StoreEpisodeVideos;
 using SurveillanceCameras.Domain.Enums;
 
 namespace SurveillanceCameras.Application.Local.Movies.Commands.SetMovieEpisodeStream;
 
 /// <summary>
 /// Gán link file video tự lưu trữ (mp4/HLS) cho một tập phim; bỏ trống để gỡ (app quay lại phát bằng trình phát nhúng của
-/// nền tảng nguồn).
+/// nền tảng nguồn, và tác vụ nền sẽ tải video về kho lại nếu còn tài khoản lưu trữ trống). File hệ thống đã lưu cho tập
+/// bị xoá khỏi kho.
 /// </summary>
 public record SetMovieEpisodeStreamCommand(int MovieId, int EpisodeId, string? StreamUrl) : IRequest;
 
@@ -25,11 +27,13 @@ public class SetMovieEpisodeStreamCommandHandler : IRequestHandler<SetMovieEpiso
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
+    private readonly EpisodeVideoStorer _videoStorer;
 
-    public SetMovieEpisodeStreamCommandHandler(IApplicationDbContext context, IUser user)
+    public SetMovieEpisodeStreamCommandHandler(IApplicationDbContext context, IUser user, EpisodeVideoStorer videoStorer)
     {
         _context = context;
         _user = user;
+        _videoStorer = videoStorer;
     }
 
     public async Task Handle(SetMovieEpisodeStreamCommand request, CancellationToken cancellationToken)
@@ -40,7 +44,13 @@ public class SetMovieEpisodeStreamCommandHandler : IRequestHandler<SetMovieEpiso
 
         Guard.Against.NotFound(request.EpisodeId, episode);
 
-        episode.StreamUrl = string.IsNullOrWhiteSpace(request.StreamUrl) ? null : request.StreamUrl.Trim();
+        var streamUrl = string.IsNullOrWhiteSpace(request.StreamUrl) ? null : request.StreamUrl.Trim();
+        if (streamUrl == episode.StreamUrl) return;
+
+        await _videoStorer.ReleaseAsync([episode], cancellationToken);
+        episode.StreamUrl = streamUrl;
+        episode.StorageError = null;
+        episode.StorageAttempts = 0;
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

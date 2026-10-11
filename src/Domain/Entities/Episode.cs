@@ -46,6 +46,20 @@ public class Episode : BaseAuditableEntity
     /// </summary>
     public string? StreamUrl { get; set; }
 
+    /// <summary>Tài khoản lưu trữ đang giữ file video của tập; <c>null</c> khi chưa lưu hoặc link do người dùng tự gán.</summary>
+    public int? StorageAccountId { get; set; }
+
+    /// <summary>Khoá (đường dẫn) của file video trong bucket.</summary>
+    public string? StorageKey { get; set; }
+
+    public long? StorageSizeBytes { get; set; }
+
+    /// <summary>Lỗi của lần lưu video gần nhất; <c>null</c> khi chưa thử hoặc đã lưu xong.</summary>
+    public string? StorageError { get; set; }
+
+    /// <summary>Số lần lưu video đã thất bại — đủ số lần thì tác vụ nền thôi thử cho tới khi người dùng bấm thử lại.</summary>
+    public int StorageAttempts { get; set; }
+
     public string? ThumbnailUrl { get; set; }
 
     /// <summary>Thời lượng tập phim (giây).</summary>
@@ -58,4 +72,6 @@ public class Episode : BaseAuditableEntity
     public Prompt? Prompt { get; set; }
 
     public Work? Work { get; set; }
+
+    public StorageAccount? StorageAccount { get; set; }
 }

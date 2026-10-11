@@ -19,6 +19,10 @@ public static class DependencyInjection
         builder.Services.AddScoped<Local.AIs.AIPromptRunner>();
         builder.Services.AddScoped<Local.Movies.Commands.SyncTikTokDramas.TikTokDramaSyncer>();
 
+        builder.Services.Configure<Local.Movies.Commands.StoreEpisodeVideos.EpisodeVideoStoreOptions>(
+            builder.Configuration.GetSection(Local.Movies.Commands.StoreEpisodeVideos.EpisodeVideoStoreOptions.SectionName));
+        builder.Services.AddScoped<Local.Movies.Commands.StoreEpisodeVideos.EpisodeVideoStorer>();
+
         builder.Services.AddMediatR(cfg => {
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
             cfg.AddOpenRequestPreProcessor(typeof(LoggingBehaviour<>));
