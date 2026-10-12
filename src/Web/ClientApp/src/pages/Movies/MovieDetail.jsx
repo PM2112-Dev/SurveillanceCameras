@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Eye, EyeOff, Pencil, RefreshCw } from 'lucide-react';
+import { ArrowLeft, CloudUpload, ExternalLink, Eye, EyeOff, Pencil, RefreshCw, RotateCcw } from 'lucide-react';
 import { SetMovieEpisodeStreamRequest, SetMoviesPublishedRequest, SyncTikTokDramasCommand } from '../../web-api-client';
 import { getErrorMessage, moviesClient } from '../../api/clients';
+import { retryMovieVideoStorage, storeMovieEpisodeVideo } from '../../api/storageAccounts';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Pagination } from '../../components/common/Pagination';
 import { EmptyState, ErrorAlert, LoadingBlock } from '../../components/common/StateBlocks';
 import { useAsyncData } from '../../hooks/useAsyncData';
 import { dateTimeFormat, formatDuration, numberFormat } from './movieFormat';
+import { formatBytes } from '../StorageAccounts/storageFormat';
 
 const PAGE_SIZE = 50;
 
@@ -20,6 +22,7 @@ export function MovieDetail() {
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [storingId, setStoringId] = useState(null);
 
   const movie = useAsyncData(() => moviesClient.getMovieById(movieId), [movieId, version]);
   const episodes = useAsyncData(() => moviesClient.getMovieEpisodes(movieId, page, PAGE_SIZE), [movieId, page, version]);
@@ -63,6 +66,33 @@ export function MovieDetail() {
       .catch(err => setError(getErrorMessage(err)));
   };
 
+  const retryStorage = () => {
+    setMessage('');
+    setError('');
+    retryMovieVideoStorage(movieId)
+      .then(count => {
+        setMessage(count > 0
+          ? `Đã đưa ${count} tập vào hàng chờ lưu video lại.`
+          : 'Không có tập nào đang lỗi lưu video.');
+        setVersion(v => v + 1);
+      })
+      .catch(err => setError(err.message));
+  };
+
+  const storeNow = episode => {
+    setStoringId(episode.id);
+    setMessage('');
+    setError('');
+    storeMovieEpisodeVideo(movieId, episode.id)
+      .then(result => {
+        if (result.succeeded) setMessage(`Đã lưu video tập ${episode.episodeNumber} vào kho (${formatBytes(result.sizeBytes)}).`);
+        else setError(`Tập ${episode.episodeNumber}: ${result.error}`);
+        setVersion(v => v + 1);
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setStoringId(null));
+  };
+
   const items = episodes.data?.items ?? [];
 
   return (
@@ -74,6 +104,11 @@ export function MovieDetail() {
             {info?.userProfileId && info?.externalId && (
               <button type="button" className="secondary" onClick={resync} disabled={syncing} aria-busy={syncing}>
                 <RefreshCw size={16} aria-hidden="true" /> Đồng bộ lại
+              </button>
+            )}
+            {items.some(episode => episode.storageError) && (
+              <button type="button" className="secondary" onClick={retryStorage}>
+                <RotateCcw size={16} aria-hidden="true" /> Lưu video lại
               </button>
             )}
             {info && (
@@ -170,6 +205,21 @@ export function MovieDetail() {
                       aria-label={`Sửa link video tập ${episode.episodeNumber}`}>
                       <Pencil size={14} aria-hidden="true" />
                     </button>
+                    {!episode.streamUrl && episode.videoUrl && (
+                      <>
+                        {' '}
+                        <button type="button" className="secondary outline" onClick={() => storeNow(episode)}
+                          disabled={storingId !== null} aria-busy={storingId === episode.id}
+                          title="Tải video từ TikTok và lưu vào kho ngay"
+                          aria-label={`Lưu video tập ${episode.episodeNumber} vào kho`}>
+                          <CloudUpload size={14} aria-hidden="true" />
+                        </button>
+                      </>
+                    )}
+                    {episode.storageAccountId != null && (
+                      <span className="cell-sub">Đã lưu vào kho — {formatBytes(episode.storageSizeBytes)}</span>
+                    )}
+                    {episode.storageError && <span className="cell-sub">Lưu video lỗi: {episode.storageError}</span>}
                   </td>
                 </tr>
               ))}

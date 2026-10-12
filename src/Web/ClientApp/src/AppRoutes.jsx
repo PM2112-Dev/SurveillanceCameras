@@ -18,6 +18,8 @@ import { CategoryForm } from './pages/Categories/CategoryForm';
 import { AccountList } from './pages/Accounts/AccountList';
 import { AccountForm } from './pages/Accounts/AccountForm';
 import { TikTokChannel } from './pages/Accounts/TikTokChannel';
+import { StorageAccountList } from './pages/StorageAccounts/StorageAccountList';
+import { StorageAccountForm } from './pages/StorageAccounts/StorageAccountForm';
 import { AccountTypeList } from './pages/AccountTypes/AccountTypeList';
 import { AccountTypeForm } from './pages/AccountTypes/AccountTypeForm';
 import { AIList } from './pages/AIs/AIList';
@@ -83,6 +85,10 @@ export default function AppRoutes() {
         <Route path="/account-types" element={<AccountTypeList />} />
         <Route path="/account-types/new" element={<AccountTypeForm />} />
         <Route path="/account-types/:id" element={<AccountTypeForm />} />
+
+        <Route path="/storage-accounts" element={<StorageAccountList />} />
+        <Route path="/storage-accounts/new" element={<StorageAccountForm />} />
+        <Route path="/storage-accounts/:id" element={<StorageAccountForm />} />
 
         <Route path="/user-profiles" element={<UserProfileList />} />
         <Route path="/user-profiles/:id/dramas" element={<ChannelDramas />} />

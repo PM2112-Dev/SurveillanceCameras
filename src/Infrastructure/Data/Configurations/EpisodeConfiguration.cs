@@ -24,6 +24,12 @@ public class EpisodeConfiguration : IEntityTypeConfiguration<Episode>
             .HasForeignKey(x => x.LanguageId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Còn tập đang lưu video ở tài khoản thì không cho xoá tài khoản lưu trữ (link phát sẽ chết).
+        builder.HasOne(x => x.StorageAccount)
+            .WithMany()
+            .HasForeignKey(x => x.StorageAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Đồng bộ lại mục lục nhận ra chương đã có theo link (chương nhập tay không có link).
         builder.HasIndex(x => new { x.WorkId, x.LinkRaw })
             .IsUnique()

@@ -29,6 +29,9 @@ using SurveillanceCameras.Application.Repository.Media;
 using SurveillanceCameras.Application.Repository.Tyt;
 using SurveillanceCameras.Infrastructure.Repository.AI;
 using SurveillanceCameras.Infrastructure.Repository.TikTok;
+using SurveillanceCameras.Application.Repository.VideoStorage;
+using SurveillanceCameras.Infrastructure.Repository.VideoStorage;
+using SurveillanceCameras.Infrastructure.Security;
 
 namespace SurveillanceCameras.Infrastructure;
 
@@ -109,6 +112,11 @@ public static class DependencyInjection
 
         builder.Services.AddTikTokApi(builder.Configuration);
 
+        builder.Services.AddSingleton<ISecretProtector, AesSecretProtector>();
+        builder.Services.Configure<R2VideoStorageOptions>(builder.Configuration.GetSection(R2VideoStorageOptions.SectionName));
+        builder.Services.AddSingleton<IVideoStorageRepository, R2VideoStorageRepository>();
+        builder.Services.AddHostedService<EpisodeVideoStoreService>();
+
         var jwtSection = builder.Configuration.GetSection("Jwt");
         var issuer = jwtSection["Issuer"];
         var audience = jwtSection["Audience"];
@@ -151,6 +159,10 @@ public static class DependencyInjection
             .AddSignInManager()
             .AddDefaultTokenProviders()
             .AddApiEndpoints();
+
+        builder.Services.Configure<SocialAuthOptions>(builder.Configuration.GetSection(SocialAuthOptions.SectionName));
+        builder.Services.AddHttpClient(nameof(SocialTokenValidator));
+        builder.Services.AddSingleton<ISocialTokenValidator, SocialTokenValidator>();
 
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();

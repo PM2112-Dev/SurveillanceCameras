@@ -53,6 +53,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
 
     public DbSet<AppSubscription> AppSubscriptions => Set<AppSubscription>();
 
+    public DbSet<StorageAccount> StorageAccounts => Set<StorageAccount>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

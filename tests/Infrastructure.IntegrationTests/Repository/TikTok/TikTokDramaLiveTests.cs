@@ -29,4 +29,42 @@ public class TikTokDramaLiveTests
         Assert.That(first.ItemList[0].DramaInfo!.DramaName, Is.Not.Empty);
         Assert.That(first.ItemList[0].Author!.UniqueId, Is.EqualTo("stardusttv_official"));
     }
+
+    [Test]
+    public async Task DownloadVideo_SavesTheFile_ForAPublicVideo()
+    {
+        var options = new TikTokApiOptions();
+        var repository = new TikTokRepository(Options.Create(options),
+            new HttpClient { BaseAddress = new Uri(options.BaseUrl) });
+        var path = Path.Combine(Path.GetTempPath(), $"tiktok-live-{Guid.NewGuid():N}.mp4");
+
+        try
+        {
+            var size = await repository.DownloadVideoAsync(null,
+                "https://www.tiktok.com/@scout2015/video/6718335390845095173", path, 50 * 1024 * 1024);
+
+            Assert.That(size, Is.GreaterThan(100_000));
+            Assert.That(new FileInfo(path).Length, Is.EqualTo(size));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    // TikTok không cấp link file của tập drama cho người chưa đăng nhập (kể cả tập xem thử).
+    [Test]
+    public void DownloadVideo_Fails_ForADramaEpisode_WithoutAnAccountCookie()
+    {
+        var options = new TikTokApiOptions();
+        var repository = new TikTokRepository(Options.Create(options),
+            new HttpClient { BaseAddress = new Uri(options.BaseUrl) });
+        var path = Path.Combine(Path.GetTempPath(), $"tiktok-live-{Guid.NewGuid():N}.mp4");
+
+        var ex = Assert.CatchAsync<SurveillanceCameras.Application.Common.Exceptions.TikTokApiException>(() =>
+            repository.DownloadVideoAsync(null, "https://www.tiktok.com/@stardusttv_official/video/7677109886609673485", path, 50 * 1024 * 1024));
+
+        Assert.That(ex!.Message, Does.Contain("không cấp link tải"));
+        Assert.That(File.Exists(path), Is.False);
+    }
 }

@@ -1354,6 +1354,104 @@ export class AppAuthClient {
         }
         return Promise.resolve<AccessTokenResponse>(null as any);
     }
+
+    /**
+     * Log in app viewer with Google
+     * @return OK
+     */
+    loginAppViewerWithGoogle(body: AppSocialLoginRequest): Promise<AppAuthResponse> {
+        let url_ = this.baseUrl + "/api/app/auth/google";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLoginAppViewerWithGoogle(_response);
+        });
+    }
+
+    protected processLoginAppViewerWithGoogle(response: Response): Promise<AppAuthResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppAuthResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = HttpValidationProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppAuthResponse>(null as any);
+    }
+
+    /**
+     * Log in app viewer with Apple
+     * @return OK
+     */
+    loginAppViewerWithApple(body: AppSocialLoginRequest): Promise<AppAuthResponse> {
+        let url_ = this.baseUrl + "/api/app/auth/apple";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLoginAppViewerWithApple(_response);
+        });
+    }
+
+    protected processLoginAppViewerWithApple(response: Response): Promise<AppAuthResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppAuthResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = HttpValidationProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppAuthResponse>(null as any);
+    }
 }
 
 export class AppCatalogClient {
@@ -1409,20 +1507,74 @@ export class AppCatalogClient {
     }
 
     /**
+     * Get app languages
+     * @return OK
+     */
+    getAppLanguages(): Promise<AppLanguageDto[]> {
+        let url_ = this.baseUrl + "/api/app/languages";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppLanguages(_response);
+        });
+    }
+
+    protected processGetAppLanguages(response: Response): Promise<AppLanguageDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(AppLanguageDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppLanguageDto[]>(null as any);
+    }
+
+    /**
      * Get app movies
      * @param search (optional) 
+     * @param language (optional) 
      * @param sort (optional) 
      * @param full (optional) 
      * @param page (optional) 
      * @param pageSize (optional) 
      * @return OK
      */
-    getAppMovies(search: string | undefined, sort: number | undefined, full: boolean | undefined, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfAppMovieDto> {
+    getAppMovies(search: string | undefined, language: string | undefined, sort: number | undefined, full: boolean | undefined, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfAppMovieDto> {
         let url_ = this.baseUrl + "/api/app/movies?";
         if (search === null)
             throw new globalThis.Error("The parameter 'search' cannot be null.");
         else if (search !== undefined)
             url_ += "search=" + encodeURIComponent("" + search) + "&";
+        if (language === null)
+            throw new globalThis.Error("The parameter 'language' cannot be null.");
+        else if (language !== undefined)
+            url_ += "language=" + encodeURIComponent("" + language) + "&";
         if (sort === null)
             throw new globalThis.Error("The parameter 'sort' cannot be null.");
         else if (sort !== undefined)
@@ -3658,6 +3810,116 @@ export class MoviesClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    /**
+     * Retry Movie video storage
+     * @return OK
+     */
+    retryMovieVideoStorage(id: number): Promise<number> {
+        let url_ = this.baseUrl + "/api/Movies/{id}/video-storage/retry";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRetryMovieVideoStorage(_response);
+        });
+    }
+
+    protected processRetryMovieVideoStorage(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Store Movie episode video
+     * @return OK
+     */
+    storeMovieEpisodeVideo(id: number, episodeId: number): Promise<StoreMovieEpisodeVideoResult> {
+        let url_ = this.baseUrl + "/api/Movies/{id}/episodes/{episodeId}/video-storage/store";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (episodeId === undefined || episodeId === null)
+            throw new globalThis.Error("The parameter 'episodeId' must be defined.");
+        url_ = url_.replace("{episodeId}", encodeURIComponent("" + episodeId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processStoreMovieEpisodeVideo(_response);
+        });
+    }
+
+    protected processStoreMovieEpisodeVideo(response: Response): Promise<StoreMovieEpisodeVideoResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = StoreMovieEpisodeVideoResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<StoreMovieEpisodeVideoResult>(null as any);
+    }
 }
 
 export class PromptsClient {
@@ -4230,6 +4492,337 @@ export class PromptTypesClient {
             });
         }
         return Promise.resolve<void>(null as any);
+    }
+}
+
+export class StorageAccountsClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get Storage Accounts
+     * @return OK
+     */
+    getStorageAccounts(): Promise<StorageAccountDto[]> {
+        let url_ = this.baseUrl + "/api/StorageAccounts";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetStorageAccounts(_response);
+        });
+    }
+
+    protected processGetStorageAccounts(response: Response): Promise<StorageAccountDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(StorageAccountDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<StorageAccountDto[]>(null as any);
+    }
+
+    /**
+     * Create Storage Account
+     * @return Created
+     */
+    createStorageAccount(body: CreateStorageAccountCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/StorageAccounts";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateStorageAccount(_response);
+        });
+    }
+
+    protected processCreateStorageAccount(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get Storage Account by Id
+     * @return OK
+     */
+    getStorageAccountById(id: number): Promise<StorageAccountDto> {
+        let url_ = this.baseUrl + "/api/StorageAccounts/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetStorageAccountById(_response);
+        });
+    }
+
+    protected processGetStorageAccountById(response: Response): Promise<StorageAccountDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = StorageAccountDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<StorageAccountDto>(null as any);
+    }
+
+    /**
+     * Update Storage Account
+     * @return No Content
+     */
+    updateStorageAccount(id: number, body: UpdateStorageAccountCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/StorageAccounts/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateStorageAccount(_response);
+        });
+    }
+
+    protected processUpdateStorageAccount(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete Storage Account
+     * @return No Content
+     */
+    deleteStorageAccount(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/StorageAccounts/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteStorageAccount(_response);
+        });
+    }
+
+    protected processDeleteStorageAccount(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Check Storage Account
+     * @return OK
+     */
+    checkStorageAccount(id: number): Promise<CheckStorageAccountResult> {
+        let url_ = this.baseUrl + "/api/StorageAccounts/{id}/check";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCheckStorageAccount(_response);
+        });
+    }
+
+    protected processCheckStorageAccount(response: Response): Promise<CheckStorageAccountResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CheckStorageAccountResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CheckStorageAccountResult>(null as any);
     }
 }
 
@@ -7497,6 +8090,62 @@ export interface IAppHistoryDto {
     [key: string]: any;
 }
 
+export class AppLanguageDto implements IAppLanguageDto {
+    code!: string;
+    title!: string;
+    movieCount!: number;
+
+    [key: string]: any;
+
+    constructor(data?: IAppLanguageDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.code = _data["code"];
+            this.title = _data["title"];
+            this.movieCount = _data["movieCount"];
+        }
+    }
+
+    static fromJS(data: any): AppLanguageDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppLanguageDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["code"] = this.code;
+        data["title"] = this.title;
+        data["movieCount"] = this.movieCount;
+        return data;
+    }
+}
+
+export interface IAppLanguageDto {
+    code: string;
+    title: string;
+    movieCount: number;
+
+    [key: string]: any;
+}
+
 export class AppLoginRequest implements IAppLoginRequest {
     email!: string | undefined;
     password!: string | undefined;
@@ -7560,6 +8209,7 @@ export class AppMovieDto implements IAppMovieDto {
     saveCount?: number;
     commentCount?: number;
     isFull?: boolean;
+    language?: string | undefined;
 
     [key: string]: any;
 
@@ -7588,6 +8238,7 @@ export class AppMovieDto implements IAppMovieDto {
             this.saveCount = _data["saveCount"];
             this.commentCount = _data["commentCount"];
             this.isFull = _data["isFull"];
+            this.language = _data["language"];
         }
     }
 
@@ -7614,6 +8265,7 @@ export class AppMovieDto implements IAppMovieDto {
         data["saveCount"] = this.saveCount;
         data["commentCount"] = this.commentCount;
         data["isFull"] = this.isFull;
+        data["language"] = this.language;
         return data;
     }
 }
@@ -7629,6 +8281,7 @@ export interface IAppMovieDto {
     saveCount?: number;
     commentCount?: number;
     isFull?: boolean;
+    language?: string | undefined;
 
     [key: string]: any;
 }
@@ -7848,6 +8501,58 @@ export class AppRegisterRequest implements IAppRegisterRequest {
 export interface IAppRegisterRequest {
     email: string | undefined;
     password: string | undefined;
+    displayName: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AppSocialLoginRequest implements IAppSocialLoginRequest {
+    idToken!: string | undefined;
+    displayName!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppSocialLoginRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.idToken = _data["idToken"];
+            this.displayName = _data["displayName"];
+        }
+    }
+
+    static fromJS(data: any): AppSocialLoginRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppSocialLoginRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["idToken"] = this.idToken;
+        data["displayName"] = this.displayName;
+        return data;
+    }
+}
+
+export interface IAppSocialLoginRequest {
+    idToken: string | undefined;
     displayName: string | undefined;
 
     [key: string]: any;
@@ -8177,6 +8882,66 @@ export class ChapterDataDto implements IChapterDataDto {
 export interface IChapterDataDto {
     title?: string | undefined;
     link?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CheckStorageAccountResult implements ICheckStorageAccountResult {
+    succeeded!: boolean;
+    error!: string | undefined;
+    usedBytes!: number;
+    objects!: number;
+
+    [key: string]: any;
+
+    constructor(data?: ICheckStorageAccountResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.succeeded = _data["succeeded"];
+            this.error = _data["error"];
+            this.usedBytes = _data["usedBytes"];
+            this.objects = _data["objects"];
+        }
+    }
+
+    static fromJS(data: any): CheckStorageAccountResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new CheckStorageAccountResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["succeeded"] = this.succeeded;
+        data["error"] = this.error;
+        data["usedBytes"] = this.usedBytes;
+        data["objects"] = this.objects;
+        return data;
+    }
+}
+
+export interface ICheckStorageAccountResult {
+    succeeded: boolean;
+    error: string | undefined;
+    usedBytes: number;
+    objects: number;
 
     [key: string]: any;
 }
@@ -8809,6 +9574,86 @@ export interface ICreatePromptTypeCommand {
     title?: string | undefined;
     code?: string | undefined;
     description?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CreateStorageAccountCommand implements ICreateStorageAccountCommand {
+    title?: string | undefined;
+    cloudflareAccountId?: string | undefined;
+    accessKeyId?: string | undefined;
+    secretAccessKey?: string | undefined;
+    bucket?: string | undefined;
+    publicBaseUrl?: string | undefined;
+    quotaBytes?: number;
+    isEnabled?: boolean;
+    priority?: number;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateStorageAccountCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+            this.cloudflareAccountId = _data["cloudflareAccountId"];
+            this.accessKeyId = _data["accessKeyId"];
+            this.secretAccessKey = _data["secretAccessKey"];
+            this.bucket = _data["bucket"];
+            this.publicBaseUrl = _data["publicBaseUrl"];
+            this.quotaBytes = _data["quotaBytes"];
+            this.isEnabled = _data["isEnabled"];
+            this.priority = _data["priority"];
+        }
+    }
+
+    static fromJS(data: any): CreateStorageAccountCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateStorageAccountCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        data["cloudflareAccountId"] = this.cloudflareAccountId;
+        data["accessKeyId"] = this.accessKeyId;
+        data["secretAccessKey"] = this.secretAccessKey;
+        data["bucket"] = this.bucket;
+        data["publicBaseUrl"] = this.publicBaseUrl;
+        data["quotaBytes"] = this.quotaBytes;
+        data["isEnabled"] = this.isEnabled;
+        data["priority"] = this.priority;
+        return data;
+    }
+}
+
+export interface ICreateStorageAccountCommand {
+    title?: string | undefined;
+    cloudflareAccountId?: string | undefined;
+    accessKeyId?: string | undefined;
+    secretAccessKey?: string | undefined;
+    bucket?: string | undefined;
+    publicBaseUrl?: string | undefined;
+    quotaBytes?: number;
+    isEnabled?: boolean;
+    priority?: number;
 
     [key: string]: any;
 }
@@ -10177,6 +11022,9 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
     streamUrl?: string | undefined;
     thumbnailUrl?: string | undefined;
     durationSeconds?: number | undefined;
+    storageAccountId?: number | undefined;
+    storageSizeBytes?: number | undefined;
+    storageError?: string | undefined;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
@@ -10206,6 +11054,9 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
             this.streamUrl = _data["streamUrl"];
             this.thumbnailUrl = _data["thumbnailUrl"];
             this.durationSeconds = _data["durationSeconds"];
+            this.storageAccountId = _data["storageAccountId"];
+            this.storageSizeBytes = _data["storageSizeBytes"];
+            this.storageError = _data["storageError"];
             this.id = _data["id"];
             this.title = _data["title"];
             this.code = _data["code"];
@@ -10233,6 +11084,9 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
         data["streamUrl"] = this.streamUrl;
         data["thumbnailUrl"] = this.thumbnailUrl;
         data["durationSeconds"] = this.durationSeconds;
+        data["storageAccountId"] = this.storageAccountId;
+        data["storageSizeBytes"] = this.storageSizeBytes;
+        data["storageError"] = this.storageError;
         data["id"] = this.id;
         data["title"] = this.title;
         data["code"] = this.code;
@@ -10249,6 +11103,9 @@ export interface IMovieEpisodeDto {
     streamUrl?: string | undefined;
     thumbnailUrl?: string | undefined;
     durationSeconds?: number | undefined;
+    storageAccountId?: number | undefined;
+    storageSizeBytes?: number | undefined;
+    storageError?: string | undefined;
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
@@ -12093,6 +12950,170 @@ export interface ISetMoviesPublishedRequest {
     [key: string]: any;
 }
 
+export class StorageAccountDto implements IStorageAccountDto {
+    cloudflareAccountId?: string | undefined;
+    accessKeyId?: string | undefined;
+    bucket?: string | undefined;
+    publicBaseUrl?: string | undefined;
+    quotaBytes?: number;
+    usedBytes?: number;
+    isEnabled?: boolean;
+    priority?: number;
+    lastCheckedAt?: Date | undefined;
+    lastError?: string | undefined;
+    episodeCount?: number;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IStorageAccountDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.cloudflareAccountId = _data["cloudflareAccountId"];
+            this.accessKeyId = _data["accessKeyId"];
+            this.bucket = _data["bucket"];
+            this.publicBaseUrl = _data["publicBaseUrl"];
+            this.quotaBytes = _data["quotaBytes"];
+            this.usedBytes = _data["usedBytes"];
+            this.isEnabled = _data["isEnabled"];
+            this.priority = _data["priority"];
+            this.lastCheckedAt = _data["lastCheckedAt"] ? new Date(_data["lastCheckedAt"].toString()) : undefined as any;
+            this.lastError = _data["lastError"];
+            this.episodeCount = _data["episodeCount"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): StorageAccountDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new StorageAccountDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["cloudflareAccountId"] = this.cloudflareAccountId;
+        data["accessKeyId"] = this.accessKeyId;
+        data["bucket"] = this.bucket;
+        data["publicBaseUrl"] = this.publicBaseUrl;
+        data["quotaBytes"] = this.quotaBytes;
+        data["usedBytes"] = this.usedBytes;
+        data["isEnabled"] = this.isEnabled;
+        data["priority"] = this.priority;
+        data["lastCheckedAt"] = this.lastCheckedAt ? this.lastCheckedAt.toISOString() : undefined as any;
+        data["lastError"] = this.lastError;
+        data["episodeCount"] = this.episodeCount;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface IStorageAccountDto {
+    cloudflareAccountId?: string | undefined;
+    accessKeyId?: string | undefined;
+    bucket?: string | undefined;
+    publicBaseUrl?: string | undefined;
+    quotaBytes?: number;
+    usedBytes?: number;
+    isEnabled?: boolean;
+    priority?: number;
+    lastCheckedAt?: Date | undefined;
+    lastError?: string | undefined;
+    episodeCount?: number;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class StoreMovieEpisodeVideoResult implements IStoreMovieEpisodeVideoResult {
+    succeeded!: boolean;
+    streamUrl!: string | undefined;
+    sizeBytes!: number | undefined;
+    error!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IStoreMovieEpisodeVideoResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.succeeded = _data["succeeded"];
+            this.streamUrl = _data["streamUrl"];
+            this.sizeBytes = _data["sizeBytes"];
+            this.error = _data["error"];
+        }
+    }
+
+    static fromJS(data: any): StoreMovieEpisodeVideoResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new StoreMovieEpisodeVideoResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["succeeded"] = this.succeeded;
+        data["streamUrl"] = this.streamUrl;
+        data["sizeBytes"] = this.sizeBytes;
+        data["error"] = this.error;
+        return data;
+    }
+}
+
+export interface IStoreMovieEpisodeVideoResult {
+    succeeded: boolean;
+    streamUrl: string | undefined;
+    sizeBytes: number | undefined;
+    error: string | undefined;
+
+    [key: string]: any;
+}
+
 export class StoryCrawlDto implements IStoryCrawlDto {
     title?: string | undefined;
     link?: string | undefined;
@@ -13405,6 +14426,90 @@ export interface IUpdatePromptTypeCommand {
     title?: string | undefined;
     code?: string | undefined;
     description?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class UpdateStorageAccountCommand implements IUpdateStorageAccountCommand {
+    id?: number;
+    title?: string | undefined;
+    cloudflareAccountId?: string | undefined;
+    accessKeyId?: string | undefined;
+    secretAccessKey?: string | undefined;
+    bucket?: string | undefined;
+    publicBaseUrl?: string | undefined;
+    quotaBytes?: number;
+    isEnabled?: boolean;
+    priority?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateStorageAccountCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.cloudflareAccountId = _data["cloudflareAccountId"];
+            this.accessKeyId = _data["accessKeyId"];
+            this.secretAccessKey = _data["secretAccessKey"];
+            this.bucket = _data["bucket"];
+            this.publicBaseUrl = _data["publicBaseUrl"];
+            this.quotaBytes = _data["quotaBytes"];
+            this.isEnabled = _data["isEnabled"];
+            this.priority = _data["priority"];
+        }
+    }
+
+    static fromJS(data: any): UpdateStorageAccountCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateStorageAccountCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["cloudflareAccountId"] = this.cloudflareAccountId;
+        data["accessKeyId"] = this.accessKeyId;
+        data["secretAccessKey"] = this.secretAccessKey;
+        data["bucket"] = this.bucket;
+        data["publicBaseUrl"] = this.publicBaseUrl;
+        data["quotaBytes"] = this.quotaBytes;
+        data["isEnabled"] = this.isEnabled;
+        data["priority"] = this.priority;
+        return data;
+    }
+}
+
+export interface IUpdateStorageAccountCommand {
+    id?: number;
+    title?: string | undefined;
+    cloudflareAccountId?: string | undefined;
+    accessKeyId?: string | undefined;
+    secretAccessKey?: string | undefined;
+    bucket?: string | undefined;
+    publicBaseUrl?: string | undefined;
+    quotaBytes?: number;
+    isEnabled?: boolean;
+    priority?: number;
 
     [key: string]: any;
 }

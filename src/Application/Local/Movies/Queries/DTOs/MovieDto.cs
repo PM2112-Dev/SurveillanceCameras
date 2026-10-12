@@ -78,6 +78,14 @@ public class MovieEpisodeDto : BaseDto
 
     public int? DurationSeconds { get; init; }
 
+    /// <summary>Tài khoản lưu trữ đang giữ file video; <c>null</c> khi chưa lưu hoặc link do người dùng tự gán.</summary>
+    public int? StorageAccountId { get; init; }
+
+    public long? StorageSizeBytes { get; init; }
+
+    /// <summary>Lỗi của lần lưu video gần nhất.</summary>
+    public string? StorageError { get; init; }
+
     private class Mapping : Profile
     {
         public Mapping()
