@@ -30,6 +30,8 @@ public interface IApplicationDbContext
 
     DbSet<UserProfile> UserProfiles { get; }
 
+    DbSet<Language> Languages { get; }
+
     DbSet<AppBookmark> AppBookmarks { get; }
 
     DbSet<AppWatchHistory> AppWatchHistories { get; }

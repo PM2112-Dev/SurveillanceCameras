@@ -51,6 +51,11 @@ public class Episode : BaseAuditableEntity
     /// <summary>Thời lượng tập phim (giây).</summary>
     public int? DurationSeconds { get; set; }
 
+    /// <summary>Ngôn ngữ của tập (với tập phim TikTok: theo <c>textLanguage</c> của video).</summary>
+    public int? LanguageId { get; set; }
+
+    public Language? Language { get; set; }
+
     public bool IsUploaded { get; set; }
 
     public bool IsPublished { get; set; }

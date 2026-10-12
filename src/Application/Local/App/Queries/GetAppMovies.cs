@@ -23,6 +23,12 @@ public record GetAppMoviesQuery : IRequest<PaginatedList<AppMovieDto>>
 
     public AppMovieSort Sort { get; init; } = AppMovieSort.Newest;
 
+    /// <summary>
+    /// Mã ngôn ngữ người xem chọn (vd. <c>vi</c>). Không truyền, hoặc chưa có phim nào bằng ngôn ngữ đó, thì trả phim
+    /// tiếng Anh.
+    /// </summary>
+    public string? Language { get; init; }
+
     /// <summary>Chỉ phim đã đủ tập.</summary>
     public bool? Full { get; init; }
 
@@ -48,9 +54,10 @@ public class GetAppMoviesQueryHandler : IRequestHandler<GetAppMoviesQuery, Pagin
 
     public GetAppMoviesQueryHandler(IApplicationDbContext context) => _context = context;
 
-    public Task<PaginatedList<AppMovieDto>> Handle(GetAppMoviesQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedList<AppMovieDto>> Handle(GetAppMoviesQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.PublishedMovies();
+        var language = await _context.ResolveAppLanguageAsync(request.Language, cancellationToken);
+        var query = _context.PublishedMovies().InLanguage(language);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
@@ -72,8 +79,34 @@ public class GetAppMoviesQueryHandler : IRequestHandler<GetAppMoviesQuery, Pagin
             _ => query.OrderByDescending(x => x.Created).ThenByDescending(x => x.Id)
         };
 
-        return PaginatedList<AppMovieDto>.CreateAsync(query.ToAppMovies(_context), request.Page, request.PageSize,
+        return await PaginatedList<AppMovieDto>.CreateAsync(query.ToAppMovies(_context), request.Page, request.PageSize,
             cancellationToken);
+    }
+}
+
+/// <summary>Các ngôn ngữ đang có phim đã xuất bản, nhiều phim trước — để app cho người xem chọn.</summary>
+public record GetAppLanguagesQuery : IRequest<List<AppLanguageDto>>;
+
+public class GetAppLanguagesQueryHandler : IRequestHandler<GetAppLanguagesQuery, List<AppLanguageDto>>
+{
+    private readonly IApplicationDbContext _context;
+
+    public GetAppLanguagesQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<AppLanguageDto>> Handle(GetAppLanguagesQuery request, CancellationToken cancellationToken)
+    {
+        var rows = await _context.PublishedMovies()
+            .Where(x => x.Language != null && x.Language.Code != null)
+            .Select(x => new { x.Language!.Code, x.Language.Title })
+            .ToListAsync(cancellationToken);
+
+        // Ngôn ngữ khai báo theo từng người quản trị nên cùng một mã có thể có nhiều bản ghi: gộp theo mã.
+        return rows
+            .GroupBy(x => x.Code!.ToLowerInvariant())
+            .Select(g => new AppLanguageDto(g.Key, g.Select(x => x.Title).FirstOrDefault(t => !string.IsNullOrWhiteSpace(t)) ?? g.Key, g.Count()))
+            .OrderByDescending(x => x.MovieCount)
+            .ThenBy(x => x.Code)
+            .ToList();
     }
 }
 

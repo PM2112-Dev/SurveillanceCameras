@@ -48,8 +48,9 @@ public class SyncTikTokDramasTests
     [TearDown]
     public void TearDown() => _db.Dispose();
 
-    private static DramaEpisodeDto Ep(int number, int numVideos = 3) => new()
+    private static DramaEpisodeDto Ep(int number, int numVideos = 3, string? language = null) => new()
     {
+        TextLanguage = language,
         Id = $"70000000000000000{number:00}",
         Desc = "Tycoon Returns",
         Author = new DramaEpisodeAuthorDto { UniqueId = "stardusttv_official" },
@@ -115,6 +116,39 @@ public class SyncTikTokDramasTests
         // TestDb không có người dùng đăng nhập nên interceptor không điền CreatedBy như khi chạy thật.
         foreach (var work in _db.Works.Where(x => x.CreatedBy == null)) work.CreatedBy = Owner;
         await _db.SaveChangesAsync();
+    }
+
+    [Test]
+    public async Task SyncsLanguageFromTextLanguage_ReusingDeclaredLanguageAndCreatingMissingOnes()
+    {
+        // Đã khai báo sẵn "EN" (khác hoa thường) và một ngôn ngữ cùng mã của người khác.
+        var english = new Language { Title = "English", Code = "EN", CreatedBy = Owner };
+        _db.Languages.AddRange(english, new Language { Title = "Của người khác", Code = "en", CreatedBy = "user-khác" });
+        await _db.SaveChangesAsync();
+        SetupPages(new DramaEpisodeListDto
+        {
+            Cursor = "1", ItemList = [Ep(1, 4, "en"), Ep(2, 4, "en"), Ep(3, 4, "es"), Ep(4, 4, "un")]
+        });
+
+        await SyncAsync();
+
+        var movie = await _db.Works.Include(x => x.Language).Include(x => x.Episodes!).ThenInclude(x => x.Language).SingleAsync();
+        var episodes = movie.Episodes!.OrderBy(x => x.EpisodeNumber).ToList();
+        episodes.Select(x => x.Language?.Code).ShouldBe(["EN", "EN", "es", null]);
+        episodes[0].LanguageId.ShouldBe(english.Id);
+        // Phim lấy ngôn ngữ có nhiều tập nhất.
+        movie.LanguageId.ShouldBe(english.Id);
+        var mine = _db.Languages.Where(x => x.CreatedBy == Owner).ToList();
+        mine.Count.ShouldBe(2);
+        mine.Single(x => x.Code == "es").Title.ShouldBe("Tiếng Tây Ban Nha");
+
+        // Đồng bộ lại: không tạo trùng; TikTok không trả ngôn ngữ thì giữ ngôn ngữ đã có.
+        SetupPages(new DramaEpisodeListDto { Cursor = "1", ItemList = [Ep(1, 4), Ep(2, 4, "es"), Ep(3, 4, "es"), Ep(4, 4, "es")] });
+        await SyncAsync();
+
+        _db.Languages.Count(x => x.CreatedBy == Owner).ShouldBe(2);
+        movie.Episodes!.OrderBy(x => x.EpisodeNumber).Select(x => x.Language?.Code).ShouldBe(["EN", "es", "es", "es"]);
+        movie.Language!.Code.ShouldBe("es");
     }
 
     [Test]

@@ -32,6 +32,10 @@ public class DramaEpisodeDto
     [JsonPropertyName("desc")]
     public string? Desc { get; init; }
 
+    /// <summary>Mã ngôn ngữ TikTok nhận diện từ phần chữ của video (vd. <c>en</c>, <c>vi</c>); <c>un</c> là không xác định.</summary>
+    [JsonPropertyName("textLanguage")]
+    public string? TextLanguage { get; init; }
+
     [JsonPropertyName("author")]
     public DramaEpisodeAuthorDto? Author { get; init; }
 

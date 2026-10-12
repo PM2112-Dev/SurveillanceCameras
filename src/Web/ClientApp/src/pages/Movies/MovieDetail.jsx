@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Eye, EyeOff, Pencil, RefreshCw } from 'lucide-react';
-import { SyncTikTokDramasCommand } from '../../web-api-client';
+import { SetMovieEpisodeStreamRequest, SetMoviesPublishedRequest, SyncTikTokDramasCommand } from '../../web-api-client';
 import { getErrorMessage, moviesClient } from '../../api/clients';
-import { setMovieEpisodeStream, setMoviesPublished } from '../../api/moviePublishing';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Pagination } from '../../components/common/Pagination';
 import { EmptyState, ErrorAlert, LoadingBlock } from '../../components/common/StateBlocks';
@@ -43,12 +42,12 @@ export function MovieDetail() {
   const togglePublished = () => {
     setMessage('');
     setError('');
-    setMoviesPublished(!info.isPublished, [movieId])
+    moviesClient.setMoviesPublished(new SetMoviesPublishedRequest({ isPublished: !info.isPublished, ids: [movieId] }))
       .then(() => {
         setMessage(info.isPublished ? 'Đã gỡ phim khỏi app.' : 'Phim đã hiện trên app.');
         setVersion(v => v + 1);
       })
-      .catch(err => setError(err.message));
+      .catch(err => setError(getErrorMessage(err)));
   };
 
   const editStream = episode => {
@@ -59,9 +58,9 @@ export function MovieDetail() {
     if (url === null) return;
     setMessage('');
     setError('');
-    setMovieEpisodeStream(movieId, episode.id, url.trim())
+    moviesClient.setMovieEpisodeStream(movieId, episode.id, new SetMovieEpisodeStreamRequest({ streamUrl: url.trim() }))
       .then(() => setVersion(v => v + 1))
-      .catch(err => setError(err.message));
+      .catch(err => setError(getErrorMessage(err)));
   };
 
   const items = episodes.data?.items ?? [];
@@ -107,6 +106,7 @@ export function MovieDetail() {
                 : '—'}
             </dd>
             <dt>ID drama</dt><dd>{info.externalId || '—'}</dd>
+            <dt>Ngôn ngữ</dt><dd>{info.languageTitle || info.languageCode || '—'}</dd>
             <dt>Lượt xem</dt><dd>{info.viewCount != null ? numberFormat.format(info.viewCount) : '—'}</dd>
             <dt>Số tập</dt><dd>{info.episodeCount ?? 0}{info.isFull && <span className="status-badge ok">Đủ tập</span>}</dd>
             <dt>Tổng thời lượng</dt><dd>{formatDuration(info.totalDurationSeconds)}</dd>
@@ -136,6 +136,7 @@ export function MovieDetail() {
               <tr>
                 <th>Tập</th>
                 <th>Ảnh</th>
+                <th>Ngôn ngữ</th>
                 <th>Thời lượng</th>
                 <th>Video</th>
                 <th>Video tự lưu trữ (app)</th>
@@ -151,6 +152,7 @@ export function MovieDetail() {
                         onError={event => { event.currentTarget.style.visibility = 'hidden'; }} />
                     )}
                   </td>
+                  <td>{episode.languageCode || '—'}</td>
                   <td className="nowrap">{episode.durationSeconds ? formatDuration(episode.durationSeconds) : '—'}</td>
                   <td>
                     {episode.videoUrl ? (

@@ -1204,6 +1204,1132 @@ export class AIsClient {
     }
 }
 
+export class AppAuthClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Register app viewer
+     * @return OK
+     */
+    registerAppViewer(body: AppRegisterRequest): Promise<AppAuthResponse> {
+        let url_ = this.baseUrl + "/api/app/auth/register";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRegisterAppViewer(_response);
+        });
+    }
+
+    protected processRegisterAppViewer(response: Response): Promise<AppAuthResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppAuthResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = HttpValidationProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppAuthResponse>(null as any);
+    }
+
+    /**
+     * Log in app viewer
+     * @return OK
+     */
+    loginAppViewer(body: AppLoginRequest): Promise<AppAuthResponse> {
+        let url_ = this.baseUrl + "/api/app/auth/login";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLoginAppViewer(_response);
+        });
+    }
+
+    protected processLoginAppViewer(response: Response): Promise<AppAuthResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppAuthResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppAuthResponse>(null as any);
+    }
+
+    /**
+     * Refresh app viewer token
+     * @return OK
+     */
+    refreshAppViewer(body: AppRefreshRequest): Promise<AccessTokenResponse> {
+        let url_ = this.baseUrl + "/api/app/auth/refresh";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRefreshAppViewer(_response);
+        });
+    }
+
+    protected processRefreshAppViewer(response: Response): Promise<AccessTokenResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AccessTokenResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AccessTokenResponse>(null as any);
+    }
+}
+
+export class AppCatalogClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get app config
+     * @return OK
+     */
+    getAppConfig(): Promise<AppConfigDto> {
+        let url_ = this.baseUrl + "/api/app/config";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppConfig(_response);
+        });
+    }
+
+    protected processGetAppConfig(response: Response): Promise<AppConfigDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppConfigDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppConfigDto>(null as any);
+    }
+
+    /**
+     * Get app movies
+     * @param search (optional) 
+     * @param sort (optional) 
+     * @param full (optional) 
+     * @param page (optional) 
+     * @param pageSize (optional) 
+     * @return OK
+     */
+    getAppMovies(search: string | undefined, sort: number | undefined, full: boolean | undefined, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfAppMovieDto> {
+        let url_ = this.baseUrl + "/api/app/movies?";
+        if (search === null)
+            throw new globalThis.Error("The parameter 'search' cannot be null.");
+        else if (search !== undefined)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
+        if (sort === null)
+            throw new globalThis.Error("The parameter 'sort' cannot be null.");
+        else if (sort !== undefined)
+            url_ += "sort=" + encodeURIComponent("" + sort) + "&";
+        if (full === null)
+            throw new globalThis.Error("The parameter 'full' cannot be null.");
+        else if (full !== undefined)
+            url_ += "full=" + encodeURIComponent("" + full) + "&";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppMovies(_response);
+        });
+    }
+
+    protected processGetAppMovies(response: Response): Promise<PaginatedListOfAppMovieDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfAppMovieDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfAppMovieDto>(null as any);
+    }
+
+    /**
+     * Get app movie
+     * @return OK
+     */
+    getAppMovieById(id: number): Promise<AppMovieDto> {
+        let url_ = this.baseUrl + "/api/app/movies/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppMovieById(_response);
+        });
+    }
+
+    protected processGetAppMovieById(response: Response): Promise<AppMovieDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppMovieDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppMovieDto>(null as any);
+    }
+
+    /**
+     * Get app movie episodes
+     * @return OK
+     */
+    getAppMovieEpisodes(id: number): Promise<AppEpisodeDto[]> {
+        let url_ = this.baseUrl + "/api/app/movies/{id}/episodes";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppMovieEpisodes(_response);
+        });
+    }
+
+    protected processGetAppMovieEpisodes(response: Response): Promise<AppEpisodeDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(AppEpisodeDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppEpisodeDto[]>(null as any);
+    }
+
+    /**
+     * Get app movie comments
+     * @param page (optional) 
+     * @param pageSize (optional) 
+     * @return OK
+     */
+    getAppMovieComments(id: number, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfAppCommentDto> {
+        let url_ = this.baseUrl + "/api/app/movies/{id}/comments?";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppMovieComments(_response);
+        });
+    }
+
+    protected processGetAppMovieComments(response: Response): Promise<PaginatedListOfAppCommentDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfAppCommentDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfAppCommentDto>(null as any);
+    }
+
+    /**
+     * Add app movie comment
+     * @return OK
+     */
+    addAppMovieComment(id: number, body: AddAppCommentRequest): Promise<AppCommentDto> {
+        let url_ = this.baseUrl + "/api/app/movies/{id}/comments";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAddAppMovieComment(_response);
+        });
+    }
+
+    protected processAddAppMovieComment(response: Response): Promise<AppCommentDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppCommentDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppCommentDto>(null as any);
+    }
+
+    /**
+     * Unlock app episode
+     * @return OK
+     */
+    unlockAppEpisode(id: number): Promise<AppEpisodeDto> {
+        let url_ = this.baseUrl + "/api/app/episodes/{id}/unlock";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUnlockAppEpisode(_response);
+        });
+    }
+
+    protected processUnlockAppEpisode(response: Response): Promise<AppEpisodeDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppEpisodeDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppEpisodeDto>(null as any);
+    }
+}
+
+export class AppMeClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get app profile
+     * @return OK
+     */
+    getAppProfile(): Promise<AppProfileDto> {
+        let url_ = this.baseUrl + "/api/app/me";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppProfile(_response);
+        });
+    }
+
+    protected processGetAppProfile(response: Response): Promise<AppProfileDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppProfileDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppProfileDto>(null as any);
+    }
+
+    /**
+     * Update app profile
+     * @return OK
+     */
+    updateAppProfile(body: UpdateAppProfileRequest): Promise<AppProfileDto> {
+        let url_ = this.baseUrl + "/api/app/me";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateAppProfile(_response);
+        });
+    }
+
+    protected processUpdateAppProfile(response: Response): Promise<AppProfileDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppProfileDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = HttpValidationProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppProfileDto>(null as any);
+    }
+
+    /**
+     * Delete app account
+     * @return No Content
+     */
+    deleteAppAccount(): Promise<void> {
+        let url_ = this.baseUrl + "/api/app/me";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteAppAccount(_response);
+        });
+    }
+
+    protected processDeleteAppAccount(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = HttpValidationProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Log out app viewer
+     * @return No Content
+     */
+    logoutAppViewer(): Promise<void> {
+        let url_ = this.baseUrl + "/api/app/me/logout";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLogoutAppViewer(_response);
+        });
+    }
+
+    protected processLogoutAppViewer(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get app bookmarks
+     * @return OK
+     */
+    getAppBookmarks(): Promise<AppMovieDto[]> {
+        let url_ = this.baseUrl + "/api/app/me/bookmarks";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppBookmarks(_response);
+        });
+    }
+
+    protected processGetAppBookmarks(response: Response): Promise<AppMovieDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(AppMovieDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppMovieDto[]>(null as any);
+    }
+
+    /**
+     * Add app bookmark
+     * @return No Content
+     */
+    addAppBookmark(movieId: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/app/me/bookmarks/{movieId}";
+        if (movieId === undefined || movieId === null)
+            throw new globalThis.Error("The parameter 'movieId' must be defined.");
+        url_ = url_.replace("{movieId}", encodeURIComponent("" + movieId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "PUT",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAddAppBookmark(_response);
+        });
+    }
+
+    protected processAddAppBookmark(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Remove app bookmark
+     * @return No Content
+     */
+    removeAppBookmark(movieId: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/app/me/bookmarks/{movieId}";
+        if (movieId === undefined || movieId === null)
+            throw new globalThis.Error("The parameter 'movieId' must be defined.");
+        url_ = url_.replace("{movieId}", encodeURIComponent("" + movieId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRemoveAppBookmark(_response);
+        });
+    }
+
+    protected processRemoveAppBookmark(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get app watch history
+     * @return OK
+     */
+    getAppHistory(): Promise<AppHistoryDto[]> {
+        let url_ = this.baseUrl + "/api/app/me/history";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppHistory(_response);
+        });
+    }
+
+    protected processGetAppHistory(response: Response): Promise<AppHistoryDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(AppHistoryDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppHistoryDto[]>(null as any);
+    }
+
+    /**
+     * Save app watch progress
+     * @return No Content
+     */
+    saveAppWatchProgress(movieId: number, body: SaveAppWatchProgressRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/app/me/history/{movieId}";
+        if (movieId === undefined || movieId === null)
+            throw new globalThis.Error("The parameter 'movieId' must be defined.");
+        url_ = url_.replace("{movieId}", encodeURIComponent("" + movieId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSaveAppWatchProgress(_response);
+        });
+    }
+
+    protected processSaveAppWatchProgress(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Remove app watch history
+     * @return No Content
+     */
+    removeAppHistory(movieId: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/app/me/history/{movieId}";
+        if (movieId === undefined || movieId === null)
+            throw new globalThis.Error("The parameter 'movieId' must be defined.");
+        url_ = url_.replace("{movieId}", encodeURIComponent("" + movieId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRemoveAppHistory(_response);
+        });
+    }
+
+    protected processRemoveAppHistory(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
+export class AppViewersClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Set app viewer VIP
+     * @return No Content
+     */
+    setAppViewerVip(body: SetAppViewerVipRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/AppViewers/vip";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetAppViewerVip(_response);
+        });
+    }
+
+    protected processSetAppViewerVip(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            return throwException("Not Found", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
 export class CategoriesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -1830,6 +2956,292 @@ export class EpisodesClient {
     }
 }
 
+export class LanguagesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get Languages
+     * @param title (optional) 
+     * @param page (optional) 
+     * @param pageSize (optional) 
+     * @return OK
+     */
+    getLanguages(title: string | undefined, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfLanguageDto> {
+        let url_ = this.baseUrl + "/api/Languages?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "title=" + encodeURIComponent("" + title) + "&";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLanguages(_response);
+        });
+    }
+
+    protected processGetLanguages(response: Response): Promise<PaginatedListOfLanguageDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfLanguageDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfLanguageDto>(null as any);
+    }
+
+    /**
+     * Create Language
+     * @return Created
+     */
+    createLanguage(body: CreateLanguageCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/Languages";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateLanguage(_response);
+        });
+    }
+
+    protected processCreateLanguage(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get Language by Id
+     * @return OK
+     */
+    getLanguageById(id: number): Promise<LanguageDto> {
+        let url_ = this.baseUrl + "/api/Languages/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLanguageById(_response);
+        });
+    }
+
+    protected processGetLanguageById(response: Response): Promise<LanguageDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = LanguageDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LanguageDto>(null as any);
+    }
+
+    /**
+     * Update Language
+     * @return No Content
+     */
+    updateLanguage(id: number, body: UpdateLanguageCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Languages/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateLanguage(_response);
+        });
+    }
+
+    protected processUpdateLanguage(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete Language
+     * @return No Content
+     */
+    deleteLanguage(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Languages/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteLanguage(_response);
+        });
+    }
+
+    protected processDeleteLanguage(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
 export class MoviesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -1844,9 +3256,10 @@ export class MoviesClient {
      * Get Movies
      * @param title (optional) 
      * @param userProfileId (optional) 
+     * @param languageId (optional) 
      * @return OK
      */
-    getMovies(title: string | undefined, userProfileId: number | undefined, sort: number, page: number, pageSize: number): Promise<PaginatedListOfMovieDto> {
+    getMovies(title: string | undefined, userProfileId: number | undefined, languageId: number | undefined, sort: number, page: number, pageSize: number): Promise<PaginatedListOfMovieDto> {
         let url_ = this.baseUrl + "/api/Movies?";
         if (title === null)
             throw new globalThis.Error("The parameter 'title' cannot be null.");
@@ -1856,6 +3269,10 @@ export class MoviesClient {
             throw new globalThis.Error("The parameter 'userProfileId' cannot be null.");
         else if (userProfileId !== undefined)
             url_ += "UserProfileId=" + encodeURIComponent("" + userProfileId) + "&";
+        if (languageId === null)
+            throw new globalThis.Error("The parameter 'languageId' cannot be null.");
+        else if (languageId !== undefined)
+            url_ += "LanguageId=" + encodeURIComponent("" + languageId) + "&";
         if (sort === undefined || sort === null)
             throw new globalThis.Error("The parameter 'sort' must be defined and cannot be null.");
         else
@@ -2129,6 +3546,117 @@ export class MoviesClient {
             });
         }
         return Promise.resolve<SyncTikTokDramasResult>(null as any);
+    }
+
+    /**
+     * Set Movies published
+     * @return OK
+     */
+    setMoviesPublished(body: SetMoviesPublishedRequest): Promise<number> {
+        let url_ = this.baseUrl + "/api/Movies/published";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetMoviesPublished(_response);
+        });
+    }
+
+    protected processSetMoviesPublished(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Set Movie episode stream
+     * @return No Content
+     */
+    setMovieEpisodeStream(id: number, episodeId: number, body: SetMovieEpisodeStreamRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/Movies/{id}/episodes/{episodeId}/stream";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (episodeId === undefined || episodeId === null)
+            throw new globalThis.Error("The parameter 'episodeId' must be defined.");
+        url_ = url_.replace("{episodeId}", encodeURIComponent("" + episodeId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetMovieEpisodeStream(_response);
+        });
+    }
+
+    protected processSetMovieEpisodeStream(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
     }
 }
 
@@ -5474,6 +7002,54 @@ export interface IAccountTypeDto {
     [key: string]: any;
 }
 
+export class AddAppCommentRequest implements IAddAppCommentRequest {
+    content!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAddAppCommentRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.content = _data["content"];
+        }
+    }
+
+    static fromJS(data: any): AddAppCommentRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddAppCommentRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["content"] = this.content;
+        return data;
+    }
+}
+
+export interface IAddAppCommentRequest {
+    content: string | undefined;
+
+    [key: string]: any;
+}
+
 export class AIDto implements IAIDto {
     provider?: number;
     model?: string | undefined;
@@ -5601,6 +7177,677 @@ export class AIModelDto implements IAIModelDto {
 
 export interface IAIModelDto {
     id: string;
+    displayName: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AppAuthResponse implements IAppAuthResponse {
+    accessToken!: string;
+    expiresIn!: number;
+    refreshToken!: string;
+    profile!: AppProfileDto;
+
+    [key: string]: any;
+
+    constructor(data?: IAppAuthResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.profile = new AppProfileDto();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.accessToken = _data["accessToken"];
+            this.expiresIn = _data["expiresIn"];
+            this.refreshToken = _data["refreshToken"];
+            this.profile = _data["profile"] ? AppProfileDto.fromJS(_data["profile"]) : new AppProfileDto();
+        }
+    }
+
+    static fromJS(data: any): AppAuthResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppAuthResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["accessToken"] = this.accessToken;
+        data["expiresIn"] = this.expiresIn;
+        data["refreshToken"] = this.refreshToken;
+        data["profile"] = this.profile ? this.profile.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface IAppAuthResponse {
+    accessToken: string;
+    expiresIn: number;
+    refreshToken: string;
+    profile: AppProfileDto;
+
+    [key: string]: any;
+}
+
+export class AppCommentDto implements IAppCommentDto {
+    id?: number;
+    author?: string | undefined;
+    content?: string;
+    created?: Date;
+    isMine?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IAppCommentDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.author = _data["author"];
+            this.content = _data["content"];
+            this.created = _data["created"] ? new Date(_data["created"].toString()) : undefined as any;
+            this.isMine = _data["isMine"];
+        }
+    }
+
+    static fromJS(data: any): AppCommentDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppCommentDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["author"] = this.author;
+        data["content"] = this.content;
+        data["created"] = this.created ? this.created.toISOString() : undefined as any;
+        data["isMine"] = this.isMine;
+        return data;
+    }
+}
+
+export interface IAppCommentDto {
+    id?: number;
+    author?: string | undefined;
+    content?: string;
+    created?: Date;
+    isMine?: boolean;
+
+    [key: string]: any;
+}
+
+export class AppConfigDto implements IAppConfigDto {
+    freeEpisodes!: number;
+    adEpisodes!: number;
+    privacyUrl!: string | undefined;
+    termsUrl!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppConfigDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.freeEpisodes = _data["freeEpisodes"];
+            this.adEpisodes = _data["adEpisodes"];
+            this.privacyUrl = _data["privacyUrl"];
+            this.termsUrl = _data["termsUrl"];
+        }
+    }
+
+    static fromJS(data: any): AppConfigDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppConfigDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["freeEpisodes"] = this.freeEpisodes;
+        data["adEpisodes"] = this.adEpisodes;
+        data["privacyUrl"] = this.privacyUrl;
+        data["termsUrl"] = this.termsUrl;
+        return data;
+    }
+}
+
+export interface IAppConfigDto {
+    freeEpisodes: number;
+    adEpisodes: number;
+    privacyUrl: string | undefined;
+    termsUrl: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AppEpisodeDto implements IAppEpisodeDto {
+    id?: number;
+    number?: number;
+    durationSeconds?: number | undefined;
+    access?: string;
+    playback?: AppPlaybackDto | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppEpisodeDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.number = _data["number"];
+            this.durationSeconds = _data["durationSeconds"];
+            this.access = _data["access"];
+            this.playback = _data["playback"] ? AppPlaybackDto.fromJS(_data["playback"]) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): AppEpisodeDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppEpisodeDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["number"] = this.number;
+        data["durationSeconds"] = this.durationSeconds;
+        data["access"] = this.access;
+        data["playback"] = this.playback ? this.playback.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface IAppEpisodeDto {
+    id?: number;
+    number?: number;
+    durationSeconds?: number | undefined;
+    access?: string;
+    playback?: AppPlaybackDto | undefined;
+
+    [key: string]: any;
+}
+
+export class AppHistoryDto implements IAppHistoryDto {
+    movie?: AppMovieDto;
+    episodeNumber?: number;
+    positionSeconds?: number;
+    durationSeconds?: number;
+    watchedAt?: Date;
+
+    [key: string]: any;
+
+    constructor(data?: IAppHistoryDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.movie = _data["movie"] ? AppMovieDto.fromJS(_data["movie"]) : undefined as any;
+            this.episodeNumber = _data["episodeNumber"];
+            this.positionSeconds = _data["positionSeconds"];
+            this.durationSeconds = _data["durationSeconds"];
+            this.watchedAt = _data["watchedAt"] ? new Date(_data["watchedAt"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): AppHistoryDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppHistoryDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["movie"] = this.movie ? this.movie.toJSON() : undefined as any;
+        data["episodeNumber"] = this.episodeNumber;
+        data["positionSeconds"] = this.positionSeconds;
+        data["durationSeconds"] = this.durationSeconds;
+        data["watchedAt"] = this.watchedAt ? this.watchedAt.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface IAppHistoryDto {
+    movie?: AppMovieDto;
+    episodeNumber?: number;
+    positionSeconds?: number;
+    durationSeconds?: number;
+    watchedAt?: Date;
+
+    [key: string]: any;
+}
+
+export class AppLoginRequest implements IAppLoginRequest {
+    email!: string | undefined;
+    password!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppLoginRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.email = _data["email"];
+            this.password = _data["password"];
+        }
+    }
+
+    static fromJS(data: any): AppLoginRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppLoginRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["email"] = this.email;
+        data["password"] = this.password;
+        return data;
+    }
+}
+
+export interface IAppLoginRequest {
+    email: string | undefined;
+    password: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AppMovieDto implements IAppMovieDto {
+    id?: number;
+    title?: string | undefined;
+    description?: string | undefined;
+    coverUrl?: string | undefined;
+    channel?: string | undefined;
+    episodeCount?: number;
+    viewCount?: number;
+    saveCount?: number;
+    commentCount?: number;
+    isFull?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IAppMovieDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.description = _data["description"];
+            this.coverUrl = _data["coverUrl"];
+            this.channel = _data["channel"];
+            this.episodeCount = _data["episodeCount"];
+            this.viewCount = _data["viewCount"];
+            this.saveCount = _data["saveCount"];
+            this.commentCount = _data["commentCount"];
+            this.isFull = _data["isFull"];
+        }
+    }
+
+    static fromJS(data: any): AppMovieDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppMovieDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["description"] = this.description;
+        data["coverUrl"] = this.coverUrl;
+        data["channel"] = this.channel;
+        data["episodeCount"] = this.episodeCount;
+        data["viewCount"] = this.viewCount;
+        data["saveCount"] = this.saveCount;
+        data["commentCount"] = this.commentCount;
+        data["isFull"] = this.isFull;
+        return data;
+    }
+}
+
+export interface IAppMovieDto {
+    id?: number;
+    title?: string | undefined;
+    description?: string | undefined;
+    coverUrl?: string | undefined;
+    channel?: string | undefined;
+    episodeCount?: number;
+    viewCount?: number;
+    saveCount?: number;
+    commentCount?: number;
+    isFull?: boolean;
+
+    [key: string]: any;
+}
+
+export class AppPlaybackDto implements IAppPlaybackDto {
+    type!: string;
+    value!: string;
+
+    [key: string]: any;
+
+    constructor(data?: IAppPlaybackDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.type = _data["type"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): AppPlaybackDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppPlaybackDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["type"] = this.type;
+        data["value"] = this.value;
+        return data;
+    }
+}
+
+export interface IAppPlaybackDto {
+    type: string;
+    value: string;
+
+    [key: string]: any;
+}
+
+export class AppProfileDto implements IAppProfileDto {
+    email!: string;
+    displayName!: string;
+    isVip!: boolean;
+    vipPlan!: string | undefined;
+    vipExpiresAt!: Date | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppProfileDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.email = _data["email"];
+            this.displayName = _data["displayName"];
+            this.isVip = _data["isVip"];
+            this.vipPlan = _data["vipPlan"];
+            this.vipExpiresAt = _data["vipExpiresAt"] ? new Date(_data["vipExpiresAt"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): AppProfileDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppProfileDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["email"] = this.email;
+        data["displayName"] = this.displayName;
+        data["isVip"] = this.isVip;
+        data["vipPlan"] = this.vipPlan;
+        data["vipExpiresAt"] = this.vipExpiresAt ? this.vipExpiresAt.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface IAppProfileDto {
+    email: string;
+    displayName: string;
+    isVip: boolean;
+    vipPlan: string | undefined;
+    vipExpiresAt: Date | undefined;
+
+    [key: string]: any;
+}
+
+export class AppRefreshRequest implements IAppRefreshRequest {
+    refreshToken!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppRefreshRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.refreshToken = _data["refreshToken"];
+        }
+    }
+
+    static fromJS(data: any): AppRefreshRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppRefreshRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["refreshToken"] = this.refreshToken;
+        return data;
+    }
+}
+
+export interface IAppRefreshRequest {
+    refreshToken: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AppRegisterRequest implements IAppRegisterRequest {
+    email!: string | undefined;
+    password!: string | undefined;
+    displayName!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppRegisterRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.email = _data["email"];
+            this.password = _data["password"];
+            this.displayName = _data["displayName"];
+        }
+    }
+
+    static fromJS(data: any): AppRegisterRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppRegisterRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["email"] = this.email;
+        data["password"] = this.password;
+        data["displayName"] = this.displayName;
+        return data;
+    }
+}
+
+export interface IAppRegisterRequest {
+    email: string | undefined;
+    password: string | undefined;
     displayName: string | undefined;
 
     [key: string]: any;
@@ -6398,6 +8645,58 @@ export interface ICreateEpisodeCommand {
     contentEdit?: string | undefined;
     isUploaded?: boolean;
     isPublished?: boolean;
+
+    [key: string]: any;
+}
+
+export class CreateLanguageCommand implements ICreateLanguageCommand {
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateLanguageCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+            this.code = _data["code"];
+        }
+    }
+
+    static fromJS(data: any): CreateLanguageCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateLanguageCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        data["code"] = this.code;
+        return data;
+    }
+}
+
+export interface ICreateLanguageCommand {
+    title?: string | undefined;
+    code?: string | undefined;
 
     [key: string]: any;
 }
@@ -7626,6 +9925,74 @@ export interface IInfoResponse {
     [key: string]: any;
 }
 
+export class LanguageDto implements ILanguageDto {
+    workCount?: number;
+    episodeCount?: number;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ILanguageDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.workCount = _data["workCount"];
+            this.episodeCount = _data["episodeCount"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): LanguageDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new LanguageDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["workCount"] = this.workCount;
+        data["episodeCount"] = this.episodeCount;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface ILanguageDto {
+    workCount?: number;
+    episodeCount?: number;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
 export class LoginRequest implements ILoginRequest {
     email!: string;
     password!: string;
@@ -7681,12 +10048,16 @@ export interface ILoginRequest {
 export class MovieDto implements IMovieDto {
     description?: string | undefined;
     coverUrl?: string | undefined;
+    languageId?: number | undefined;
+    languageCode?: string | undefined;
+    languageTitle?: string | undefined;
     externalId?: string | undefined;
     userProfileId?: number | undefined;
     userProfileTitle?: string | undefined;
     userProfileUniqueId?: string | undefined;
     viewCount?: number | undefined;
     isFull?: boolean;
+    isPublished?: boolean;
     episodeCount?: number;
     totalDurationSeconds?: number;
     episodesSyncedAt?: Date | undefined;
@@ -7715,12 +10086,16 @@ export class MovieDto implements IMovieDto {
             }
             this.description = _data["description"];
             this.coverUrl = _data["coverUrl"];
+            this.languageId = _data["languageId"];
+            this.languageCode = _data["languageCode"];
+            this.languageTitle = _data["languageTitle"];
             this.externalId = _data["externalId"];
             this.userProfileId = _data["userProfileId"];
             this.userProfileTitle = _data["userProfileTitle"];
             this.userProfileUniqueId = _data["userProfileUniqueId"];
             this.viewCount = _data["viewCount"];
             this.isFull = _data["isFull"];
+            this.isPublished = _data["isPublished"];
             this.episodeCount = _data["episodeCount"];
             this.totalDurationSeconds = _data["totalDurationSeconds"];
             this.episodesSyncedAt = _data["episodesSyncedAt"] ? new Date(_data["episodesSyncedAt"].toString()) : undefined as any;
@@ -7747,12 +10122,16 @@ export class MovieDto implements IMovieDto {
         }
         data["description"] = this.description;
         data["coverUrl"] = this.coverUrl;
+        data["languageId"] = this.languageId;
+        data["languageCode"] = this.languageCode;
+        data["languageTitle"] = this.languageTitle;
         data["externalId"] = this.externalId;
         data["userProfileId"] = this.userProfileId;
         data["userProfileTitle"] = this.userProfileTitle;
         data["userProfileUniqueId"] = this.userProfileUniqueId;
         data["viewCount"] = this.viewCount;
         data["isFull"] = this.isFull;
+        data["isPublished"] = this.isPublished;
         data["episodeCount"] = this.episodeCount;
         data["totalDurationSeconds"] = this.totalDurationSeconds;
         data["episodesSyncedAt"] = this.episodesSyncedAt ? this.episodesSyncedAt.toISOString() : undefined as any;
@@ -7768,12 +10147,16 @@ export class MovieDto implements IMovieDto {
 export interface IMovieDto {
     description?: string | undefined;
     coverUrl?: string | undefined;
+    languageId?: number | undefined;
+    languageCode?: string | undefined;
+    languageTitle?: string | undefined;
     externalId?: string | undefined;
     userProfileId?: number | undefined;
     userProfileTitle?: string | undefined;
     userProfileUniqueId?: string | undefined;
     viewCount?: number | undefined;
     isFull?: boolean;
+    isPublished?: boolean;
     episodeCount?: number;
     totalDurationSeconds?: number;
     episodesSyncedAt?: Date | undefined;
@@ -7790,6 +10173,8 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
     episodeNumber?: number;
     externalId?: string | undefined;
     videoUrl?: string | undefined;
+    languageCode?: string | undefined;
+    streamUrl?: string | undefined;
     thumbnailUrl?: string | undefined;
     durationSeconds?: number | undefined;
     id?: number;
@@ -7817,6 +10202,8 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
             this.episodeNumber = _data["episodeNumber"];
             this.externalId = _data["externalId"];
             this.videoUrl = _data["videoUrl"];
+            this.languageCode = _data["languageCode"];
+            this.streamUrl = _data["streamUrl"];
             this.thumbnailUrl = _data["thumbnailUrl"];
             this.durationSeconds = _data["durationSeconds"];
             this.id = _data["id"];
@@ -7842,6 +10229,8 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
         data["episodeNumber"] = this.episodeNumber;
         data["externalId"] = this.externalId;
         data["videoUrl"] = this.videoUrl;
+        data["languageCode"] = this.languageCode;
+        data["streamUrl"] = this.streamUrl;
         data["thumbnailUrl"] = this.thumbnailUrl;
         data["durationSeconds"] = this.durationSeconds;
         data["id"] = this.id;
@@ -7856,6 +10245,8 @@ export interface IMovieEpisodeDto {
     episodeNumber?: number;
     externalId?: string | undefined;
     videoUrl?: string | undefined;
+    languageCode?: string | undefined;
+    streamUrl?: string | undefined;
     thumbnailUrl?: string | undefined;
     durationSeconds?: number | undefined;
     id?: number;
@@ -8094,6 +10485,158 @@ export interface IPaginatedListOfAIDto {
     [key: string]: any;
 }
 
+export class PaginatedListOfAppCommentDto implements IPaginatedListOfAppCommentDto {
+    items?: AppCommentDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfAppCommentDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(AppCommentDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfAppCommentDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfAppCommentDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfAppCommentDto {
+    items?: AppCommentDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfAppMovieDto implements IPaginatedListOfAppMovieDto {
+    items?: AppMovieDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfAppMovieDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(AppMovieDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfAppMovieDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfAppMovieDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfAppMovieDto {
+    items?: AppMovieDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
 export class PaginatedListOfCategoryDto implements IPaginatedListOfCategoryDto {
     items?: CategoryDto[] | undefined;
     pageNumber!: number;
@@ -8237,6 +10780,82 @@ export class PaginatedListOfEpisodeBriefDto implements IPaginatedListOfEpisodeBr
 
 export interface IPaginatedListOfEpisodeBriefDto {
     items?: EpisodeBriefDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfLanguageDto implements IPaginatedListOfLanguageDto {
+    items?: LanguageDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfLanguageDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(LanguageDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfLanguageDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfLanguageDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfLanguageDto {
+    items?: LanguageDto[] | undefined;
     pageNumber: number;
     totalPages?: number;
     totalCount?: number;
@@ -9250,6 +11869,230 @@ export interface IRegisterRequest {
     [key: string]: any;
 }
 
+export class SaveAppWatchProgressRequest implements ISaveAppWatchProgressRequest {
+    episodeNumber!: number;
+    positionSeconds!: number;
+    durationSeconds!: number;
+    watchedAt!: Date | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISaveAppWatchProgressRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.episodeNumber = _data["episodeNumber"];
+            this.positionSeconds = _data["positionSeconds"];
+            this.durationSeconds = _data["durationSeconds"];
+            this.watchedAt = _data["watchedAt"] ? new Date(_data["watchedAt"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): SaveAppWatchProgressRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SaveAppWatchProgressRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["episodeNumber"] = this.episodeNumber;
+        data["positionSeconds"] = this.positionSeconds;
+        data["durationSeconds"] = this.durationSeconds;
+        data["watchedAt"] = this.watchedAt ? this.watchedAt.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface ISaveAppWatchProgressRequest {
+    episodeNumber: number;
+    positionSeconds: number;
+    durationSeconds: number;
+    watchedAt: Date | undefined;
+
+    [key: string]: any;
+}
+
+export class SetAppViewerVipRequest implements ISetAppViewerVipRequest {
+    email!: string | undefined;
+    plan!: string | undefined;
+    expiresAt!: Date;
+
+    [key: string]: any;
+
+    constructor(data?: ISetAppViewerVipRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.email = _data["email"];
+            this.plan = _data["plan"];
+            this.expiresAt = _data["expiresAt"] ? new Date(_data["expiresAt"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): SetAppViewerVipRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetAppViewerVipRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["email"] = this.email;
+        data["plan"] = this.plan;
+        data["expiresAt"] = this.expiresAt ? this.expiresAt.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface ISetAppViewerVipRequest {
+    email: string | undefined;
+    plan: string | undefined;
+    expiresAt: Date;
+
+    [key: string]: any;
+}
+
+export class SetMovieEpisodeStreamRequest implements ISetMovieEpisodeStreamRequest {
+    streamUrl!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISetMovieEpisodeStreamRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.streamUrl = _data["streamUrl"];
+        }
+    }
+
+    static fromJS(data: any): SetMovieEpisodeStreamRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetMovieEpisodeStreamRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["streamUrl"] = this.streamUrl;
+        return data;
+    }
+}
+
+export interface ISetMovieEpisodeStreamRequest {
+    streamUrl: string | undefined;
+
+    [key: string]: any;
+}
+
+export class SetMoviesPublishedRequest implements ISetMoviesPublishedRequest {
+    isPublished!: boolean;
+    ids!: number[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISetMoviesPublishedRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.isPublished = _data["isPublished"];
+            if (Array.isArray(_data["ids"])) {
+                this.ids = [] as any;
+                for (let item of _data["ids"])
+                    this.ids!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): SetMoviesPublishedRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetMoviesPublishedRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["isPublished"] = this.isPublished;
+        if (Array.isArray(this.ids)) {
+            data["ids"] = [];
+            for (let item of this.ids)
+                data["ids"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ISetMoviesPublishedRequest {
+    isPublished: boolean;
+    ids: number[] | undefined;
+
+    [key: string]: any;
+}
+
 export class StoryCrawlDto implements IStoryCrawlDto {
     title?: string | undefined;
     link?: string | undefined;
@@ -10198,6 +13041,54 @@ export interface IUpdateAICommand {
     [key: string]: any;
 }
 
+export class UpdateAppProfileRequest implements IUpdateAppProfileRequest {
+    displayName!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateAppProfileRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.displayName = _data["displayName"];
+        }
+    }
+
+    static fromJS(data: any): UpdateAppProfileRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateAppProfileRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["displayName"] = this.displayName;
+        return data;
+    }
+}
+
+export interface IUpdateAppProfileRequest {
+    displayName: string | undefined;
+
+    [key: string]: any;
+}
+
 export class UpdateCategoryCommand implements IUpdateCategoryCommand {
     id?: number;
     title?: string | undefined;
@@ -10338,6 +13229,62 @@ export interface IUpdateEpisodeCommand {
     contentEdit?: string | undefined;
     isUploaded?: boolean;
     isPublished?: boolean;
+
+    [key: string]: any;
+}
+
+export class UpdateLanguageCommand implements IUpdateLanguageCommand {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateLanguageCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+        }
+    }
+
+    static fromJS(data: any): UpdateLanguageCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateLanguageCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        return data;
+    }
+}
+
+export interface IUpdateLanguageCommand {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
 
     [key: string]: any;
 }

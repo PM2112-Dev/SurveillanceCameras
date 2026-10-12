@@ -33,6 +33,8 @@ import { MovieList } from './pages/Movies/MovieList';
 import { MovieDetail } from './pages/Movies/MovieDetail';
 import { ChannelDramas } from './pages/Movies/ChannelDramas';
 import { ChapterDetail } from './pages/Chapters/ChapterDetail';
+import { LanguageList } from './pages/Languages/LanguageList';
+import { LanguageForm } from './pages/Languages/LanguageForm';
 import { StoryVideoTypeList } from './pages/StoryVideoTypes/StoryVideoTypeList';
 import { StoryVideoTypeForm } from './pages/StoryVideoTypes/StoryVideoTypeForm';
 import { UserProfileList } from './pages/UserProfiles/UserProfileList';
@@ -112,6 +114,9 @@ export default function AppRoutes() {
         <Route path="/stories/:storyId/chapters/:id" element={<ChapterDetail />} />
         <Route path="/stories/:storyId/chapters/:id/edit" element={<ChapterForm />} />
 
+        <Route path="/languages" element={<LanguageList />} />
+        <Route path="/languages/new" element={<LanguageForm />} />
+        <Route path="/languages/:id" element={<LanguageForm />} />
         <Route path="/story-video-types" element={<StoryVideoTypeList />} />
         <Route path="/story-video-types/new" element={<StoryVideoTypeForm />} />
         <Route path="/story-video-types/:id" element={<StoryVideoTypeForm />} />

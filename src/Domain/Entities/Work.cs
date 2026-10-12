@@ -19,6 +19,11 @@ public class Work : BaseAuditableEntity
 
     public string? CoverUrl { get; set; }
 
+    /// <summary>Ngôn ngữ của tác phẩm. Với phim đồng bộ từ TikTok: ngôn ngữ có nhiều tập nhất.</summary>
+    public int? LanguageId { get; set; }
+
+    public Language? Language { get; set; }
+
     /// <summary>Lượt xem trên nền tảng nguồn (vd. numWatched của drama TikTok), cập nhật mỗi lần đồng bộ.</summary>
     public long? ViewCount { get; set; }
 

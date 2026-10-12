@@ -67,6 +67,8 @@ app.UseAuthorization();
 app.MapDefaultEndpoints();
 app.MapEndpoints(typeof(Program).Assembly);
 
+// API không tồn tại phải trả 404, không rơi xuống trang index.html của giao diện quản trị (client nhận 200 + HTML).
+app.MapFallback("/api/{**path}", () => Results.NotFound());
 app.MapFallbackToFile("index.html");
 
 app.Run();

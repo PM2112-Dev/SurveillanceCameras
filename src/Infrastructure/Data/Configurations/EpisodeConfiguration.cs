@@ -19,6 +19,11 @@ public class EpisodeConfiguration : IEntityTypeConfiguration<Episode>
             .HasForeignKey(x => x.PromptId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne(x => x.Language)
+            .WithMany()
+            .HasForeignKey(x => x.LanguageId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Đồng bộ lại mục lục nhận ra chương đã có theo link (chương nhập tay không có link).
         builder.HasIndex(x => new { x.WorkId, x.LinkRaw })
             .IsUnique()

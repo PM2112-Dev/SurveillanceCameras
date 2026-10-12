@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using SurveillanceCameras.Application.Common.Exceptions;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Models.TikTok;
+using SurveillanceCameras.Application.Local.Languages;
 using SurveillanceCameras.Application.Repository.Media;
 using SurveillanceCameras.Application.Repository.TikTok;
 using SurveillanceCameras.Domain.Entities;
@@ -114,7 +115,8 @@ public class TikTokDramaSyncer
             }
 
             var movie = await _context.Works
-                .Include(x => x.Episodes)
+                .Include(x => x.Language)
+                .Include(x => x.Episodes!).ThenInclude(x => x.Language)
                 .FirstOrDefaultAsync(x => x.CreatedBy == ownerId && x.Type == WorkType.Movie
                                           && x.UserProfileId == channel.Id && x.ExternalId == dramaId, cancellationToken);
             if (movie is null)
@@ -140,7 +142,16 @@ public class TikTokDramaSyncer
             movie.ViewCount = info is not null ? info.NumWatched : movie.ViewCount;
             movie.IsFull = info is not null && info.NumVideos > 0 && episodes.Count >= info.NumVideos;
 
-            episodesAdded += MergeEpisodes(movie, episodes, channel.UniqueId);
+            var languages = await LanguagesAsync(ownerId, episodes, cancellationToken);
+            episodesAdded += MergeEpisodes(movie, episodes, channel.UniqueId, languages);
+            // Ngôn ngữ của phim: ngôn ngữ có nhiều tập nhất. Không tập nào có ngôn ngữ thì giữ giá trị đang có
+            // (có thể do người dùng chọn tay).
+            movie.Language = movie.Episodes!
+                .Where(x => x.Language is not null)
+                .GroupBy(x => x.Language!)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault() ?? movie.Language;
             movie.EpisodesSyncedAt = _timeProvider.GetUtcNow();
             movie.EpisodeSyncError = null;
 
@@ -175,7 +186,8 @@ public class TikTokDramaSyncer
 
     /// <summary>Thêm tập mới, cập nhật tập đã có theo ID video.</summary>
     /// <returns>Số tập thêm mới.</returns>
-    private static int MergeEpisodes(Work movie, List<DramaEpisodeDto> episodes, string? channelHandle)
+    private static int MergeEpisodes(Work movie, List<DramaEpisodeDto> episodes, string? channelHandle,
+        Dictionary<string, Language> languages)
     {
         var byId = movie.Episodes!.Where(x => x.ExternalId is not null).ToDictionary(x => x.ExternalId!);
         var added = 0;
@@ -198,12 +210,43 @@ public class TikTokDramaSyncer
             episode.NameRaw = item.Desc;
             episode.DurationSeconds = item.Video?.Duration is > 0 ? item.Video.Duration : episode.DurationSeconds;
             episode.ThumbnailUrl = item.Video?.Cover ?? episode.ThumbnailUrl;
+            // TikTok không trả ngôn ngữ (hoặc trả "un") thì giữ ngôn ngữ đang có của tập.
+            if (LanguageCodes.Normalize(item.TextLanguage) is { } code) episode.Language = languages[code];
             episode.VideoUrl = handle is null
                 ? $"https://www.tiktok.com/video/{item.Id}"
                 : $"https://www.tiktok.com/@{handle}/video/{item.Id}";
         }
 
         return added;
+    }
+
+    /// <summary>
+    /// Ngôn ngữ (của chủ phim) ứng với các mã <c>textLanguage</c> xuất hiện trong các tập, theo mã. Mã chưa khai báo thì
+    /// tạo mới — lưu cùng lần lưu phim.
+    /// </summary>
+    private async Task<Dictionary<string, Language>> LanguagesAsync(string? ownerId, List<DramaEpisodeDto> episodes,
+        CancellationToken cancellationToken)
+    {
+        var codes = episodes.Select(x => LanguageCodes.Normalize(x.TextLanguage)).OfType<string>().Distinct().ToList();
+        if (codes.Count == 0) return [];
+
+        // So mã không phân biệt hoa thường (người dùng có thể đã khai báo "EN").
+        var existing = await _context.Languages
+            .Where(x => x.CreatedBy == ownerId && x.Code != null && codes.Contains(x.Code.ToLower()))
+            .OrderBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        var result = new Dictionary<string, Language>();
+        foreach (var language in existing) result.TryAdd(language.Code!.ToLower(), language);
+
+        foreach (var code in codes.Where(code => !result.ContainsKey(code)))
+        {
+            var language = new Language { Code = code, Title = LanguageCodes.DisplayName(code), CreatedBy = ownerId };
+            _context.Languages.Add(language);
+            result[code] = language;
+        }
+
+        return result;
     }
 
     /// <summary>Lưu ảnh bìa về kho; lỗi thì giữ link TikTok (còn dùng được vài ngày), lần đồng bộ sau thử lại.</summary>

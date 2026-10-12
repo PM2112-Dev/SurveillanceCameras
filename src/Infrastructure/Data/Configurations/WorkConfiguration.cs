@@ -29,6 +29,12 @@ public class WorkConfiguration : IEntityTypeConfiguration<Work>
             .HasForeignKey(x => x.UserProfileId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Xoá ngôn ngữ thì tác phẩm chỉ mất liên kết.
+        builder.HasOne(x => x.Language)
+            .WithMany()
+            .HasForeignKey(x => x.LanguageId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Một drama của một kênh chỉ tạo một phim cho mỗi người dùng.
         builder.HasIndex(x => new { x.CreatedBy, x.UserProfileId, x.ExternalId })
             .IsUnique()

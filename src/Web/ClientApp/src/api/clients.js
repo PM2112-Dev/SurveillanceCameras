@@ -4,6 +4,7 @@ import {
   AIsClient,
   CategoriesClient,
   EpisodesClient,
+  LanguagesClient,
   MoviesClient,
   PromptsClient,
   PromptTypesClient,
@@ -24,6 +25,7 @@ export const aisClient = new AIsClient(undefined, authorizedHttp);
 export const promptTypesClient = new PromptTypesClient(undefined, authorizedHttp);
 export const promptsClient = new PromptsClient(undefined, authorizedHttp);
 export const worksClient = new WorksClient(undefined, authorizedHttp);
+export const languagesClient = new LanguagesClient(undefined, authorizedHttp);
 export const moviesClient = new MoviesClient(undefined, authorizedHttp);
 export const episodesClient = new EpisodesClient(undefined, authorizedHttp);
 export const categoriesClient = new CategoriesClient(undefined, authorizedHttp);
