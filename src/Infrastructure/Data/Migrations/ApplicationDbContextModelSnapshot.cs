@@ -663,6 +663,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<bool>("IsUploaded")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("LanguageId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("timestamp with time zone");
 
@@ -719,6 +722,8 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("LanguageId");
+
                     b.HasIndex("PromptId");
 
                     b.HasIndex("StorageAccountId");
@@ -736,6 +741,40 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.HasIndex("WorkId", "Status");
 
                     b.ToTable("Episodes");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Language", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Languages");
                 });
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Prompt", b =>
@@ -1227,6 +1266,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("LanguageId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("timestamp with time zone");
 
@@ -1266,6 +1308,8 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LanguageId");
 
                     b.HasIndex("StorySourceId");
 
@@ -1486,6 +1530,11 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Episode", b =>
                 {
+                    b.HasOne("SurveillanceCameras.Domain.Entities.Language", "Language")
+                        .WithMany()
+                        .HasForeignKey("LanguageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("SurveillanceCameras.Domain.Entities.Prompt", "Prompt")
                         .WithMany()
                         .HasForeignKey("PromptId")
@@ -1501,6 +1550,8 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                         .HasForeignKey("WorkId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Language");
 
                     b.Navigation("Prompt");
 
@@ -1559,6 +1610,11 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.Work", b =>
                 {
+                    b.HasOne("SurveillanceCameras.Domain.Entities.Language", "Language")
+                        .WithMany()
+                        .HasForeignKey("LanguageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("SurveillanceCameras.Domain.Entities.StorySource", "StorySource")
                         .WithMany("Works")
                         .HasForeignKey("StorySourceId")
@@ -1573,6 +1629,8 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("UserProfileId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Language");
 
                     b.Navigation("StorySource");
 

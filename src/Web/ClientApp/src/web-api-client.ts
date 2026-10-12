@@ -1354,6 +1354,104 @@ export class AppAuthClient {
         }
         return Promise.resolve<AccessTokenResponse>(null as any);
     }
+
+    /**
+     * Log in app viewer with Google
+     * @return OK
+     */
+    loginAppViewerWithGoogle(body: AppSocialLoginRequest): Promise<AppAuthResponse> {
+        let url_ = this.baseUrl + "/api/app/auth/google";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLoginAppViewerWithGoogle(_response);
+        });
+    }
+
+    protected processLoginAppViewerWithGoogle(response: Response): Promise<AppAuthResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppAuthResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = HttpValidationProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppAuthResponse>(null as any);
+    }
+
+    /**
+     * Log in app viewer with Apple
+     * @return OK
+     */
+    loginAppViewerWithApple(body: AppSocialLoginRequest): Promise<AppAuthResponse> {
+        let url_ = this.baseUrl + "/api/app/auth/apple";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLoginAppViewerWithApple(_response);
+        });
+    }
+
+    protected processLoginAppViewerWithApple(response: Response): Promise<AppAuthResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppAuthResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = HttpValidationProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppAuthResponse>(null as any);
+    }
 }
 
 export class AppCatalogClient {
@@ -1409,20 +1507,74 @@ export class AppCatalogClient {
     }
 
     /**
+     * Get app languages
+     * @return OK
+     */
+    getAppLanguages(): Promise<AppLanguageDto[]> {
+        let url_ = this.baseUrl + "/api/app/languages";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppLanguages(_response);
+        });
+    }
+
+    protected processGetAppLanguages(response: Response): Promise<AppLanguageDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(AppLanguageDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppLanguageDto[]>(null as any);
+    }
+
+    /**
      * Get app movies
      * @param search (optional) 
+     * @param language (optional) 
      * @param sort (optional) 
      * @param full (optional) 
      * @param page (optional) 
      * @param pageSize (optional) 
      * @return OK
      */
-    getAppMovies(search: string | undefined, sort: number | undefined, full: boolean | undefined, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfAppMovieDto> {
+    getAppMovies(search: string | undefined, language: string | undefined, sort: number | undefined, full: boolean | undefined, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfAppMovieDto> {
         let url_ = this.baseUrl + "/api/app/movies?";
         if (search === null)
             throw new globalThis.Error("The parameter 'search' cannot be null.");
         else if (search !== undefined)
             url_ += "search=" + encodeURIComponent("" + search) + "&";
+        if (language === null)
+            throw new globalThis.Error("The parameter 'language' cannot be null.");
+        else if (language !== undefined)
+            url_ += "language=" + encodeURIComponent("" + language) + "&";
         if (sort === null)
             throw new globalThis.Error("The parameter 'sort' cannot be null.");
         else if (sort !== undefined)
@@ -2956,6 +3108,292 @@ export class EpisodesClient {
     }
 }
 
+export class LanguagesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get Languages
+     * @param title (optional) 
+     * @param page (optional) 
+     * @param pageSize (optional) 
+     * @return OK
+     */
+    getLanguages(title: string | undefined, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfLanguageDto> {
+        let url_ = this.baseUrl + "/api/Languages?";
+        if (title === null)
+            throw new globalThis.Error("The parameter 'title' cannot be null.");
+        else if (title !== undefined)
+            url_ += "title=" + encodeURIComponent("" + title) + "&";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLanguages(_response);
+        });
+    }
+
+    protected processGetLanguages(response: Response): Promise<PaginatedListOfLanguageDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfLanguageDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfLanguageDto>(null as any);
+    }
+
+    /**
+     * Create Language
+     * @return Created
+     */
+    createLanguage(body: CreateLanguageCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/Languages";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateLanguage(_response);
+        });
+    }
+
+    protected processCreateLanguage(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Get Language by Id
+     * @return OK
+     */
+    getLanguageById(id: number): Promise<LanguageDto> {
+        let url_ = this.baseUrl + "/api/Languages/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLanguageById(_response);
+        });
+    }
+
+    protected processGetLanguageById(response: Response): Promise<LanguageDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = LanguageDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LanguageDto>(null as any);
+    }
+
+    /**
+     * Update Language
+     * @return No Content
+     */
+    updateLanguage(id: number, body: UpdateLanguageCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Languages/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateLanguage(_response);
+        });
+    }
+
+    protected processUpdateLanguage(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete Language
+     * @return No Content
+     */
+    deleteLanguage(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Languages/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteLanguage(_response);
+        });
+    }
+
+    protected processDeleteLanguage(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
 export class MoviesClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -2970,9 +3408,10 @@ export class MoviesClient {
      * Get Movies
      * @param title (optional) 
      * @param userProfileId (optional) 
+     * @param languageId (optional) 
      * @return OK
      */
-    getMovies(title: string | undefined, userProfileId: number | undefined, sort: number, page: number, pageSize: number): Promise<PaginatedListOfMovieDto> {
+    getMovies(title: string | undefined, userProfileId: number | undefined, languageId: number | undefined, sort: number, page: number, pageSize: number): Promise<PaginatedListOfMovieDto> {
         let url_ = this.baseUrl + "/api/Movies?";
         if (title === null)
             throw new globalThis.Error("The parameter 'title' cannot be null.");
@@ -2982,6 +3421,10 @@ export class MoviesClient {
             throw new globalThis.Error("The parameter 'userProfileId' cannot be null.");
         else if (userProfileId !== undefined)
             url_ += "UserProfileId=" + encodeURIComponent("" + userProfileId) + "&";
+        if (languageId === null)
+            throw new globalThis.Error("The parameter 'languageId' cannot be null.");
+        else if (languageId !== undefined)
+            url_ += "LanguageId=" + encodeURIComponent("" + languageId) + "&";
         if (sort === undefined || sort === null)
             throw new globalThis.Error("The parameter 'sort' must be defined and cannot be null.");
         else
@@ -7647,6 +8090,62 @@ export interface IAppHistoryDto {
     [key: string]: any;
 }
 
+export class AppLanguageDto implements IAppLanguageDto {
+    code!: string;
+    title!: string;
+    movieCount!: number;
+
+    [key: string]: any;
+
+    constructor(data?: IAppLanguageDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.code = _data["code"];
+            this.title = _data["title"];
+            this.movieCount = _data["movieCount"];
+        }
+    }
+
+    static fromJS(data: any): AppLanguageDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppLanguageDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["code"] = this.code;
+        data["title"] = this.title;
+        data["movieCount"] = this.movieCount;
+        return data;
+    }
+}
+
+export interface IAppLanguageDto {
+    code: string;
+    title: string;
+    movieCount: number;
+
+    [key: string]: any;
+}
+
 export class AppLoginRequest implements IAppLoginRequest {
     email!: string | undefined;
     password!: string | undefined;
@@ -7710,6 +8209,7 @@ export class AppMovieDto implements IAppMovieDto {
     saveCount?: number;
     commentCount?: number;
     isFull?: boolean;
+    language?: string | undefined;
 
     [key: string]: any;
 
@@ -7738,6 +8238,7 @@ export class AppMovieDto implements IAppMovieDto {
             this.saveCount = _data["saveCount"];
             this.commentCount = _data["commentCount"];
             this.isFull = _data["isFull"];
+            this.language = _data["language"];
         }
     }
 
@@ -7764,6 +8265,7 @@ export class AppMovieDto implements IAppMovieDto {
         data["saveCount"] = this.saveCount;
         data["commentCount"] = this.commentCount;
         data["isFull"] = this.isFull;
+        data["language"] = this.language;
         return data;
     }
 }
@@ -7779,6 +8281,7 @@ export interface IAppMovieDto {
     saveCount?: number;
     commentCount?: number;
     isFull?: boolean;
+    language?: string | undefined;
 
     [key: string]: any;
 }
@@ -7998,6 +8501,58 @@ export class AppRegisterRequest implements IAppRegisterRequest {
 export interface IAppRegisterRequest {
     email: string | undefined;
     password: string | undefined;
+    displayName: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AppSocialLoginRequest implements IAppSocialLoginRequest {
+    idToken!: string | undefined;
+    displayName!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppSocialLoginRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.idToken = _data["idToken"];
+            this.displayName = _data["displayName"];
+        }
+    }
+
+    static fromJS(data: any): AppSocialLoginRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppSocialLoginRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["idToken"] = this.idToken;
+        data["displayName"] = this.displayName;
+        return data;
+    }
+}
+
+export interface IAppSocialLoginRequest {
+    idToken: string | undefined;
     displayName: string | undefined;
 
     [key: string]: any;
@@ -8855,6 +9410,58 @@ export interface ICreateEpisodeCommand {
     contentEdit?: string | undefined;
     isUploaded?: boolean;
     isPublished?: boolean;
+
+    [key: string]: any;
+}
+
+export class CreateLanguageCommand implements ICreateLanguageCommand {
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICreateLanguageCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.title = _data["title"];
+            this.code = _data["code"];
+        }
+    }
+
+    static fromJS(data: any): CreateLanguageCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateLanguageCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["title"] = this.title;
+        data["code"] = this.code;
+        return data;
+    }
+}
+
+export interface ICreateLanguageCommand {
+    title?: string | undefined;
+    code?: string | undefined;
 
     [key: string]: any;
 }
@@ -10163,6 +10770,74 @@ export interface IInfoResponse {
     [key: string]: any;
 }
 
+export class LanguageDto implements ILanguageDto {
+    workCount?: number;
+    episodeCount?: number;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ILanguageDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.workCount = _data["workCount"];
+            this.episodeCount = _data["episodeCount"];
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+            this.baseStatus = _data["baseStatus"];
+        }
+    }
+
+    static fromJS(data: any): LanguageDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new LanguageDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["workCount"] = this.workCount;
+        data["episodeCount"] = this.episodeCount;
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        data["baseStatus"] = this.baseStatus;
+        return data;
+    }
+}
+
+export interface ILanguageDto {
+    workCount?: number;
+    episodeCount?: number;
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+    baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
 export class LoginRequest implements ILoginRequest {
     email!: string;
     password!: string;
@@ -10218,6 +10893,9 @@ export interface ILoginRequest {
 export class MovieDto implements IMovieDto {
     description?: string | undefined;
     coverUrl?: string | undefined;
+    languageId?: number | undefined;
+    languageCode?: string | undefined;
+    languageTitle?: string | undefined;
     externalId?: string | undefined;
     userProfileId?: number | undefined;
     userProfileTitle?: string | undefined;
@@ -10253,6 +10931,9 @@ export class MovieDto implements IMovieDto {
             }
             this.description = _data["description"];
             this.coverUrl = _data["coverUrl"];
+            this.languageId = _data["languageId"];
+            this.languageCode = _data["languageCode"];
+            this.languageTitle = _data["languageTitle"];
             this.externalId = _data["externalId"];
             this.userProfileId = _data["userProfileId"];
             this.userProfileTitle = _data["userProfileTitle"];
@@ -10286,6 +10967,9 @@ export class MovieDto implements IMovieDto {
         }
         data["description"] = this.description;
         data["coverUrl"] = this.coverUrl;
+        data["languageId"] = this.languageId;
+        data["languageCode"] = this.languageCode;
+        data["languageTitle"] = this.languageTitle;
         data["externalId"] = this.externalId;
         data["userProfileId"] = this.userProfileId;
         data["userProfileTitle"] = this.userProfileTitle;
@@ -10308,6 +10992,9 @@ export class MovieDto implements IMovieDto {
 export interface IMovieDto {
     description?: string | undefined;
     coverUrl?: string | undefined;
+    languageId?: number | undefined;
+    languageCode?: string | undefined;
+    languageTitle?: string | undefined;
     externalId?: string | undefined;
     userProfileId?: number | undefined;
     userProfileTitle?: string | undefined;
@@ -10331,6 +11018,7 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
     episodeNumber?: number;
     externalId?: string | undefined;
     videoUrl?: string | undefined;
+    languageCode?: string | undefined;
     streamUrl?: string | undefined;
     thumbnailUrl?: string | undefined;
     durationSeconds?: number | undefined;
@@ -10362,6 +11050,7 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
             this.episodeNumber = _data["episodeNumber"];
             this.externalId = _data["externalId"];
             this.videoUrl = _data["videoUrl"];
+            this.languageCode = _data["languageCode"];
             this.streamUrl = _data["streamUrl"];
             this.thumbnailUrl = _data["thumbnailUrl"];
             this.durationSeconds = _data["durationSeconds"];
@@ -10391,6 +11080,7 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
         data["episodeNumber"] = this.episodeNumber;
         data["externalId"] = this.externalId;
         data["videoUrl"] = this.videoUrl;
+        data["languageCode"] = this.languageCode;
         data["streamUrl"] = this.streamUrl;
         data["thumbnailUrl"] = this.thumbnailUrl;
         data["durationSeconds"] = this.durationSeconds;
@@ -10409,6 +11099,7 @@ export interface IMovieEpisodeDto {
     episodeNumber?: number;
     externalId?: string | undefined;
     videoUrl?: string | undefined;
+    languageCode?: string | undefined;
     streamUrl?: string | undefined;
     thumbnailUrl?: string | undefined;
     durationSeconds?: number | undefined;
@@ -10946,6 +11637,82 @@ export class PaginatedListOfEpisodeBriefDto implements IPaginatedListOfEpisodeBr
 
 export interface IPaginatedListOfEpisodeBriefDto {
     items?: EpisodeBriefDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfLanguageDto implements IPaginatedListOfLanguageDto {
+    items?: LanguageDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfLanguageDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(LanguageDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfLanguageDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfLanguageDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfLanguageDto {
+    items?: LanguageDto[] | undefined;
     pageNumber: number;
     totalPages?: number;
     totalCount?: number;
@@ -13483,6 +14250,62 @@ export interface IUpdateEpisodeCommand {
     contentEdit?: string | undefined;
     isUploaded?: boolean;
     isPublished?: boolean;
+
+    [key: string]: any;
+}
+
+export class UpdateLanguageCommand implements IUpdateLanguageCommand {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateLanguageCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.code = _data["code"];
+        }
+    }
+
+    static fromJS(data: any): UpdateLanguageCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateLanguageCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["code"] = this.code;
+        return data;
+    }
+}
+
+export interface IUpdateLanguageCommand {
+    id?: number;
+    title?: string | undefined;
+    code?: string | undefined;
 
     [key: string]: any;
 }

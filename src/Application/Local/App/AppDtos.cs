@@ -29,7 +29,13 @@ public class AppMovieDto
     public int CommentCount { get; init; }
 
     public bool IsFull { get; init; }
+
+    /// <summary>Mã ngôn ngữ của phim (vd. <c>en</c>); <c>null</c> khi chưa xác định.</summary>
+    public string? Language { get; init; }
 }
+
+/// <summary>Ngôn ngữ đang có phim trên app.</summary>
+public record AppLanguageDto(string Code, string Title, int MovieCount);
 
 /// <summary>Cách phát một tập.</summary>
 /// <param name="Type"><c>stream</c>: <paramref name="Value"/> là link file video; <c>tiktok</c>: là id video TikTok (phát bằng trình phát nhúng).</param>
@@ -113,8 +119,28 @@ public static class AppQueries
             ViewCount = x.ViewCount ?? 0,
             SaveCount = context.AppBookmarks.Count(b => b.WorkId == x.Id),
             CommentCount = context.AppComments.Count(c => c.WorkId == x.Id),
-            IsFull = x.IsFull
+            IsFull = x.IsFull,
+            Language = x.Language != null ? x.Language.Code : null
         });
+
+    /// <summary>Ngôn ngữ app dùng khi người xem chưa chọn, hoặc chọn ngôn ngữ chưa có phim nào.</summary>
+    public const string DefaultLanguage = "en";
+
+    public static IQueryable<Work> InLanguage(this IQueryable<Work> works, string code)
+        => works.Where(x => x.Language != null && x.Language.Code != null && x.Language.Code.ToLower() == code);
+
+    /// <summary>
+    /// Mã ngôn ngữ dùng để lọc phim cho yêu cầu của app: mã người xem chọn nếu đang có phim đã xuất bản bằng ngôn ngữ
+    /// đó, còn lại (không truyền, mã lạ, chưa có phim) là <see cref="DefaultLanguage"/>.
+    /// </summary>
+    public static async Task<string> ResolveAppLanguageAsync(this IApplicationDbContext context, string? requested,
+        CancellationToken cancellationToken)
+    {
+        var code = Languages.LanguageCodes.Normalize(requested);
+        if (code is null || code == DefaultLanguage) return DefaultLanguage;
+
+        return await context.PublishedMovies().InLanguage(code).AnyAsync(cancellationToken) ? code : DefaultLanguage;
+    }
 
     /// <summary>Người xem còn hạn VIP không; <c>null</c> (chưa đăng nhập) thì không.</summary>
     public static Task<bool> IsVipAsync(this IApplicationDbContext context, string? userId, DateTimeOffset now,

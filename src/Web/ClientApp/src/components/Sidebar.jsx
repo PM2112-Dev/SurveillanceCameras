@@ -14,7 +14,8 @@ import {
   Contact,
   Shapes,
   Film,
-  HardDrive
+  HardDrive,
+  Languages
 } from 'lucide-react';
 
 const menuSections = [
@@ -29,6 +30,7 @@ const menuSections = [
       { to: '/categories', label: 'Thể loại', icon: Tags },
       { to: '/stories', label: 'Truyện', icon: Library },
       { to: '/movies', label: 'Phim', icon: Film },
+      { to: '/languages', label: 'Ngôn ngữ', icon: Languages },
       { to: '/story-video-types', label: 'Loại video truyện', icon: Clapperboard }
     ]
   },

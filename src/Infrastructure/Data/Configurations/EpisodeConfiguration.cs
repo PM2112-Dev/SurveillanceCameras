@@ -19,6 +19,11 @@ public class EpisodeConfiguration : IEntityTypeConfiguration<Episode>
             .HasForeignKey(x => x.PromptId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne(x => x.Language)
+            .WithMany()
+            .HasForeignKey(x => x.LanguageId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Còn tập đang lưu video ở tài khoản thì không cho xoá tài khoản lưu trữ (link phát sẽ chết).
         builder.HasOne(x => x.StorageAccount)
             .WithMany()

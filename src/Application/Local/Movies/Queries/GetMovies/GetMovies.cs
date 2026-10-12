@@ -21,6 +21,9 @@ public record GetMoviesQuery : IRequest<PaginatedList<MovieDto>>
     /// <summary>Chỉ phim của kênh này.</summary>
     public int? UserProfileId { get; init; }
 
+    /// <summary>Chỉ phim thuộc ngôn ngữ này.</summary>
+    public int? LanguageId { get; init; }
+
     public MovieSort Sort { get; init; } = MovieSort.Newest;
 
     public int Page { get; init; } = 1;
@@ -59,6 +62,8 @@ public class GetMoviesQueryHandler : IRequestHandler<GetMoviesQuery, PaginatedLi
             query = query.Where(x => x.Title != null && x.Title.Contains(request.Title));
         if (request.UserProfileId is { } userProfileId)
             query = query.Where(x => x.UserProfileId == userProfileId);
+        if (request.LanguageId is { } languageId)
+            query = query.Where(x => x.LanguageId == languageId);
 
         return PaginatedList<MovieDto>.CreateAsync(
             Sorted(query, request.Sort).ProjectTo<MovieDto>(_mapper.ConfigurationProvider),

@@ -41,6 +41,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
 
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
 
+    public DbSet<Language> Languages => Set<Language>();
+
     public DbSet<AppBookmark> AppBookmarks => Set<AppBookmark>();
 
     public DbSet<AppWatchHistory> AppWatchHistories => Set<AppWatchHistory>();

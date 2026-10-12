@@ -21,6 +21,7 @@ public class AppCatalog : IEndpointGroup
     public static void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet(GetAppConfig, "config");
+        groupBuilder.MapGet(GetAppLanguages, "languages");
         groupBuilder.MapGet(GetAppMovies, "movies");
         groupBuilder.MapGet(GetAppMovieById, "movies/{id}");
         groupBuilder.MapGet(GetAppMovieEpisodes, "movies/{id}/episodes");
@@ -39,13 +40,18 @@ public class AppCatalog : IEndpointGroup
         return TypedResults.Ok(new AppConfigDto(o.FreeEpisodes, o.AdEpisodes, o.PrivacyUrl, o.TermsUrl));
     }
 
+    [EndpointSummary("Get app languages")]
+    [EndpointDescription("Các ngôn ngữ đang có phim đã xuất bản, để người xem chọn")]
+    public static async Task<Ok<List<AppLanguageDto>>> GetAppLanguages(ISender sender)
+        => TypedResults.Ok(await sender.Send(new GetAppLanguagesQuery()));
+
     [EndpointSummary("Get app movies")]
-    [EndpointDescription("Danh sách phim đã xuất bản (tìm theo tên/kênh, sắp xếp, có phân trang)")]
+    [EndpointDescription("Danh sách phim đã xuất bản theo ngôn ngữ người xem chọn (mặc định tiếng Anh); tìm theo tên/kênh, sắp xếp, có phân trang")]
     public static async Task<Ok<PaginatedList<AppMovieDto>>> GetAppMovies(ISender sender, string? search = null,
-        AppMovieSort sort = AppMovieSort.Newest, bool? full = null, int page = 1, int pageSize = 20)
+        string? language = null, AppMovieSort sort = AppMovieSort.Newest, bool? full = null, int page = 1, int pageSize = 20)
         => TypedResults.Ok(await sender.Send(new GetAppMoviesQuery
         {
-            Search = search, Sort = sort, Full = full, Page = page, PageSize = pageSize
+            Search = search, Language = language, Sort = sort, Full = full, Page = page, PageSize = pageSize
         }));
 
     [EndpointSummary("Get app movie")]

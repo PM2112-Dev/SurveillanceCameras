@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { moviesClient } from '../../api/clients';
+import { languagesClient, moviesClient } from '../../api/clients';
+import { useOptions } from '../../hooks/useOptions';
 import { CrudList } from '../../components/common/CrudList';
 import { formatDuration, numberFormat } from './movieFormat';
 
@@ -7,6 +8,8 @@ import { formatDuration, numberFormat } from './movieFormat';
 const SORT_OPTIONS = [{ value: '1', label: 'Lượt xem: cao → thấp' }];
 
 export function MovieList() {
+  const languages = useOptions(() => languagesClient.getLanguages(undefined, 1, 100));
+
   return (
     <CrudList
       title="Phim"
@@ -15,7 +18,10 @@ export function MovieList() {
       editable={false}
       emptyMessage="Chưa có phim nào. Vào Kênh đã lưu, mở danh sách drama của kênh TikTok và chọn drama để đồng bộ."
       deleteTitle="Xoá phim"
-      filters={[{ name: 'sort', label: 'Sắp xếp', allLabel: 'Mới đồng bộ trước', options: SORT_OPTIONS }]}
+      filters={[
+        { name: 'languageId', label: 'Ngôn ngữ', options: languages },
+        { name: 'sort', label: 'Sắp xếp', allLabel: 'Mới đồng bộ trước', options: SORT_OPTIONS }
+      ]}
       columns={[
         {
           header: 'Phim',
@@ -31,6 +37,7 @@ export function MovieList() {
           )
         },
         { header: 'Kênh', render: item => item.userProfileTitle || '—' },
+        { header: 'Ngôn ngữ', render: item => item.languageTitle || item.languageCode || '—' },
         {
           header: 'Lượt xem',
           render: item => (item.viewCount != null ? numberFormat.format(item.viewCount) : '—')
@@ -39,7 +46,8 @@ export function MovieList() {
         { header: 'Thời lượng', render: item => formatDuration(item.totalDurationSeconds) }
       ]}
       fetchPage={({ search, page, pageSize, filters }) =>
-        moviesClient.getMovies(search, undefined, Number(filters.sort || 0), page, pageSize)}
+        moviesClient.getMovies(search, undefined, filters.languageId ? Number(filters.languageId) : undefined,
+          Number(filters.sort || 0), page, pageSize)}
       deleteItem={item => moviesClient.deleteMovie(item.id)}
     />
   );
