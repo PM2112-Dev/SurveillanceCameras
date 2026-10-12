@@ -160,6 +160,10 @@ public static class DependencyInjection
             .AddDefaultTokenProviders()
             .AddApiEndpoints();
 
+        builder.Services.Configure<SocialAuthOptions>(builder.Configuration.GetSection(SocialAuthOptions.SectionName));
+        builder.Services.AddHttpClient(nameof(SocialTokenValidator));
+        builder.Services.AddSingleton<ISocialTokenValidator, SocialTokenValidator>();
+
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();
 
