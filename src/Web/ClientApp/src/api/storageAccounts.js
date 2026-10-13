@@ -25,6 +25,13 @@ export const deleteStorageAccount = id => send('DELETE', `/api/StorageAccounts/$
 /** Kết nối thử tới bucket và đối soát dung lượng đã dùng. Trả về `{ succeeded, error, usedBytes, objects }`. */
 export const checkStorageAccount = id => send('POST', `/api/StorageAccounts/${id}/check`);
 
+/**
+ * Đưa dung lượng bucket về dưới hạn mức. `apply = false` chỉ trả kế hoạch (không xoá gì); `deleteOrphans` xoá cả file
+ * trong thư mục movies/ mà không tập nào trỏ tới.
+ */
+export const trimStorageAccount = (id, apply, deleteOrphans) =>
+  send('POST', `/api/StorageAccounts/${id}/trim`, { apply, deleteOrphans });
+
 /** Cho hệ thống thử lưu lại video của các tập đã lỗi trong phim. Trả về số tập được đưa lại vào hàng chờ. */
 export const retryMovieVideoStorage = movieId => send('POST', `/api/Movies/${movieId}/video-storage/retry`);
 

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using SurveillanceCameras.Application.Local.StorageAccounts.Commands.CheckStorageAccount;
 using SurveillanceCameras.Application.Local.StorageAccounts.Commands.CreateStorageAccount;
 using SurveillanceCameras.Application.Local.StorageAccounts.Commands.DeleteStorageAccount;
+using SurveillanceCameras.Application.Local.StorageAccounts.Commands.TrimStorageAccount;
 using SurveillanceCameras.Application.Local.StorageAccounts.Commands.UpdateStorageAccount;
 using SurveillanceCameras.Application.Local.StorageAccounts.Queries.DTOs;
 using SurveillanceCameras.Application.Local.StorageAccounts.Queries.GetStorageAccountById;
@@ -22,6 +23,7 @@ public class StorageAccounts : IEndpointGroup
         groupBuilder.MapPut(UpdateStorageAccount, "{id}");
         groupBuilder.MapDelete(DeleteStorageAccount, "{id}");
         groupBuilder.MapPost(CheckStorageAccount, "{id}/check");
+        groupBuilder.MapPost(TrimStorageAccount, "{id}/trim");
     }
 
     [EndpointSummary("Get Storage Accounts")]
@@ -68,4 +70,11 @@ public class StorageAccounts : IEndpointGroup
     [EndpointDescription("Kết nối thử tới bucket và đặt lại dung lượng đã dùng theo tổng kích thước file thực có trong bucket")]
     public static async Task<Ok<CheckStorageAccountResult>> CheckStorageAccount(ISender sender, int id)
         => TypedResults.Ok(await sender.Send(new CheckStorageAccountCommand(id)));
+
+    public sealed record TrimStorageAccountRequest(bool Apply, bool DeleteOrphans);
+
+    [EndpointSummary("Trim Storage Account")]
+    [EndpointDescription("Đưa dung lượng bucket về dưới hạn mức: gỡ video của các tập (phim ít lượt xem trước, tập cuối trước), tuỳ chọn xoá file mồ côi. apply = false chỉ trả kế hoạch, không xoá")]
+    public static async Task<Ok<TrimStorageAccountResult>> TrimStorageAccount(ISender sender, int id, TrimStorageAccountRequest request)
+        => TypedResults.Ok(await sender.Send(new TrimStorageAccountCommand(id, request.Apply, request.DeleteOrphans)));
 }

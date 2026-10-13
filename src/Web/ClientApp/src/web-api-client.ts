@@ -4877,6 +4877,63 @@ export class StorageAccountsClient {
         }
         return Promise.resolve<CheckStorageAccountResult>(null as any);
     }
+
+    /**
+     * Trim Storage Account
+     * @return OK
+     */
+    trimStorageAccount(id: number, body: TrimStorageAccountRequest): Promise<TrimStorageAccountResult> {
+        let url_ = this.baseUrl + "/api/StorageAccounts/{id}/trim";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processTrimStorageAccount(_response);
+        });
+    }
+
+    protected processTrimStorageAccount(response: Response): Promise<TrimStorageAccountResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = TrimStorageAccountResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<TrimStorageAccountResult>(null as any);
+    }
 }
 
 export class StorySourcesClient {
@@ -14019,6 +14076,242 @@ export interface ITikTokUserProfileDto {
     followingCount?: number;
     heartCount?: number;
     videoCount?: number;
+
+    [key: string]: any;
+}
+
+export class TrimmedMovie implements ITrimmedMovie {
+    movieId!: number;
+    title!: string | undefined;
+    episodes!: number;
+    fromEpisode!: number;
+    toEpisode!: number;
+    bytes!: number;
+
+    [key: string]: any;
+
+    constructor(data?: ITrimmedMovie) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.movieId = _data["movieId"];
+            this.title = _data["title"];
+            this.episodes = _data["episodes"];
+            this.fromEpisode = _data["fromEpisode"];
+            this.toEpisode = _data["toEpisode"];
+            this.bytes = _data["bytes"];
+        }
+    }
+
+    static fromJS(data: any): TrimmedMovie {
+        data = typeof data === 'object' ? data : {};
+        let result = new TrimmedMovie();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["movieId"] = this.movieId;
+        data["title"] = this.title;
+        data["episodes"] = this.episodes;
+        data["fromEpisode"] = this.fromEpisode;
+        data["toEpisode"] = this.toEpisode;
+        data["bytes"] = this.bytes;
+        return data;
+    }
+}
+
+export interface ITrimmedMovie {
+    movieId: number;
+    title: string | undefined;
+    episodes: number;
+    fromEpisode: number;
+    toEpisode: number;
+    bytes: number;
+
+    [key: string]: any;
+}
+
+export class TrimStorageAccountRequest implements ITrimStorageAccountRequest {
+    apply!: boolean;
+    deleteOrphans!: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: ITrimStorageAccountRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.apply = _data["apply"];
+            this.deleteOrphans = _data["deleteOrphans"];
+        }
+    }
+
+    static fromJS(data: any): TrimStorageAccountRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new TrimStorageAccountRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["apply"] = this.apply;
+        data["deleteOrphans"] = this.deleteOrphans;
+        return data;
+    }
+}
+
+export interface ITrimStorageAccountRequest {
+    apply: boolean;
+    deleteOrphans: boolean;
+
+    [key: string]: any;
+}
+
+export class TrimStorageAccountResult implements ITrimStorageAccountResult {
+    applied!: boolean;
+    quotaBytes!: number;
+    usedBytesBefore!: number;
+    usedBytesAfter!: number;
+    objects!: number;
+    orphanObjects!: number;
+    orphanBytes!: number;
+    orphansDeleted!: boolean;
+    episodesReleased!: number;
+    episodeBytesReleased!: number;
+    movies!: TrimmedMovie[];
+    errors!: string[];
+    withinQuota?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: ITrimStorageAccountResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.movies = [];
+            this.errors = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.applied = _data["applied"];
+            this.quotaBytes = _data["quotaBytes"];
+            this.usedBytesBefore = _data["usedBytesBefore"];
+            this.usedBytesAfter = _data["usedBytesAfter"];
+            this.objects = _data["objects"];
+            this.orphanObjects = _data["orphanObjects"];
+            this.orphanBytes = _data["orphanBytes"];
+            this.orphansDeleted = _data["orphansDeleted"];
+            this.episodesReleased = _data["episodesReleased"];
+            this.episodeBytesReleased = _data["episodeBytesReleased"];
+            if (Array.isArray(_data["movies"])) {
+                this.movies = [] as any;
+                for (let item of _data["movies"])
+                    this.movies!.push(TrimmedMovie.fromJS(item));
+            }
+            if (Array.isArray(_data["errors"])) {
+                this.errors = [] as any;
+                for (let item of _data["errors"])
+                    this.errors!.push(item);
+            }
+            this.withinQuota = _data["withinQuota"];
+        }
+    }
+
+    static fromJS(data: any): TrimStorageAccountResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new TrimStorageAccountResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["applied"] = this.applied;
+        data["quotaBytes"] = this.quotaBytes;
+        data["usedBytesBefore"] = this.usedBytesBefore;
+        data["usedBytesAfter"] = this.usedBytesAfter;
+        data["objects"] = this.objects;
+        data["orphanObjects"] = this.orphanObjects;
+        data["orphanBytes"] = this.orphanBytes;
+        data["orphansDeleted"] = this.orphansDeleted;
+        data["episodesReleased"] = this.episodesReleased;
+        data["episodeBytesReleased"] = this.episodeBytesReleased;
+        if (Array.isArray(this.movies)) {
+            data["movies"] = [];
+            for (let item of this.movies)
+                data["movies"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.errors)) {
+            data["errors"] = [];
+            for (let item of this.errors)
+                data["errors"].push(item);
+        }
+        data["withinQuota"] = this.withinQuota;
+        return data;
+    }
+}
+
+export interface ITrimStorageAccountResult {
+    applied: boolean;
+    quotaBytes: number;
+    usedBytesBefore: number;
+    usedBytesAfter: number;
+    objects: number;
+    orphanObjects: number;
+    orphanBytes: number;
+    orphansDeleted: boolean;
+    episodesReleased: number;
+    episodeBytesReleased: number;
+    movies: TrimmedMovie[];
+    errors: string[];
+    withinQuota?: boolean;
 
     [key: string]: any;
 }

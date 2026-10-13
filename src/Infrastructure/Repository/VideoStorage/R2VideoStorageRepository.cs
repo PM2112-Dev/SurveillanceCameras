@@ -34,26 +34,27 @@ public sealed class R2VideoStorageRepository : IVideoStorageRepository
         => RunAsync(target, "xoá file", client => client.DeleteObjectAsync(target.Bucket, key, cancellationToken),
             cancellationToken);
 
-    public Task<VideoStorageUsage> GetUsageAsync(VideoStorageTarget target, CancellationToken cancellationToken = default)
+    public async Task<VideoStorageUsage> GetUsageAsync(VideoStorageTarget target, CancellationToken cancellationToken = default)
+    {
+        var objects = await ListAsync(target, cancellationToken);
+        return new VideoStorageUsage(objects.Sum(x => x.Size), objects.Count);
+    }
+
+    public Task<List<VideoStorageObject>> ListAsync(VideoStorageTarget target, CancellationToken cancellationToken = default)
         => RunAsync(target, "đọc bucket", async client =>
         {
-            long bytes = 0;
-            var objects = 0;
+            var objects = new List<VideoStorageObject>();
             string? continuation = null;
             do
             {
                 var page = await client.ListObjectsV2Async(
                     new ListObjectsV2Request { BucketName = target.Bucket, ContinuationToken = continuation }, cancellationToken);
-                foreach (var item in page.S3Objects ?? [])
-                {
-                    bytes += item.Size ?? 0;
-                    objects++;
-                }
+                objects.AddRange((page.S3Objects ?? []).Select(x => new VideoStorageObject(x.Key, x.Size ?? 0)));
 
                 continuation = page.IsTruncated == true ? page.NextContinuationToken : null;
             } while (continuation is not null);
 
-            return new VideoStorageUsage(bytes, objects);
+            return objects;
         }, cancellationToken);
 
     private async Task<T> RunAsync<T>(VideoStorageTarget target, string action, Func<AmazonS3Client, Task<T>> operation,

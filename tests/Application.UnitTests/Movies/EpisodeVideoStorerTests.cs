@@ -19,7 +19,7 @@ namespace SurveillanceCameras.Application.UnitTests.Movies;
 public class EpisodeVideoStorerTests
 {
     private const string Owner = "user-1";
-    private const long Mb = 1024 * 1024;
+    private const long Mb = StorageAccount.BytesPerMb;
 
     private ApplicationDbContext _db = null!;
     private Mock<ITikTokRepository> _tikTok = null!;
