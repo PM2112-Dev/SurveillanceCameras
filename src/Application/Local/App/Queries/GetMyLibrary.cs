@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using SurveillanceCameras.Application.Common.Interfaces;
 
 namespace SurveillanceCameras.Application.Local.App.Queries;
@@ -10,10 +11,13 @@ public class GetMyBookmarksQueryHandler : IRequestHandler<GetMyBookmarksQuery, L
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
 
-    public GetMyBookmarksQueryHandler(IApplicationDbContext context, IUser user)
+    private readonly AppOptions _options;
+
+    public GetMyBookmarksQueryHandler(IApplicationDbContext context, IUser user, IOptions<AppOptions> options)
     {
         _context = context;
         _user = user;
+        _options = options.Value;
     }
 
     public async Task<List<AppMovieDto>> Handle(GetMyBookmarksQuery request, CancellationToken cancellationToken)
@@ -28,7 +32,7 @@ public class GetMyBookmarksQueryHandler : IRequestHandler<GetMyBookmarksQuery, L
 
         var movies = await _context.PublishedMovies()
             .Where(x => ids.Contains(x.Id))
-            .ToAppMovies(_context)
+            .ToAppMovies(_context, _options)
             .ToDictionaryAsync(x => x.Id, cancellationToken);
 
         // Phim đã gỡ xuất bản không hiện, nhưng lượt lưu vẫn giữ để hiện lại khi phim xuất bản trở lại.
@@ -44,10 +48,13 @@ public class GetMyHistoryQueryHandler : IRequestHandler<GetMyHistoryQuery, List<
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
 
-    public GetMyHistoryQueryHandler(IApplicationDbContext context, IUser user)
+    private readonly AppOptions _options;
+
+    public GetMyHistoryQueryHandler(IApplicationDbContext context, IUser user, IOptions<AppOptions> options)
     {
         _context = context;
         _user = user;
+        _options = options.Value;
     }
 
     public async Task<List<AppHistoryDto>> Handle(GetMyHistoryQuery request, CancellationToken cancellationToken)
@@ -63,7 +70,7 @@ public class GetMyHistoryQueryHandler : IRequestHandler<GetMyHistoryQuery, List<
         var ids = entries.Select(x => x.WorkId).ToList();
         var movies = await _context.PublishedMovies()
             .Where(x => ids.Contains(x.Id))
-            .ToAppMovies(_context)
+            .ToAppMovies(_context, _options)
             .ToDictionaryAsync(x => x.Id, cancellationToken);
 
         return entries

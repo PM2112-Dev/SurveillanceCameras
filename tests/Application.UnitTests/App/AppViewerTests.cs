@@ -7,6 +7,7 @@ using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Local.App;
 using SurveillanceCameras.Application.Local.App.Commands;
 using SurveillanceCameras.Application.Local.App.Queries;
+using SurveillanceCameras.Application.Local.Movies.Commands.SetMovieAccess;
 using SurveillanceCameras.Domain.Entities;
 using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Infrastructure.Data;
@@ -57,7 +58,7 @@ public class AppViewerTests
     {
         var (db, movie, hidden) = await SeedAsync();
         using var _ = db;
-        var handler = new GetAppMoviesQueryHandler(db);
+        var handler = new GetAppMoviesQueryHandler(db, Options);
 
         var all = await handler.Handle(new GetAppMoviesQuery { Sort = AppMovieSort.MostViewed }, CancellationToken.None);
         all.Items.Select(x => x.Id).ShouldBe([movie.Id]);
@@ -67,7 +68,7 @@ public class AppViewerTests
         (await handler.Handle(new GetAppMoviesQuery { Search = "không có" }, CancellationToken.None)).TotalCount.ShouldBe(0);
 
         await Should.ThrowAsync<Ardalis.GuardClauses.NotFoundException>(() =>
-            new GetAppMovieByIdQueryHandler(db).Handle(new GetAppMovieByIdQuery(hidden.Id), CancellationToken.None));
+            new GetAppMovieByIdQueryHandler(db, Options).Handle(new GetAppMovieByIdQuery(hidden.Id), CancellationToken.None));
         await Should.ThrowAsync<Ardalis.GuardClauses.NotFoundException>(() => EpisodesAsync(db, hidden.Id, null));
     }
 
@@ -83,7 +84,7 @@ public class AppViewerTests
             // Ngôn ngữ chỉ có phim chưa xuất bản thì coi như chưa có phim.
             new Work { Title = "Phim Hàn ẩn", Type = WorkType.Movie, Language = new Language { Title = "Tiếng Hàn", Code = "ko", CreatedBy = Admin }, CreatedBy = Admin });
         await db.SaveChangesAsync();
-        var handler = new GetAppMoviesQueryHandler(db);
+        var handler = new GetAppMoviesQueryHandler(db, Options);
         async Task<List<string?>> Titles(string? language)
             => (await handler.Handle(new GetAppMoviesQuery { Language = language }, CancellationToken.None)).Items.Select(x => x.Title).ToList();
 
@@ -136,6 +137,54 @@ public class AppViewerTests
     }
 
     [Test]
+    public async Task CustomAccess_SetsAdAndVipRangesPerMovie_AndDefaultRestoresSystemRule()
+    {
+        var (db, movie, _) = await SeedAsync();
+        using var __ = db;
+        var set = new SetMovieAccessCommandHandler(db, User(Admin));
+        async Task<List<string>> Access(string? viewer = null) => (await EpisodesAsync(db, movie.Id, viewer)).Select(x => x.Access).ToList();
+
+        // Tập 2–3 quảng cáo, tập 3 trở đi VIP: tập nằm trong cả hai khoảng là VIP.
+        await set.Handle(new SetMovieAccessCommand { MovieId = movie.Id, AdFromEpisode = 2, AdToEpisode = 3, VipFromEpisode = 3 }, CancellationToken.None);
+        (await Access()).ShouldBe([AppAccess.Free, AppAccess.Ads, AppAccess.Vip, AppAccess.Vip]);
+        var dto = await new GetAppMovieByIdQueryHandler(db, Options).Handle(new GetAppMovieByIdQuery(movie.Id), CancellationToken.None);
+        (dto.AdFromEpisode, dto.AdToEpisode, dto.VipFromEpisode, dto.VipToEpisode).ShouldBe((2, 3, 3, null));
+
+        // Mở tập quảng cáo theo cấu hình riêng; tập VIP vẫn bị từ chối.
+        var ids = movie.Episodes!.OrderBy(x => x.EpisodeNumber).Select(x => x.Id).ToList();
+        var unlock = new UnlockAppEpisodeCommandHandler(db, User(Viewer), TimeProvider.System, Options);
+        (await unlock.Handle(new UnlockAppEpisodeCommand(ids[1]), CancellationToken.None)).Access.ShouldBe(AppAccess.Free);
+        await Should.ThrowAsync<ForbiddenAccessException>(() => unlock.Handle(new UnlockAppEpisodeCommand(ids[2]), CancellationToken.None));
+
+        // Chỉ có VIP ở giữa phim, không có quảng cáo: tập sau khoảng lại miễn phí.
+        await set.Handle(new SetMovieAccessCommand { MovieId = movie.Id, VipFromEpisode = 2, VipToEpisode = 3 }, CancellationToken.None);
+        (await Access()).ShouldBe([AppAccess.Free, AppAccess.Vip, AppAccess.Vip, AppAccess.Free]);
+
+        // Cấu hình riêng nhưng để trống hết: cả phim miễn phí.
+        await set.Handle(new SetMovieAccessCommand { MovieId = movie.Id }, CancellationToken.None);
+        (await Access()).ShouldAllBe(x => x == AppAccess.Free);
+
+        await set.Handle(new SetMovieAccessCommand { MovieId = movie.Id, UseDefault = true, VipFromEpisode = 1 }, CancellationToken.None);
+        (await Access()).ShouldBe([AppAccess.Free, AppAccess.Free, AppAccess.Ads, AppAccess.Vip]);
+        db.Works.Single(x => x.Id == movie.Id).VipFromEpisode.ShouldBeNull();
+
+        await Should.ThrowAsync<Ardalis.GuardClauses.NotFoundException>(() =>
+            new SetMovieAccessCommandHandler(db, User("người-khác")).Handle(new SetMovieAccessCommand { MovieId = movie.Id }, CancellationToken.None));
+    }
+
+    [Test]
+    public void AccessValidator_RejectsBrokenRanges()
+    {
+        var validator = new SetMovieAccessCommandValidator();
+        validator.Validate(new SetMovieAccessCommand { AdFromEpisode = 4, AdToEpisode = 6, VipFromEpisode = 7 }).IsValid.ShouldBeTrue();
+        validator.Validate(new SetMovieAccessCommand { AdFromEpisode = 6, AdToEpisode = 4 }).IsValid.ShouldBeFalse();
+        validator.Validate(new SetMovieAccessCommand { VipToEpisode = 9 }).IsValid.ShouldBeFalse();
+        validator.Validate(new SetMovieAccessCommand { VipFromEpisode = 0 }).IsValid.ShouldBeFalse();
+        // Dùng mặc định thì bỏ qua các ô nhập.
+        validator.Validate(new SetMovieAccessCommand { UseDefault = true, AdFromEpisode = 6, AdToEpisode = 4 }).IsValid.ShouldBeTrue();
+    }
+
+    [Test]
     public async Task Vip_SeesEveryEpisode_UntilSubscriptionExpires()
     {
         var (db, movie, _) = await SeedAsync();
@@ -163,10 +212,10 @@ public class AppViewerTests
         await Should.ThrowAsync<Ardalis.GuardClauses.NotFoundException>(() =>
             bookmark.Handle(new SetAppBookmarkCommand(hidden.Id, true), CancellationToken.None));
 
-        var saved = await new GetMyBookmarksQueryHandler(db, user).Handle(new GetMyBookmarksQuery(), CancellationToken.None);
+        var saved = await new GetMyBookmarksQueryHandler(db, user, Options).Handle(new GetMyBookmarksQuery(), CancellationToken.None);
         saved.Select(x => x.Id).ShouldBe([movie.Id]);
         saved[0].SaveCount.ShouldBe(1);
-        (await new GetMyBookmarksQueryHandler(db, User("viewer-2")).Handle(new GetMyBookmarksQuery(), CancellationToken.None))
+        (await new GetMyBookmarksQueryHandler(db, User("viewer-2"), Options).Handle(new GetMyBookmarksQuery(), CancellationToken.None))
             .ShouldBeEmpty();
 
         var progress = new SaveAppWatchProgressCommandHandler(db, user, TimeProvider.System);
@@ -179,7 +228,7 @@ public class AppViewerTests
             { MovieId = movie.Id, EpisodeNumber = 1, PositionSeconds = 5, DurationSeconds = 90, WatchedAt = now.AddHours(-2) },
             CancellationToken.None);
 
-        var history = await new GetMyHistoryQueryHandler(db, user).Handle(new GetMyHistoryQuery(), CancellationToken.None);
+        var history = await new GetMyHistoryQueryHandler(db, user, Options).Handle(new GetMyHistoryQuery(), CancellationToken.None);
         history.Count.ShouldBe(1);
         history[0].EpisodeNumber.ShouldBe(3);
         history[0].PositionSeconds.ShouldBe(40);

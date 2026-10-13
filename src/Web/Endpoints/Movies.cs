@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.Movies.Commands.DeleteMovie;
 using SurveillanceCameras.Application.Local.Movies.Commands.RetryMovieVideoStorage;
+using SurveillanceCameras.Application.Local.Movies.Commands.SetMovieAccess;
 using SurveillanceCameras.Application.Local.Movies.Commands.SetMovieEpisodeStream;
 using SurveillanceCameras.Application.Local.Movies.Commands.SetMoviePublished;
 using SurveillanceCameras.Application.Local.Movies.Commands.StoreMovieEpisodeVideo;
@@ -27,6 +28,7 @@ public class Movies : IEndpointGroup
         groupBuilder.MapDelete(DeleteMovie, "{id}");
         groupBuilder.MapPost(SetMoviesPublished, "published");
         groupBuilder.MapPut(SetMovieEpisodeStream, "{id}/episodes/{episodeId}/stream");
+        groupBuilder.MapPut(SetMovieAccess, "{id}/access");
         groupBuilder.MapPost(RetryMovieVideoStorage, "{id}/video-storage/retry");
         groupBuilder.MapPost(StoreMovieEpisodeVideo, "{id}/episodes/{episodeId}/video-storage/store");
     }
@@ -39,6 +41,23 @@ public class Movies : IEndpointGroup
     [EndpointDescription("Bật/tắt hiển thị phim trên app xem phim; không truyền ids thì áp dụng cho mọi phim. Trả về số phim đã đổi")]
     public static async Task<Ok<int>> SetMoviesPublished(ISender sender, SetMoviesPublishedRequest request)
         => TypedResults.Ok(await sender.Send(new SetMoviePublishedCommand(request.IsPublished, request.Ids)));
+
+    public sealed record SetMovieAccessRequest(bool UseDefault, int? AdFromEpisode, int? AdToEpisode, int? VipFromEpisode,
+        int? VipToEpisode);
+
+    [EndpointSummary("Set Movie access")]
+    [EndpointDescription("Đặt khoảng tập mở bằng quảng cáo và khoảng tập VIP của phim trên app; useDefault = true để dùng mặc định hệ thống")]
+    public static async Task<NoContent> SetMovieAccess(ISender sender, int id, SetMovieAccessRequest request)
+    {
+        await sender.Send(new SetMovieAccessCommand
+        {
+            MovieId = id, UseDefault = request.UseDefault,
+            AdFromEpisode = request.AdFromEpisode, AdToEpisode = request.AdToEpisode,
+            VipFromEpisode = request.VipFromEpisode, VipToEpisode = request.VipToEpisode
+        });
+
+        return TypedResults.NoContent();
+    }
 
     [EndpointSummary("Set Movie episode stream")]
     [EndpointDescription("Gán link file video tự lưu trữ (https, mp4/HLS) cho một tập; bỏ trống để gỡ")]

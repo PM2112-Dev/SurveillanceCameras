@@ -32,6 +32,18 @@ public class AppMovieDto
 
     /// <summary>Mã ngôn ngữ của phim (vd. <c>en</c>); <c>null</c> khi chưa xác định.</summary>
     public string? Language { get; init; }
+
+    /// <summary>Tập đầu của khoảng mở bằng quảng cáo đang áp dụng cho phim; <c>null</c> là không có tập quảng cáo.</summary>
+    public int? AdFromEpisode { get; init; }
+
+    /// <summary>Tập cuối của khoảng quảng cáo; <c>null</c> là tới hết phim.</summary>
+    public int? AdToEpisode { get; init; }
+
+    /// <summary>Tập đầu của khoảng chỉ dành cho VIP; <c>null</c> là không có tập VIP.</summary>
+    public int? VipFromEpisode { get; init; }
+
+    /// <summary>Tập cuối của khoảng VIP; <c>null</c> là tới hết phim.</summary>
+    public int? VipToEpisode { get; init; }
 }
 
 /// <summary>Ngôn ngữ đang có phim trên app.</summary>
@@ -92,13 +104,39 @@ public static class AppAccess
     public const string Ads = "ads";
     public const string Vip = "vip";
 
-    /// <summary>Quyền xem tập số <paramref name="number"/> với người xem có/không VIP và đã/chưa mở tập bằng quảng cáo.</summary>
-    public static string For(AppOptions options, int number, bool isVip, bool unlocked)
+}
+
+/// <summary>
+/// Các khoảng tập quảng cáo / VIP đang áp dụng cho một phim. Tập nằm trong cả hai khoảng thì là VIP; tập ngoài cả hai
+/// thì miễn phí. Đầu khoảng <c>null</c> là không có khoảng đó; cuối khoảng <c>null</c> là tới hết phim.
+/// </summary>
+public record AppAccessRule(int? AdFrom, int? AdTo, int? VipFrom, int? VipTo)
+{
+    /// <summary>Mặc định của hệ thống: N tập đầu miễn phí, M tập kế mở bằng quảng cáo, còn lại VIP.</summary>
+    public static AppAccessRule Default(AppOptions options)
     {
-        if (isVip || number <= options.FreeEpisodes) return Free;
-        if (number <= options.FreeEpisodes + options.AdEpisodes) return unlocked ? Free : Ads;
-        return Vip;
+        var free = Math.Max(options.FreeEpisodes, 0);
+        var ads = Math.Max(options.AdEpisodes, 0);
+        return new AppAccessRule(ads > 0 ? free + 1 : null, ads > 0 ? free + ads : null, free + ads + 1, null);
     }
+
+    /// <summary>Khoảng tập đang áp dụng cho <paramref name="movie"/>: cấu hình riêng của phim nếu có, không thì mặc định.</summary>
+    public static AppAccessRule Of(Work movie, AppOptions options)
+        => movie.HasCustomAccess
+            ? new AppAccessRule(movie.AdFromEpisode, movie.AdToEpisode, movie.VipFromEpisode, movie.VipToEpisode)
+            : Default(options);
+
+    /// <summary>Quyền xem tập số <paramref name="number"/> với người xem có/không VIP và đã/chưa mở tập bằng quảng cáo.</summary>
+    public string Access(int number, bool isVip, bool unlocked)
+    {
+        if (isVip) return AppAccess.Free;
+        if (Contains(VipFrom, VipTo, number)) return AppAccess.Vip;
+        if (Contains(AdFrom, AdTo, number)) return unlocked ? AppAccess.Free : AppAccess.Ads;
+        return AppAccess.Free;
+    }
+
+    private static bool Contains(int? from, int? to, int number)
+        => from is { } start && number >= start && (to is not { } end || number <= end);
 }
 
 public static class AppQueries
@@ -107,9 +145,18 @@ public static class AppQueries
     public static IQueryable<Work> PublishedMovies(this IApplicationDbContext context)
         => context.Works.Where(x => x.Type == WorkType.Movie && x.IsPublished);
 
-    public static IQueryable<AppMovieDto> ToAppMovies(this IQueryable<Work> works, IApplicationDbContext context)
-        => works.Select(x => new AppMovieDto
+    public static IQueryable<AppMovieDto> ToAppMovies(this IQueryable<Work> works, IApplicationDbContext context,
+        AppOptions options)
+    {
+        var fallback = AppAccessRule.Default(options);
+        int? adFrom = fallback.AdFrom, adTo = fallback.AdTo, vipFrom = fallback.VipFrom, vipTo = fallback.VipTo;
+
+        return works.Select(x => new AppMovieDto
         {
+            AdFromEpisode = x.HasCustomAccess ? x.AdFromEpisode : adFrom,
+            AdToEpisode = x.HasCustomAccess ? x.AdToEpisode : adTo,
+            VipFromEpisode = x.HasCustomAccess ? x.VipFromEpisode : vipFrom,
+            VipToEpisode = x.HasCustomAccess ? x.VipToEpisode : vipTo,
             Id = x.Id,
             Title = x.Title,
             Description = x.Description,
@@ -122,6 +169,7 @@ public static class AppQueries
             IsFull = x.IsFull,
             Language = x.Language != null ? x.Language.Code : null
         });
+    }
 
     /// <summary>Ngôn ngữ app dùng khi người xem chưa chọn, hoặc chọn ngôn ngữ chưa có phim nào.</summary>
     public const string DefaultLanguage = "en";

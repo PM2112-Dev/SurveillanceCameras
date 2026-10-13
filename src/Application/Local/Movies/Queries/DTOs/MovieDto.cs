@@ -32,6 +32,19 @@ public class MovieDto : BaseDto
     /// <summary>Đã đồng bộ đủ số tập TikTok báo.</summary>
     public bool IsFull { get; init; }
 
+    /// <summary>Phim có cấu hình quyền xem riêng; tắt thì app dùng mặc định của hệ thống.</summary>
+    public bool HasCustomAccess { get; init; }
+
+    /// <summary>Khoảng tập mở bằng quảng cáo (cấu hình riêng của phim); đầu khoảng trống là không có.</summary>
+    public int? AdFromEpisode { get; init; }
+
+    public int? AdToEpisode { get; init; }
+
+    /// <summary>Khoảng tập chỉ dành cho VIP (cấu hình riêng của phim); cuối khoảng trống là tới hết phim.</summary>
+    public int? VipFromEpisode { get; init; }
+
+    public int? VipToEpisode { get; init; }
+
     /// <summary>Đang hiện trên app xem phim.</summary>
     public bool IsPublished { get; init; }
 

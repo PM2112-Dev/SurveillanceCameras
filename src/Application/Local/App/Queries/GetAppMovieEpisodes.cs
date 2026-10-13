@@ -27,8 +27,10 @@ public class GetAppMovieEpisodesQueryHandler : IRequestHandler<GetAppMovieEpisod
 
     public async Task<List<AppEpisodeDto>> Handle(GetAppMovieEpisodesQuery request, CancellationToken cancellationToken)
     {
-        if (!await _context.PublishedMovies().AnyAsync(x => x.Id == request.MovieId, cancellationToken))
-            throw new NotFoundException(request.MovieId.ToString(), "Movie");
+        var movie = await _context.PublishedMovies().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == request.MovieId, cancellationToken);
+        if (movie is null) throw new NotFoundException(request.MovieId.ToString(), "Movie");
+        var rule = AppAccessRule.Of(movie, _options);
 
         var episodes = await _context.Episodes
             .AsNoTracking()
@@ -47,7 +49,7 @@ public class GetAppMovieEpisodesQueryHandler : IRequestHandler<GetAppMovieEpisod
                 .ToListAsync(cancellationToken)).ToHashSet();
 
         return episodes
-            .Select(x => x.ToAppEpisode(AppAccess.For(_options, x.EpisodeNumber, isVip, unlocked.Contains(x.Id))))
+            .Select(x => x.ToAppEpisode(rule.Access(x.EpisodeNumber, isVip, unlocked.Contains(x.Id))))
             .ToList();
     }
 }
