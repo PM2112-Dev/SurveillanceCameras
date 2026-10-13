@@ -1215,6 +1215,12 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<int>("AdCount")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("AdFromEpisode")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("AdToEpisode")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Author")
                         .HasColumnType("text");
 
@@ -1253,6 +1259,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.Property<string>("ExternalId")
                         .HasColumnType("text");
+
+                    b.Property<bool>("HasCustomAccess")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsComment")
                         .HasColumnType("boolean");
@@ -1306,6 +1315,12 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.Property<long?>("ViewCount")
                         .HasColumnType("bigint");
+
+                    b.Property<int?>("VipFromEpisode")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("VipToEpisode")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Models;
 
@@ -51,8 +52,13 @@ public class GetAppMoviesQueryValidator : AbstractValidator<GetAppMoviesQuery>
 public class GetAppMoviesQueryHandler : IRequestHandler<GetAppMoviesQuery, PaginatedList<AppMovieDto>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly AppOptions _options;
 
-    public GetAppMoviesQueryHandler(IApplicationDbContext context) => _context = context;
+    public GetAppMoviesQueryHandler(IApplicationDbContext context, IOptions<AppOptions> options)
+    {
+        _context = context;
+        _options = options.Value;
+    }
 
     public async Task<PaginatedList<AppMovieDto>> Handle(GetAppMoviesQuery request, CancellationToken cancellationToken)
     {
@@ -79,7 +85,7 @@ public class GetAppMoviesQueryHandler : IRequestHandler<GetAppMoviesQuery, Pagin
             _ => query.OrderByDescending(x => x.Created).ThenByDescending(x => x.Id)
         };
 
-        return await PaginatedList<AppMovieDto>.CreateAsync(query.ToAppMovies(_context), request.Page, request.PageSize,
+        return await PaginatedList<AppMovieDto>.CreateAsync(query.ToAppMovies(_context, _options), request.Page, request.PageSize,
             cancellationToken);
     }
 }
@@ -115,14 +121,19 @@ public record GetAppMovieByIdQuery(int Id) : IRequest<AppMovieDto>;
 public class GetAppMovieByIdQueryHandler : IRequestHandler<GetAppMovieByIdQuery, AppMovieDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly AppOptions _options;
 
-    public GetAppMovieByIdQueryHandler(IApplicationDbContext context) => _context = context;
+    public GetAppMovieByIdQueryHandler(IApplicationDbContext context, IOptions<AppOptions> options)
+    {
+        _context = context;
+        _options = options.Value;
+    }
 
     public async Task<AppMovieDto> Handle(GetAppMovieByIdQuery request, CancellationToken cancellationToken)
     {
         var movie = await _context.PublishedMovies()
             .Where(x => x.Id == request.Id)
-            .ToAppMovies(_context)
+            .ToAppMovies(_context, _options)
             .FirstOrDefaultAsync(cancellationToken);
 
         Guard.Against.NotFound(request.Id, movie);

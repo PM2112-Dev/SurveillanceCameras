@@ -31,6 +31,7 @@ public class UnlockAppEpisodeCommandHandler : IRequestHandler<UnlockAppEpisodeCo
         var userId = _user.RequireId();
         var episode = await _context.Episodes
             .AsNoTracking()
+            .Include(x => x.Work)
             .FirstOrDefaultAsync(x => x.Id == request.EpisodeId
                                       && _context.PublishedMovies().Any(w => w.Id == x.WorkId), cancellationToken);
         Guard.Against.NotFound(request.EpisodeId, episode);
@@ -39,7 +40,7 @@ public class UnlockAppEpisodeCommandHandler : IRequestHandler<UnlockAppEpisodeCo
         var unlocked = await _context.AppEpisodeUnlocks
             .AnyAsync(x => x.CreatedBy == userId && x.EpisodeId == episode.Id, cancellationToken);
 
-        var access = AppAccess.For(_options, episode.EpisodeNumber, isVip, unlocked);
+        var access = AppAccessRule.Of(episode.Work!, _options).Access(episode.EpisodeNumber, isVip, unlocked);
         if (access == AppAccess.Vip) throw new Common.Exceptions.ForbiddenAccessException();
 
         if (access == AppAccess.Ads)

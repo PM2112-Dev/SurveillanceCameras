@@ -8,6 +8,7 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { Pagination } from '../../components/common/Pagination';
 import { EmptyState, ErrorAlert, LoadingBlock } from '../../components/common/StateBlocks';
 import { useAsyncData } from '../../hooks/useAsyncData';
+import { MovieAccessForm, effectiveAccessRule, episodeAccess } from './MovieAccessForm';
 import { dateTimeFormat, formatDuration, numberFormat } from './movieFormat';
 import { formatBytes } from '../StorageAccounts/storageFormat';
 
@@ -25,6 +26,8 @@ export function MovieDetail() {
   const [storingId, setStoringId] = useState(null);
 
   const movie = useAsyncData(() => moviesClient.getMovieById(movieId), [movieId, version]);
+  // Mặc định hệ thống (số tập miễn phí / quảng cáo) — endpoint công khai của app.
+  const appConfig = useAsyncData(() => fetch('/api/app/config').then(response => (response.ok ? response.json() : null)), []);
   const episodes = useAsyncData(() => moviesClient.getMovieEpisodes(movieId, page, PAGE_SIZE), [movieId, page, version]);
   const info = movie.data;
 
@@ -94,6 +97,8 @@ export function MovieDetail() {
   };
 
   const items = episodes.data?.items ?? [];
+  const accessRule = effectiveAccessRule(info, appConfig.data);
+  const accessLabels = { free: 'Miễn phí', ads: 'Quảng cáo', vip: 'VIP' };
 
   return (
     <>
@@ -159,6 +164,15 @@ export function MovieDetail() {
         </section>
       )}
 
+      {info && (
+        <MovieAccessForm
+          key={`${info.id}:${info.hasCustomAccess}:${info.adFromEpisode}:${info.adToEpisode}:${info.vipFromEpisode}:${info.vipToEpisode}`}
+          movie={info}
+          config={appConfig.data}
+          onSaved={() => setVersion(v => v + 1)}
+        />
+      )}
+
       <h2>Danh sách tập</h2>
       {episodes.loading && !episodes.data ? (
         <LoadingBlock />
@@ -171,6 +185,7 @@ export function MovieDetail() {
               <tr>
                 <th>Tập</th>
                 <th>Ảnh</th>
+                <th>Quyền xem</th>
                 <th>Ngôn ngữ</th>
                 <th>Thời lượng</th>
                 <th>Video</th>
@@ -187,6 +202,7 @@ export function MovieDetail() {
                         onError={event => { event.currentTarget.style.visibility = 'hidden'; }} />
                     )}
                   </td>
+                  <td>{accessLabels[episodeAccess(accessRule, episode.episodeNumber)] ?? '—'}</td>
                   <td>{episode.languageCode || '—'}</td>
                   <td className="nowrap">{episode.durationSeconds ? formatDuration(episode.durationSeconds) : '—'}</td>
                   <td>

@@ -3812,6 +3812,59 @@ export class MoviesClient {
     }
 
     /**
+     * Set Movie access
+     * @return No Content
+     */
+    setMovieAccess(id: number, body: SetMovieAccessRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/Movies/{id}/access";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetMovieAccess(_response);
+        });
+    }
+
+    protected processSetMovieAccess(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * Retry Movie video storage
      * @return OK
      */
@@ -8210,6 +8263,10 @@ export class AppMovieDto implements IAppMovieDto {
     commentCount?: number;
     isFull?: boolean;
     language?: string | undefined;
+    adFromEpisode?: number | undefined;
+    adToEpisode?: number | undefined;
+    vipFromEpisode?: number | undefined;
+    vipToEpisode?: number | undefined;
 
     [key: string]: any;
 
@@ -8239,6 +8296,10 @@ export class AppMovieDto implements IAppMovieDto {
             this.commentCount = _data["commentCount"];
             this.isFull = _data["isFull"];
             this.language = _data["language"];
+            this.adFromEpisode = _data["adFromEpisode"];
+            this.adToEpisode = _data["adToEpisode"];
+            this.vipFromEpisode = _data["vipFromEpisode"];
+            this.vipToEpisode = _data["vipToEpisode"];
         }
     }
 
@@ -8266,6 +8327,10 @@ export class AppMovieDto implements IAppMovieDto {
         data["commentCount"] = this.commentCount;
         data["isFull"] = this.isFull;
         data["language"] = this.language;
+        data["adFromEpisode"] = this.adFromEpisode;
+        data["adToEpisode"] = this.adToEpisode;
+        data["vipFromEpisode"] = this.vipFromEpisode;
+        data["vipToEpisode"] = this.vipToEpisode;
         return data;
     }
 }
@@ -8282,6 +8347,10 @@ export interface IAppMovieDto {
     commentCount?: number;
     isFull?: boolean;
     language?: string | undefined;
+    adFromEpisode?: number | undefined;
+    adToEpisode?: number | undefined;
+    vipFromEpisode?: number | undefined;
+    vipToEpisode?: number | undefined;
 
     [key: string]: any;
 }
@@ -10902,6 +10971,11 @@ export class MovieDto implements IMovieDto {
     userProfileUniqueId?: string | undefined;
     viewCount?: number | undefined;
     isFull?: boolean;
+    hasCustomAccess?: boolean;
+    adFromEpisode?: number | undefined;
+    adToEpisode?: number | undefined;
+    vipFromEpisode?: number | undefined;
+    vipToEpisode?: number | undefined;
     isPublished?: boolean;
     episodeCount?: number;
     totalDurationSeconds?: number;
@@ -10940,6 +11014,11 @@ export class MovieDto implements IMovieDto {
             this.userProfileUniqueId = _data["userProfileUniqueId"];
             this.viewCount = _data["viewCount"];
             this.isFull = _data["isFull"];
+            this.hasCustomAccess = _data["hasCustomAccess"];
+            this.adFromEpisode = _data["adFromEpisode"];
+            this.adToEpisode = _data["adToEpisode"];
+            this.vipFromEpisode = _data["vipFromEpisode"];
+            this.vipToEpisode = _data["vipToEpisode"];
             this.isPublished = _data["isPublished"];
             this.episodeCount = _data["episodeCount"];
             this.totalDurationSeconds = _data["totalDurationSeconds"];
@@ -10976,6 +11055,11 @@ export class MovieDto implements IMovieDto {
         data["userProfileUniqueId"] = this.userProfileUniqueId;
         data["viewCount"] = this.viewCount;
         data["isFull"] = this.isFull;
+        data["hasCustomAccess"] = this.hasCustomAccess;
+        data["adFromEpisode"] = this.adFromEpisode;
+        data["adToEpisode"] = this.adToEpisode;
+        data["vipFromEpisode"] = this.vipFromEpisode;
+        data["vipToEpisode"] = this.vipToEpisode;
         data["isPublished"] = this.isPublished;
         data["episodeCount"] = this.episodeCount;
         data["totalDurationSeconds"] = this.totalDurationSeconds;
@@ -11001,6 +11085,11 @@ export interface IMovieDto {
     userProfileUniqueId?: string | undefined;
     viewCount?: number | undefined;
     isFull?: boolean;
+    hasCustomAccess?: boolean;
+    adFromEpisode?: number | undefined;
+    adToEpisode?: number | undefined;
+    vipFromEpisode?: number | undefined;
+    vipToEpisode?: number | undefined;
     isPublished?: boolean;
     episodeCount?: number;
     totalDurationSeconds?: number;
@@ -12838,6 +12927,70 @@ export interface ISetAppViewerVipRequest {
     email: string | undefined;
     plan: string | undefined;
     expiresAt: Date;
+
+    [key: string]: any;
+}
+
+export class SetMovieAccessRequest implements ISetMovieAccessRequest {
+    useDefault!: boolean;
+    adFromEpisode!: number | undefined;
+    adToEpisode!: number | undefined;
+    vipFromEpisode!: number | undefined;
+    vipToEpisode!: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISetMovieAccessRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.useDefault = _data["useDefault"];
+            this.adFromEpisode = _data["adFromEpisode"];
+            this.adToEpisode = _data["adToEpisode"];
+            this.vipFromEpisode = _data["vipFromEpisode"];
+            this.vipToEpisode = _data["vipToEpisode"];
+        }
+    }
+
+    static fromJS(data: any): SetMovieAccessRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetMovieAccessRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["useDefault"] = this.useDefault;
+        data["adFromEpisode"] = this.adFromEpisode;
+        data["adToEpisode"] = this.adToEpisode;
+        data["vipFromEpisode"] = this.vipFromEpisode;
+        data["vipToEpisode"] = this.vipToEpisode;
+        return data;
+    }
+}
+
+export interface ISetMovieAccessRequest {
+    useDefault: boolean;
+    adFromEpisode: number | undefined;
+    adToEpisode: number | undefined;
+    vipFromEpisode: number | undefined;
+    vipToEpisode: number | undefined;
 
     [key: string]: any;
 }

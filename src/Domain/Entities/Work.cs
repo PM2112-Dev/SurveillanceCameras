@@ -64,6 +64,25 @@ public class Work : BaseAuditableEntity
 
     public int Paid { get; set; }
 
+    // ── Quyền xem trên app (phim) ─────────────────────────────────────────────
+    /// <summary>
+    /// Phim có cấu hình quyền xem riêng (các khoảng tập bên dưới). Tắt thì dùng mặc định của hệ thống (mục <c>App</c>
+    /// trong cấu hình: N tập đầu miễn phí, M tập kế mở bằng quảng cáo, còn lại VIP).
+    /// </summary>
+    public bool HasCustomAccess { get; set; }
+
+    /// <summary>Tập đầu của khoảng mở bằng quảng cáo; <c>null</c> là phim không có tập quảng cáo.</summary>
+    public int? AdFromEpisode { get; set; }
+
+    /// <summary>Tập cuối của khoảng quảng cáo; <c>null</c> là tới hết phim.</summary>
+    public int? AdToEpisode { get; set; }
+
+    /// <summary>Tập đầu của khoảng chỉ dành cho VIP; <c>null</c> là phim không có tập VIP.</summary>
+    public int? VipFromEpisode { get; set; }
+
+    /// <summary>Tập cuối của khoảng VIP; <c>null</c> là tới hết phim.</summary>
+    public int? VipToEpisode { get; set; }
+
     public StorySource? StorySource { get; set; }
 
     public UserProfile? UserProfile { get; set; }
