@@ -62,15 +62,21 @@ public sealed class AccountSessionManagerRepository : IAccountSessionManagerRepo
             var profileDir = Path.GetFullPath(Path.Combine(_options.ProfileDirectory, accountId.ToString()));
             Directory.CreateDirectory(profileDir);
 
+            // Giảm dấu hiệu "trình duyệt bị điều khiển tự động" để trang đỡ bắt xác minh.
+            List<string> args = ["--disable-blink-features=AutomationControlled"];
+            if (_options.RemoteDebuggingPortBase > 0)
+            {
+                args.Add($"--remote-debugging-port={_options.RemoteDebuggingPortBase + accountId}");
+            }
+
             var context = await _playwright.Chromium.LaunchPersistentContextAsync(profileDir,
                 new BrowserTypeLaunchPersistentContextOptions
                 {
                     Headless = _options.Headless,
                     Channel = string.IsNullOrWhiteSpace(_options.Channel) ? null : _options.Channel,
                     ViewportSize = _options.Headless ? null : ViewportSize.NoViewport,
-                    // Giảm dấu hiệu "trình duyệt bị điều khiển tự động" để trang đỡ bắt xác minh.
                     IgnoreDefaultArgs = ["--enable-automation"],
-                    Args = ["--disable-blink-features=AutomationControlled"],
+                    Args = args,
                 });
 
             var session = new Session(accountId, context, target, CookieDomainOf(target.LoginUrl));
