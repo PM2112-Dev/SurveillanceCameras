@@ -1,0 +1,31 @@
+# Tự build và deploy lên IIS của máy server mỗi khi main có commit mới.
+# Chạy trên self-hosted runner cài ngay trên máy server; service của runner phải chạy bằng tài khoản có quyền
+# Administrator (vd. NT AUTHORITY\SYSTEM) vì deploy\iis\Deploy-IIS.ps1 cấu hình IIS và ghi vào C:\inetpub.
+name: Deploy IIS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Không chạy hai lần deploy cùng lúc; commit mới hơn chờ lần đang chạy xong.
+concurrency:
+  group: deploy-iis
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 30
+    defaults:
+      run:
+        # Dùng cmd: tài khoản service mặc định không được chạy file .ps1 (ExecutionPolicy Restricted).
+        shell: cmd
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish
+        run: dotnet publish src\Web\Web.csproj -c Release -o "%RUNNER_TEMP%\publish" --nologo
+
+      - name: Deploy
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File deploy\iis\Deploy-IIS.ps1 -PublishDir "%RUNNER_TEMP%\publish"

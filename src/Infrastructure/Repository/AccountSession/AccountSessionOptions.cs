@@ -17,6 +17,13 @@ public class AccountSessionOptions
     /// <summary>"chrome" dùng Google Chrome đã cài trên máy; để trống để dùng Chromium của Playwright.</summary>
     public string? Channel { get; set; } = "chrome";
 
+    /// <summary>
+    /// Khi app chạy dạng dịch vụ (IIS) cửa sổ Chrome nằm ở session ẩn, không ai thấy. Đặt &gt; 0 để Chrome của
+    /// account N mở cổng debug <c>RemoteDebuggingPortBase + N</c> (chỉ nghe trên localhost) — đăng nhập bằng cách
+    /// mở <c>chrome://inspect</c> trên chính máy đó. 0 = tắt.
+    /// </summary>
+    public int RemoteDebuggingPortBase { get; set; }
+
     /// <summary>Chu kỳ đọc lại cookie jar dù không có request nào (bắt cookie do JS đặt).</summary>
     public int PollIntervalSeconds { get; set; } = 30;
 
