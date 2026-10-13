@@ -215,7 +215,7 @@ public class EpisodeVideoStorer
         if (candidates.Count == 0)
         {
             throw new VideoStorageException(
-                $"Không tài khoản lưu trữ nào còn đủ {size / 1024d / 1024d:0.#} MB trống. Thêm tài khoản mới hoặc nâng hạn mức rồi bấm thử lại.");
+                $"Không tài khoản lưu trữ nào còn đủ {size / (double)StorageAccount.BytesPerMb:0.#} MB trống. Thêm tài khoản mới hoặc nâng hạn mức rồi bấm thử lại.");
         }
 
         // Tên file có phần ngẫu nhiên: bucket công khai nên không để đoán được link các tập bị khoá.

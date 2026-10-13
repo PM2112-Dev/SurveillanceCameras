@@ -87,7 +87,10 @@ export function StorageAccountForm() {
         Hạn mức (GB) <span className="required">*</span>
         <input type="number" required min="0.01" step="0.01" value={form.quotaGb}
           onChange={event => update({ quotaGb: event.target.value })} />
-        <small>Đầy tới mức này thì hệ thống chuyển sang tài khoản kế tiếp. Mức miễn phí của R2 là 10 GB.</small>
+        <small>
+          Đầy tới mức này thì hệ thống chuyển sang tài khoản kế tiếp. Mức miễn phí của R2 là 10 GB, tính như Cloudflare
+          (1 GB = 1 tỷ byte).
+        </small>
       </label>
 
       <label>

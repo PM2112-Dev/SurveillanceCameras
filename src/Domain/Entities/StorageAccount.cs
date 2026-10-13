@@ -6,8 +6,16 @@ namespace SurveillanceCameras.Domain.Entities;
 /// </summary>
 public class StorageAccount : BaseAuditableEntity
 {
+    /// <summary>
+    /// Số byte của 1 GB theo cách Cloudflare tính dung lượng R2 (hệ thập phân: 1 GB = 1 tỷ byte, không phải 1024³).
+    /// Mọi quy đổi hạn mức/dung lượng phải dùng hằng số này, nếu không "9,5 GB" nhập vào sẽ thành 10,2 GB trên Cloudflare.
+    /// </summary>
+    public const long BytesPerGb = 1_000_000_000;
+
+    public const long BytesPerMb = 1_000_000;
+
     /// <summary>10 GB: mức miễn phí của Cloudflare R2.</summary>
-    public const long DefaultQuotaBytes = 10L * 1024 * 1024 * 1024;
+    public const long DefaultQuotaBytes = 10 * BytesPerGb;
 
     /// <summary>Account ID của Cloudflare (dựng ra endpoint S3 <c>https://{id}.r2.cloudflarestorage.com</c>).</summary>
     public string? CloudflareAccountId { get; set; }

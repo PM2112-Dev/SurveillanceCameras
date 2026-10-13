@@ -8,6 +8,8 @@ public record VideoStorageTarget(string CloudflareAccountId, string AccessKeyId,
 
 public record VideoStorageUsage(long Bytes, int Objects);
 
+public record VideoStorageObject(string Key, long Size);
+
 /// <summary>Kho lưu file video (Cloudflare R2, giao thức S3).</summary>
 /// <remarks>Mọi lỗi kết nối/quyền truy cập ném <see cref="Common.Exceptions.VideoStorageException"/>.</remarks>
 public interface IVideoStorageRepository
@@ -17,6 +19,9 @@ public interface IVideoStorageRepository
 
     /// <summary>Xoá file; file không còn thì coi như đã xoá.</summary>
     Task DeleteAsync(VideoStorageTarget target, string key, CancellationToken cancellationToken = default);
+
+    /// <summary>Mọi file đang có trong bucket kèm kích thước (duyệt toàn bộ bucket).</summary>
+    Task<List<VideoStorageObject>> ListAsync(VideoStorageTarget target, CancellationToken cancellationToken = default);
 
     /// <summary>Tổng dung lượng và số file đang có trong bucket (duyệt toàn bộ bucket).</summary>
     Task<VideoStorageUsage> GetUsageAsync(VideoStorageTarget target, CancellationToken cancellationToken = default);
