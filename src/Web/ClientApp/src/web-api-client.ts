@@ -8320,6 +8320,7 @@ export class AppMovieDto implements IAppMovieDto {
     commentCount?: number;
     isFull?: boolean;
     language?: string | undefined;
+    isVip?: boolean;
     adFromEpisode?: number | undefined;
     adToEpisode?: number | undefined;
     vipFromEpisode?: number | undefined;
@@ -8353,6 +8354,7 @@ export class AppMovieDto implements IAppMovieDto {
             this.commentCount = _data["commentCount"];
             this.isFull = _data["isFull"];
             this.language = _data["language"];
+            this.isVip = _data["isVip"];
             this.adFromEpisode = _data["adFromEpisode"];
             this.adToEpisode = _data["adToEpisode"];
             this.vipFromEpisode = _data["vipFromEpisode"];
@@ -8384,6 +8386,7 @@ export class AppMovieDto implements IAppMovieDto {
         data["commentCount"] = this.commentCount;
         data["isFull"] = this.isFull;
         data["language"] = this.language;
+        data["isVip"] = this.isVip;
         data["adFromEpisode"] = this.adFromEpisode;
         data["adToEpisode"] = this.adToEpisode;
         data["vipFromEpisode"] = this.vipFromEpisode;
@@ -8404,6 +8407,7 @@ export interface IAppMovieDto {
     commentCount?: number;
     isFull?: boolean;
     language?: string | undefined;
+    isVip?: boolean;
     adFromEpisode?: number | undefined;
     adToEpisode?: number | undefined;
     vipFromEpisode?: number | undefined;
@@ -11029,6 +11033,7 @@ export class MovieDto implements IMovieDto {
     viewCount?: number | undefined;
     isFull?: boolean;
     hasCustomAccess?: boolean;
+    isVipOnly?: boolean;
     adFromEpisode?: number | undefined;
     adToEpisode?: number | undefined;
     vipFromEpisode?: number | undefined;
@@ -11072,6 +11077,7 @@ export class MovieDto implements IMovieDto {
             this.viewCount = _data["viewCount"];
             this.isFull = _data["isFull"];
             this.hasCustomAccess = _data["hasCustomAccess"];
+            this.isVipOnly = _data["isVipOnly"];
             this.adFromEpisode = _data["adFromEpisode"];
             this.adToEpisode = _data["adToEpisode"];
             this.vipFromEpisode = _data["vipFromEpisode"];
@@ -11113,6 +11119,7 @@ export class MovieDto implements IMovieDto {
         data["viewCount"] = this.viewCount;
         data["isFull"] = this.isFull;
         data["hasCustomAccess"] = this.hasCustomAccess;
+        data["isVipOnly"] = this.isVipOnly;
         data["adFromEpisode"] = this.adFromEpisode;
         data["adToEpisode"] = this.adToEpisode;
         data["vipFromEpisode"] = this.vipFromEpisode;
@@ -11143,6 +11150,7 @@ export interface IMovieDto {
     viewCount?: number | undefined;
     isFull?: boolean;
     hasCustomAccess?: boolean;
+    isVipOnly?: boolean;
     adFromEpisode?: number | undefined;
     adToEpisode?: number | undefined;
     vipFromEpisode?: number | undefined;
@@ -12994,6 +13002,7 @@ export class SetMovieAccessRequest implements ISetMovieAccessRequest {
     adToEpisode!: number | undefined;
     vipFromEpisode!: number | undefined;
     vipToEpisode!: number | undefined;
+    isVipOnly?: boolean;
 
     [key: string]: any;
 
@@ -13003,6 +13012,9 @@ export class SetMovieAccessRequest implements ISetMovieAccessRequest {
                 if (data.hasOwnProperty(property))
                     (this as any)[property] = (data as any)[property];
             }
+        }
+        if (!data) {
+            this.isVipOnly = false;
         }
     }
 
@@ -13017,6 +13029,7 @@ export class SetMovieAccessRequest implements ISetMovieAccessRequest {
             this.adToEpisode = _data["adToEpisode"];
             this.vipFromEpisode = _data["vipFromEpisode"];
             this.vipToEpisode = _data["vipToEpisode"];
+            this.isVipOnly = _data["isVipOnly"] !== undefined ? _data["isVipOnly"] : false;
         }
     }
 
@@ -13038,6 +13051,7 @@ export class SetMovieAccessRequest implements ISetMovieAccessRequest {
         data["adToEpisode"] = this.adToEpisode;
         data["vipFromEpisode"] = this.vipFromEpisode;
         data["vipToEpisode"] = this.vipToEpisode;
+        data["isVipOnly"] = this.isVipOnly;
         return data;
     }
 }
@@ -13048,6 +13062,7 @@ export interface ISetMovieAccessRequest {
     adToEpisode: number | undefined;
     vipFromEpisode: number | undefined;
     vipToEpisode: number | undefined;
+    isVipOnly?: boolean;
 
     [key: string]: any;
 }

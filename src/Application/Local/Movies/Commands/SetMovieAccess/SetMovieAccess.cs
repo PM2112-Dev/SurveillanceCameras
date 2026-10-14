@@ -6,13 +6,17 @@ namespace SurveillanceCameras.Application.Local.Movies.Commands.SetMovieAccess;
 /// <summary>
 /// Đặt quyền xem trên app cho các tập của một phim: khoảng tập mở bằng quảng cáo và khoảng tập chỉ dành cho VIP. Tập ngoài
 /// hai khoảng thì miễn phí; tập nằm trong cả hai thì là VIP. <see cref="UseDefault"/> bật thì bỏ cấu hình riêng, phim
-/// quay về mặc định của hệ thống.
+/// quay về mặc định của hệ thống. Cấu hình riêng mà không bật khoảng nào nghĩa là mọi tập đều miễn phí.
+/// <see cref="IsVipOnly"/> đặt cả phim chỉ dành cho VIP, độc lập với các khoảng tập.
 /// </summary>
 public record SetMovieAccessCommand : IRequest
 {
     public int MovieId { get; init; }
 
     public bool UseDefault { get; init; }
+
+    /// <summary>Cả phim chỉ dành cho VIP (app gắn nhãn VIP lên phim).</summary>
+    public bool IsVipOnly { get; init; }
 
     /// <summary>Tập đầu của khoảng quảng cáo; trống là phim không có tập quảng cáo.</summary>
     public int? AdFromEpisode { get; init; }
@@ -67,6 +71,7 @@ public class SetMovieAccessCommandHandler : IRequestHandler<SetMovieAccessComman
         Guard.Against.NotFound(request.MovieId, movie);
 
         movie.HasCustomAccess = !request.UseDefault;
+        movie.IsVipOnly = request.IsVipOnly;
         movie.AdFromEpisode = request.UseDefault ? null : request.AdFromEpisode;
         movie.AdToEpisode = request.UseDefault ? null : request.AdToEpisode;
         movie.VipFromEpisode = request.UseDefault ? null : request.VipFromEpisode;

@@ -1275,6 +1275,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsVipOnly")
+                        .HasColumnType("boolean");
+
                     b.Property<int?>("LanguageId")
                         .HasColumnType("integer");
 

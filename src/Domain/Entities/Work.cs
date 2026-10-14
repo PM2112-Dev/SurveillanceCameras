@@ -71,6 +71,12 @@ public class Work : BaseAuditableEntity
     /// </summary>
     public bool HasCustomAccess { get; set; }
 
+    /// <summary>
+    /// Phim chỉ dành cho VIP: người chưa có VIP không xem được tập nào (bỏ qua các khoảng tập bên dưới), và app gắn nhãn
+    /// VIP lên phim. Độc lập với <see cref="HasCustomAccess"/>.
+    /// </summary>
+    public bool IsVipOnly { get; set; }
+
     /// <summary>Tập đầu của khoảng mở bằng quảng cáo; <c>null</c> là phim không có tập quảng cáo.</summary>
     public int? AdFromEpisode { get; set; }
 

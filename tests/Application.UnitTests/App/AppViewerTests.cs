@@ -137,6 +137,37 @@ public class AppViewerTests
     }
 
     [Test]
+    public async Task VipOnlyMovie_LocksEveryEpisodeForNonVip_AndIsTheOnlyThingThatFlagsTheMovieAsVip()
+    {
+        var (db, movie, _) = await SeedAsync();
+        using var __ = db;
+        var set = new SetMovieAccessCommandHandler(db, User(Admin));
+        async Task<AppMovieDto> Dto() => await new GetAppMovieByIdQueryHandler(db, Options).Handle(new GetAppMovieByIdQuery(movie.Id), CancellationToken.None);
+
+        // Phim có tập VIP (theo mặc định hệ thống) nhưng không phải phim VIP: app không gắn nhãn VIP.
+        (await Dto()).IsVip.ShouldBeFalse();
+
+        // Miễn phí mọi tập + cả phim chỉ dành cho VIP: cờ phim thắng các khoảng tập.
+        await set.Handle(new SetMovieAccessCommand { MovieId = movie.Id, IsVipOnly = true }, CancellationToken.None);
+        (await Dto()).IsVip.ShouldBeTrue();
+        (await EpisodesAsync(db, movie.Id, null)).ShouldAllBe(x => x.Access == AppAccess.Vip && x.Playback == null);
+        (await EpisodesAsync(db, movie.Id, Viewer)).ShouldAllBe(x => x.Access == AppAccess.Vip);
+        // Tập đầu vốn miễn phí cũng không mở được bằng quảng cáo.
+        var first = movie.Episodes!.OrderBy(x => x.EpisodeNumber).First().Id;
+        await Should.ThrowAsync<ForbiddenAccessException>(() =>
+            new UnlockAppEpisodeCommandHandler(db, User(Viewer), TimeProvider.System, Options).Handle(new UnlockAppEpisodeCommand(first), CancellationToken.None));
+
+        // Người có VIP xem được hết.
+        await new SetAppViewerVipCommandHandler(db).Handle(new SetAppViewerVipCommand(Viewer, "year", DateTimeOffset.UtcNow.AddDays(30)), CancellationToken.None);
+        (await EpisodesAsync(db, movie.Id, Viewer)).ShouldAllBe(x => x.Access == AppAccess.Free);
+
+        // Bỏ cờ, giữ mặc định hệ thống: quay về như cũ.
+        await set.Handle(new SetMovieAccessCommand { MovieId = movie.Id, UseDefault = true }, CancellationToken.None);
+        (await Dto()).IsVip.ShouldBeFalse();
+        (await EpisodesAsync(db, movie.Id, null)).Select(x => x.Access).ShouldBe([AppAccess.Free, AppAccess.Free, AppAccess.Ads, AppAccess.Vip]);
+    }
+
+    [Test]
     public async Task CustomAccess_SetsAdAndVipRangesPerMovie_AndDefaultRestoresSystemRule()
     {
         var (db, movie, _) = await SeedAsync();

@@ -166,7 +166,7 @@ export function MovieDetail() {
 
       {info && (
         <MovieAccessForm
-          key={`${info.id}:${info.hasCustomAccess}:${info.adFromEpisode}:${info.adToEpisode}:${info.vipFromEpisode}:${info.vipToEpisode}`}
+          key={`${info.id}:${info.hasCustomAccess}:${info.isVipOnly}:${info.adFromEpisode}:${info.adToEpisode}:${info.vipFromEpisode}:${info.vipToEpisode}`}
           movie={info}
           config={appConfig.data}
           onSaved={() => setVersion(v => v + 1)}

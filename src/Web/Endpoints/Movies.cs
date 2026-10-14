@@ -43,15 +43,15 @@ public class Movies : IEndpointGroup
         => TypedResults.Ok(await sender.Send(new SetMoviePublishedCommand(request.IsPublished, request.Ids)));
 
     public sealed record SetMovieAccessRequest(bool UseDefault, int? AdFromEpisode, int? AdToEpisode, int? VipFromEpisode,
-        int? VipToEpisode);
+        int? VipToEpisode, bool IsVipOnly = false);
 
     [EndpointSummary("Set Movie access")]
-    [EndpointDescription("Đặt khoảng tập mở bằng quảng cáo và khoảng tập VIP của phim trên app; useDefault = true để dùng mặc định hệ thống")]
+    [EndpointDescription("Đặt quyền xem của phim trên app: khoảng tập quảng cáo/VIP (useDefault = true để dùng mặc định hệ thống; cấu hình riêng không có khoảng nào là miễn phí mọi tập) và isVipOnly để cả phim chỉ dành cho VIP")]
     public static async Task<NoContent> SetMovieAccess(ISender sender, int id, SetMovieAccessRequest request)
     {
         await sender.Send(new SetMovieAccessCommand
         {
-            MovieId = id, UseDefault = request.UseDefault,
+            MovieId = id, UseDefault = request.UseDefault, IsVipOnly = request.IsVipOnly,
             AdFromEpisode = request.AdFromEpisode, AdToEpisode = request.AdToEpisode,
             VipFromEpisode = request.VipFromEpisode, VipToEpisode = request.VipToEpisode
         });
