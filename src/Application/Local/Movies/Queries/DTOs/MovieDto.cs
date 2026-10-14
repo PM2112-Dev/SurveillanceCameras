@@ -35,6 +35,9 @@ public class MovieDto : BaseDto
     /// <summary>Phim có cấu hình quyền xem riêng; tắt thì app dùng mặc định của hệ thống.</summary>
     public bool HasCustomAccess { get; init; }
 
+    /// <summary>Cả phim chỉ dành cho VIP.</summary>
+    public bool IsVipOnly { get; init; }
+
     /// <summary>Khoảng tập mở bằng quảng cáo (cấu hình riêng của phim); đầu khoảng trống là không có.</summary>
     public int? AdFromEpisode { get; init; }
 

@@ -33,6 +33,12 @@ public class AppMovieDto
     /// <summary>Mã ngôn ngữ của phim (vd. <c>en</c>); <c>null</c> khi chưa xác định.</summary>
     public string? Language { get; init; }
 
+    /// <summary>
+    /// Phim chỉ dành cho VIP (người chưa có VIP không xem được tập nào) — app chỉ gắn nhãn VIP lên phim khi cờ này bật,
+    /// không gắn khi phim chỉ có vài tập VIP.
+    /// </summary>
+    public bool IsVip { get; init; }
+
     /// <summary>Tập đầu của khoảng mở bằng quảng cáo đang áp dụng cho phim; <c>null</c> là không có tập quảng cáo.</summary>
     public int? AdFromEpisode { get; init; }
 
@@ -109,8 +115,9 @@ public static class AppAccess
 /// <summary>
 /// Các khoảng tập quảng cáo / VIP đang áp dụng cho một phim. Tập nằm trong cả hai khoảng thì là VIP; tập ngoài cả hai
 /// thì miễn phí. Đầu khoảng <c>null</c> là không có khoảng đó; cuối khoảng <c>null</c> là tới hết phim.
+/// <paramref name="VipOnly"/> bật thì cả phim chỉ dành cho VIP, bất kể các khoảng.
 /// </summary>
-public record AppAccessRule(int? AdFrom, int? AdTo, int? VipFrom, int? VipTo)
+public record AppAccessRule(int? AdFrom, int? AdTo, int? VipFrom, int? VipTo, bool VipOnly = false)
 {
     /// <summary>Mặc định của hệ thống: N tập đầu miễn phí, M tập kế mở bằng quảng cáo, còn lại VIP.</summary>
     public static AppAccessRule Default(AppOptions options)
@@ -122,15 +129,15 @@ public record AppAccessRule(int? AdFrom, int? AdTo, int? VipFrom, int? VipTo)
 
     /// <summary>Khoảng tập đang áp dụng cho <paramref name="movie"/>: cấu hình riêng của phim nếu có, không thì mặc định.</summary>
     public static AppAccessRule Of(Work movie, AppOptions options)
-        => movie.HasCustomAccess
+        => (movie.HasCustomAccess
             ? new AppAccessRule(movie.AdFromEpisode, movie.AdToEpisode, movie.VipFromEpisode, movie.VipToEpisode)
-            : Default(options);
+            : Default(options)) with { VipOnly = movie.IsVipOnly };
 
     /// <summary>Quyền xem tập số <paramref name="number"/> với người xem có/không VIP và đã/chưa mở tập bằng quảng cáo.</summary>
     public string Access(int number, bool isVip, bool unlocked)
     {
         if (isVip) return AppAccess.Free;
-        if (Contains(VipFrom, VipTo, number)) return AppAccess.Vip;
+        if (VipOnly || Contains(VipFrom, VipTo, number)) return AppAccess.Vip;
         if (Contains(AdFrom, AdTo, number)) return unlocked ? AppAccess.Free : AppAccess.Ads;
         return AppAccess.Free;
     }
@@ -157,6 +164,7 @@ public static class AppQueries
             AdToEpisode = x.HasCustomAccess ? x.AdToEpisode : adTo,
             VipFromEpisode = x.HasCustomAccess ? x.VipFromEpisode : vipFrom,
             VipToEpisode = x.HasCustomAccess ? x.VipToEpisode : vipTo,
+            IsVip = x.IsVipOnly,
             Id = x.Id,
             Title = x.Title,
             Description = x.Description,

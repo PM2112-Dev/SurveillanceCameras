@@ -32,6 +32,7 @@ export function MovieList() {
                 <Link to={`/movies/${item.id}`}>{item.title || <em>(không tên)</em>}</Link>
                 {item.isFull && <small className="status-badge ok">Đủ tập</small>}
                 {item.isPublished && <small className="status-badge ok">Trên app</small>}
+                {item.isVipOnly && <small className="status-badge warn">Phim VIP</small>}
               </span>
             </span>
           )
