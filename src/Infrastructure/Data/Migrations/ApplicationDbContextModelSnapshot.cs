@@ -1227,6 +1227,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<int>("BaseStatus")
                         .HasColumnType("integer");
 
+                    b.Property<int>("BookmarkCount")
+                        .HasColumnType("integer");
+
                     b.Property<int>("ChapterUploaded")
                         .HasColumnType("integer");
 

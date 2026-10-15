@@ -36,7 +36,18 @@ public class SetAppBookmarkCommandHandler : IRequestHandler<SetAppBookmarkComman
             _context.AppBookmarks.Add(new AppBookmark { WorkId = request.MovieId, CreatedBy = userId });
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // Cùng lúc có request khác của người này đã lưu/bỏ lưu phim (chỉ mục duy nhất, hoặc dòng đã bị xoá):
+            // request đó đã tính lượt rồi.
+            return;
+        }
+
+        await _context.AdjustBookmarkCountAsync(request.MovieId, request.Saved ? 1 : -1, cancellationToken);
     }
 }
 

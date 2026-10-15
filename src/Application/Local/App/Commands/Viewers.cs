@@ -15,13 +15,17 @@ public class DeleteAppViewerDataCommandHandler : IRequestHandler<DeleteAppViewer
     public async Task Handle(DeleteAppViewerDataCommand request, CancellationToken cancellationToken)
     {
         var userId = request.UserId;
-        _context.AppBookmarks.RemoveRange(await _context.AppBookmarks.Where(x => x.CreatedBy == userId).ToListAsync(cancellationToken));
+        var bookmarks = await _context.AppBookmarks.Where(x => x.CreatedBy == userId).ToListAsync(cancellationToken);
+        _context.AppBookmarks.RemoveRange(bookmarks);
         _context.AppWatchHistories.RemoveRange(await _context.AppWatchHistories.Where(x => x.CreatedBy == userId).ToListAsync(cancellationToken));
         _context.AppComments.RemoveRange(await _context.AppComments.Where(x => x.CreatedBy == userId).ToListAsync(cancellationToken));
         _context.AppEpisodeUnlocks.RemoveRange(await _context.AppEpisodeUnlocks.Where(x => x.CreatedBy == userId).ToListAsync(cancellationToken));
         _context.AppSubscriptions.RemoveRange(await _context.AppSubscriptions.Where(x => x.UserId == userId).ToListAsync(cancellationToken));
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        foreach (var bookmark in bookmarks)
+            await _context.AdjustBookmarkCountAsync(bookmark.WorkId, -1, cancellationToken);
     }
 }
 

@@ -79,7 +79,7 @@ public class GetAppMoviesQueryHandler : IRequestHandler<GetAppMoviesQuery, Pagin
         {
             AppMovieSort.MostViewed => query.OrderByDescending(x => x.ViewCount ?? 0).ThenByDescending(x => x.Id),
             AppMovieSort.Top => query
-                .OrderByDescending(x => _context.AppBookmarks.Count(b => b.WorkId == x.Id))
+                .OrderByDescending(x => x.BookmarkCount)
                 .ThenByDescending(x => x.ViewCount ?? 0)
                 .ThenByDescending(x => x.Id),
             _ => query.OrderByDescending(x => x.Created).ThenByDescending(x => x.Id)

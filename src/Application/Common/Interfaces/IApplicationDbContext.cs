@@ -49,6 +49,9 @@ public interface IApplicationDbContext
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 
+    /// <summary>Cộng <paramref name="delta"/> vào số lượt lưu của một phim ngay trong DB (không âm), an toàn khi nhiều người cùng lưu.</summary>
+    Task AdjustBookmarkCountAsync(int workId, int delta, CancellationToken cancellationToken);
+
     /// <summary>Dùng cho tác vụ nền xử lý nhiều bản ghi: xoá bớt entity đang theo dõi giữa các lô.</summary>
     Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker ChangeTracker { get; }
 
