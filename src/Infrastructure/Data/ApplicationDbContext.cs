@@ -61,6 +61,25 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     }
 
+    public async Task AdjustBookmarkCountAsync(int workId, int delta, CancellationToken cancellationToken)
+    {
+        if (delta == 0) return;
+
+        if (Database.IsRelational())
+        {
+            // Một câu UPDATE: hai người lưu cùng lúc không đè mất lượt của nhau.
+            await Works.Where(x => x.Id == workId).ExecuteUpdateAsync(s => s.SetProperty(
+                x => x.BookmarkCount, x => x.BookmarkCount + delta < 0 ? 0 : x.BookmarkCount + delta), cancellationToken);
+            return;
+        }
+
+        // Provider in-memory (unit test) không hỗ trợ ExecuteUpdate.
+        var work = await Works.FindAsync([workId], cancellationToken);
+        if (work is null) return;
+        work.BookmarkCount = Math.Max(0, work.BookmarkCount + delta);
+        await SaveChangesAsync(cancellationToken);
+    }
+
     public async Task ExecuteInTransactionAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default)
     {
         var strategy = Database.CreateExecutionStrategy();

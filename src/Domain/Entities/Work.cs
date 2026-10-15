@@ -27,6 +27,9 @@ public class Work : BaseAuditableEntity
     /// <summary>Lượt xem trên nền tảng nguồn (vd. numWatched của drama TikTok), cập nhật mỗi lần đồng bộ.</summary>
     public long? ViewCount { get; set; }
 
+    /// <summary>Số người xem trên app đang lưu phim này (chỉ tính theo phim, không theo tập).</summary>
+    public int BookmarkCount { get; set; }
+
     /// <summary>Tài khoản đăng truyện (TYT). Truyện do AI tạo từ nguồn truyện chưa có, gắn sau khi sửa truyện.</summary>
     public int? AccountId { get; set; }
 

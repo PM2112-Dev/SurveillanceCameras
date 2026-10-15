@@ -278,6 +278,31 @@ public class AppViewerTests
     }
 
     [Test]
+    public async Task BookmarkCount_RisesWhenAViewerSavesTheMovie_FallsWhenTheyUnsaveOrDeleteTheirAccount()
+    {
+        var (db, movie, _) = await SeedAsync();
+        using var __ = db;
+        Task Save(string viewer, bool saved) =>
+            new SetAppBookmarkCommandHandler(db, User(viewer)).Handle(new SetAppBookmarkCommand(movie.Id, saved), CancellationToken.None);
+        async Task<int> CountAsync() =>
+            (await new GetMyBookmarksQueryHandler(db, User("viewer-3"), Options).Handle(new GetMyBookmarksQuery(), CancellationToken.None))
+            .Single().SaveCount;
+
+        await Save("viewer-3", true);
+        await Save("viewer-3", true);   // lưu lặp lại không tính thêm
+        await Save(Viewer, true);
+        (await CountAsync()).ShouldBe(2);
+
+        await Save(Viewer, false);
+        await Save(Viewer, false);      // bỏ lưu lặp lại không trừ thêm
+        (await CountAsync()).ShouldBe(1);
+
+        await Save(Viewer, true);
+        await new DeleteAppViewerDataCommandHandler(db).Handle(new DeleteAppViewerDataCommand(Viewer), CancellationToken.None);
+        (await CountAsync()).ShouldBe(1);
+    }
+
+    [Test]
     public async Task LibraryCommands_RequireLoggedInViewer()
     {
         var (db, movie, _) = await SeedAsync();

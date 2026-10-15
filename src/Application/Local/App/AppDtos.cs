@@ -172,7 +172,7 @@ public static class AppQueries
             Channel = x.UserProfile != null ? x.UserProfile.Title : null,
             EpisodeCount = x.Episodes!.Count,
             ViewCount = x.ViewCount ?? 0,
-            SaveCount = context.AppBookmarks.Count(b => b.WorkId == x.Id),
+            SaveCount = x.BookmarkCount,
             CommentCount = context.AppComments.Count(c => c.WorkId == x.Id),
             IsFull = x.IsFull,
             Language = x.Language != null ? x.Language.Code : null
