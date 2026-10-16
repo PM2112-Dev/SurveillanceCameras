@@ -42,6 +42,16 @@ public interface IApplicationDbContext
 
     DbSet<AppSubscription> AppSubscriptions { get; }
 
+    DbSet<AppSubscriptionPlan> AppSubscriptionPlans { get; }
+
+    DbSet<AppStoreEvent> AppStoreEvents { get; }
+
+    DbSet<AppAdPlacement> AppAdPlacements { get; }
+
+    DbSet<AppAdReward> AppAdRewards { get; }
+
+    DbSet<AppMonetizationSettings> AppMonetizationSettings { get; }
+
     DbSet<StorageAccount> StorageAccounts { get; }
     
     /// <summary>Outbox pattern: pending integration events awaiting Kafka publish.</summary>

@@ -2,9 +2,11 @@ import {
   AccountsClient,
   AccountTypesClient,
   AIsClient,
+  AppViewersClient,
   CategoriesClient,
   EpisodesClient,
   LanguagesClient,
+  MonetizationClient,
   MoviesClient,
   PromptsClient,
   PromptTypesClient,
@@ -34,6 +36,8 @@ export const storyVideoTypesClient = new StoryVideoTypesClient(undefined, author
 export const userProfilesClient = new UserProfilesClient(undefined, authorizedHttp);
 export const userProfileTypesClient = new UserProfileTypesClient(undefined, authorizedHttp);
 export const webSourcesClient = new WebSourcesClient(undefined, authorizedHttp);
+export const monetizationClient = new MonetizationClient(undefined, authorizedHttp);
+export const appViewersClient = new AppViewersClient(undefined, authorizedHttp);
 
 /** Lấy thông điệp lỗi dễ đọc từ SwaggerException / ProblemDetails trả về bởi API. */
 export function getErrorMessage(error, fallback = 'Đã có lỗi xảy ra, vui lòng thử lại.') {

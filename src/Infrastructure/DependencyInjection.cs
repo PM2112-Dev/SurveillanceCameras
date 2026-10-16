@@ -15,7 +15,9 @@ using SurveillanceCameras.Application.Repository.AI;
 using SurveillanceCameras.Application.Repository.TikTok;
 using SurveillanceCameras.Infrastructure.Data;
 using SurveillanceCameras.Infrastructure.Data.Interceptors;
+using SurveillanceCameras.Application.Local.App.Monetization;
 using SurveillanceCameras.Infrastructure.Identity;
+using SurveillanceCameras.Infrastructure.Store;
 using SurveillanceCameras.Infrastructure.Kafka;
 using SurveillanceCameras.Infrastructure.Repository;
 using SurveillanceCameras.Infrastructure.Repository.CrawlStory;
@@ -163,6 +165,14 @@ public static class DependencyInjection
         builder.Services.Configure<SocialAuthOptions>(builder.Configuration.GetSection(SocialAuthOptions.SectionName));
         builder.Services.AddHttpClient(nameof(SocialTokenValidator));
         builder.Services.AddSingleton<ISocialTokenValidator, SocialTokenValidator>();
+
+        // Mua trong app (App Store / Google Play) và xác minh quảng cáo có thưởng AdMob.
+        builder.Services.Configure<InAppPurchaseOptions>(builder.Configuration.GetSection(InAppPurchaseOptions.SectionName));
+        builder.Services.AddHttpClient(GooglePlayClient.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(20));
+        builder.Services.AddHttpClient(AdMobRewardVerifier.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15));
+        builder.Services.AddSingleton<IAppStoreVerifier, AppStoreVerifier>();
+        builder.Services.AddSingleton<IGooglePlayClient, GooglePlayClient>();
+        builder.Services.AddSingleton<IAdMobRewardVerifier, AdMobRewardVerifier>();
 
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();

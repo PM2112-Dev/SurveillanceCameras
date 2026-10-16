@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Local.App;
 using SurveillanceCameras.Application.Local.App.Commands;
+using SurveillanceCameras.Application.Local.App.Monetization.Commands;
 using SurveillanceCameras.Application.Local.App.Queries;
 using SurveillanceCameras.Domain.Constants;
 using SurveillanceCameras.Infrastructure.Data;
@@ -24,6 +25,9 @@ public class AppMe : IEndpointGroup
         groupBuilder.MapDelete(DeleteAppAccount, "");
         groupBuilder.MapPost(LogoutAppViewer, "logout");
 
+        groupBuilder.MapPost(VerifyAppStorePurchase, "subscriptions/app-store");
+        groupBuilder.MapPost(VerifyGooglePlayPurchase, "subscriptions/google-play");
+
         groupBuilder.MapGet(GetAppBookmarks, "bookmarks");
         groupBuilder.MapPut(AddAppBookmark, "bookmarks/{movieId}");
         groupBuilder.MapDelete(RemoveAppBookmark, "bookmarks/{movieId}");
@@ -34,6 +38,39 @@ public class AppMe : IEndpointGroup
     }
 
     public sealed record UpdateAppProfileRequest(string? DisplayName);
+
+    /// <param name="SignedTransactions">Chuỗi JWS của giao dịch StoreKit 2 (vừa mua, hoặc mọi gói đang có khi khôi phục).</param>
+    public sealed record AppStorePurchaseRequest(List<string>? SignedTransactions);
+
+    /// <param name="PurchaseTokens">Purchase token Google Play (vừa mua, hoặc mọi gói đang có khi khôi phục).</param>
+    public sealed record GooglePlayPurchaseRequest(List<string>? PurchaseTokens);
+
+    [EndpointSummary("Verify App Store purchase")]
+    [EndpointDescription("Kiểm chữ ký giao dịch StoreKit 2 rồi gắn gói VIP vào người đang đăng nhập. Trả hồ sơ mới (kèm hạn VIP)")]
+    public static async Task<Results<Ok<AppAuth.AppProfileDto>, UnauthorizedHttpResult>> VerifyAppStorePurchase(ISender sender,
+        IUser currentUser, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, TimeProvider timeProvider,
+        AppStorePurchaseRequest request)
+    {
+        await sender.Send(new VerifyAppStorePurchaseCommand(request.SignedTransactions ?? []));
+        return await ProfileResultAsync(currentUser, userManager, dbContext, timeProvider);
+    }
+
+    [EndpointSummary("Verify Google Play purchase")]
+    [EndpointDescription("Hỏi Google Play trạng thái gói theo purchase token rồi gắn vào người đang đăng nhập. Trả hồ sơ mới (kèm hạn VIP)")]
+    public static async Task<Results<Ok<AppAuth.AppProfileDto>, UnauthorizedHttpResult>> VerifyGooglePlayPurchase(ISender sender,
+        IUser currentUser, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, TimeProvider timeProvider,
+        GooglePlayPurchaseRequest request)
+    {
+        await sender.Send(new VerifyGooglePlayPurchaseCommand(request.PurchaseTokens ?? []));
+        return await ProfileResultAsync(currentUser, userManager, dbContext, timeProvider);
+    }
+
+    private static async Task<Results<Ok<AppAuth.AppProfileDto>, UnauthorizedHttpResult>> ProfileResultAsync(IUser currentUser,
+        UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, TimeProvider timeProvider)
+    {
+        var user = await userManager.FindByIdAsync(currentUser.Id ?? "");
+        return user is null ? TypedResults.Unauthorized() : TypedResults.Ok(await AppAuth.ProfileAsync(user, dbContext, timeProvider));
+    }
 
     public sealed record SaveAppWatchProgressRequest(int EpisodeNumber, int PositionSeconds, int DurationSeconds,
         DateTimeOffset? WatchedAt);

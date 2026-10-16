@@ -15,7 +15,11 @@ import {
   Shapes,
   Film,
   HardDrive,
-  Languages
+  Languages,
+  BadgeDollarSign,
+  Crown,
+  Megaphone,
+  UserCheck
 } from 'lucide-react';
 
 const menuSections = [
@@ -32,6 +36,15 @@ const menuSections = [
       { to: '/movies', label: 'Phim', icon: Film },
       { to: '/languages', label: 'Ngôn ngữ', icon: Languages },
       { to: '/story-video-types', label: 'Loại video truyện', icon: Clapperboard }
+    ]
+  },
+  {
+    heading: 'App xem phim',
+    items: [
+      { to: '/monetization', label: 'Kiếm tiền', icon: BadgeDollarSign, end: true },
+      { to: '/monetization/plans', label: 'Gói VIP', icon: Crown },
+      { to: '/monetization/ads', label: 'Quảng cáo', icon: Megaphone },
+      { to: '/monetization/subscriptions', label: 'Người đăng ký', icon: UserCheck }
     ]
   },
   {

@@ -88,6 +88,19 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
                 Title = "Nền tảng AI trả lỗi.",
                 Detail = ae.Message
             }),
+            AppRequestException are => (are.StatusCode, new ProblemDetails
+            {
+                Status = are.StatusCode,
+                Title = are.Message,
+                Detail = are.Message,
+                Extensions = { ["code"] = are.Code }
+            }),
+            StoreVerificationException se => (StatusCodes.Status422UnprocessableEntity, new ProblemDetails
+            {
+                Status = StatusCodes.Status422UnprocessableEntity,
+                Title = "Không xác minh được giao dịch.",
+                Detail = se.Message
+            }),
             _ => (-1, null)
         };
 

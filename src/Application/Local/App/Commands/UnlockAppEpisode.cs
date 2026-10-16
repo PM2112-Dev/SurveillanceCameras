@@ -1,5 +1,8 @@
 using Microsoft.Extensions.Options;
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Common.Exceptions;
+using SurveillanceCameras.Application.Local.App.Monetization;
+using SurveillanceCameras.Application.Local.App.Monetization.Commands;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.App.Commands;
@@ -41,10 +44,32 @@ public class UnlockAppEpisodeCommandHandler : IRequestHandler<UnlockAppEpisodeCo
             .AnyAsync(x => x.CreatedBy == userId && x.EpisodeId == episode.Id, cancellationToken);
 
         var access = AppAccessRule.Of(episode.Work!, _options).Access(episode.EpisodeNumber, isVip, unlocked);
-        if (access == AppAccess.Vip) throw new Common.Exceptions.ForbiddenAccessException();
+        if (access == AppAccess.Vip) throw new ForbiddenAccessException();
 
         if (access == AppAccess.Ads)
         {
+            var now = _timeProvider.GetUtcNow();
+            var placement = (await _context.PlacementsAsync(cancellationToken))
+                .FirstOrDefault(x => x.Code == AppAdPlacement.RewardedUnlock);
+            if (placement is { DailyLimit: > 0 })
+            {
+                var today = AdRules.StartOfDay(now);
+                var opened = await _context.AppEpisodeUnlocks.CountAsync(x => x.CreatedBy == userId && x.Created >= today, cancellationToken);
+                if (opened >= placement.DailyLimit) throw AppRequestException.AdLimitReached(placement.DailyLimit);
+            }
+
+            // Bật xác minh: chỉ mở khi AdMob đã báo về máy chủ là người này xem hết quảng cáo cho đúng tập này.
+            if ((await _context.SettingsAsync(cancellationToken)).RequireAdVerification)
+            {
+                var since = now - AdRules.RewardLifetime;
+                var reward = await _context.AppAdRewards
+                    .Where(x => x.UserId == userId && x.EpisodeId == episode.Id && x.ConsumedAt == null && x.RewardedAt >= since)
+                    .OrderBy(x => x.RewardedAt)
+                    .FirstOrDefaultAsync(cancellationToken);
+                if (reward is null) throw AppRequestException.AdRewardPending();
+                reward.ConsumedAt = now;
+            }
+
             _context.AppEpisodeUnlocks.Add(new AppEpisodeUnlock { EpisodeId = episode.Id, CreatedBy = userId });
             await _context.SaveChangesAsync(cancellationToken);
             access = AppAccess.Free;
