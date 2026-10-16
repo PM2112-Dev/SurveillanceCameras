@@ -5,7 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Aspire.Hosting.* pulls in StreamJsonRpc -> MessagePack 2.5.192, which has known CVEs (NU1902/NU1903). Force the patched version for all projects. -->
-    <GlobalPackageReference Include="MessagePack" Version="3.1.8" />
+    <GlobalPackageReference Include="MessagePack" Version="3.1.12" />
     <!-- System.Security.Cryptography.Pkcs comes in transitively (10.0.1 / 10.0.10) and is vulnerable up to 10.0.12 (CVE-2026-84008, NU1902/NU1903). Force the patched version for all projects. -->
     <GlobalPackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
