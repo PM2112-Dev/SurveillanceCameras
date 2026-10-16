@@ -1466,10 +1466,15 @@ export class AppCatalogClient {
 
     /**
      * Get app config
+     * @param platform (optional) 
      * @return OK
      */
-    getAppConfig(): Promise<AppConfigDto> {
-        let url_ = this.baseUrl + "/api/app/config";
+    getAppConfig(platform: string | undefined): Promise<AppRemoteConfigDto> {
+        let url_ = this.baseUrl + "/api/app/config?";
+        if (platform === null)
+            throw new globalThis.Error("The parameter 'platform' cannot be null.");
+        else if (platform !== undefined)
+            url_ += "platform=" + encodeURIComponent("" + platform) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1484,15 +1489,19 @@ export class AppCatalogClient {
         });
     }
 
-    protected processGetAppConfig(response: Response): Promise<AppConfigDto> {
+    protected processGetAppConfig(response: Response): Promise<AppRemoteConfigDto> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = AppConfigDto.fromJS(resultData200);
+            result200 = AppRemoteConfigDto.fromJS(resultData200);
             return result200;
+            });
+        } else if (status === 304) {
+            return response.text().then((_responseText) => {
+            return throwException("Not Modified", status, _responseText, _headers);
             });
         } else if (status === 400) {
             return response.text().then((_responseText) => {
@@ -1503,7 +1512,7 @@ export class AppCatalogClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<AppConfigDto>(null as any);
+        return Promise.resolve<AppRemoteConfigDto>(null as any);
     }
 
     /**
@@ -2103,6 +2112,114 @@ export class AppMeClient {
     }
 
     /**
+     * Verify App Store purchase
+     * @return OK
+     */
+    verifyAppStorePurchase(body: AppStorePurchaseRequest): Promise<AppProfileDto> {
+        let url_ = this.baseUrl + "/api/app/me/subscriptions/app-store";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processVerifyAppStorePurchase(_response);
+        });
+    }
+
+    protected processVerifyAppStorePurchase(response: Response): Promise<AppProfileDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppProfileDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppProfileDto>(null as any);
+    }
+
+    /**
+     * Verify Google Play purchase
+     * @return OK
+     */
+    verifyGooglePlayPurchase(body: GooglePlayPurchaseRequest): Promise<AppProfileDto> {
+        let url_ = this.baseUrl + "/api/app/me/subscriptions/google-play";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processVerifyGooglePlayPurchase(_response);
+        });
+    }
+
+    protected processVerifyGooglePlayPurchase(response: Response): Promise<AppProfileDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AppProfileDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AppProfileDto>(null as any);
+    }
+
+    /**
      * Get app bookmarks
      * @return OK
      */
@@ -2407,6 +2524,144 @@ export class AppMeClient {
         } else if (status === 403) {
             return response.text().then((_responseText) => {
             return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
+export class AppStoreClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * App Store server notification
+     * @return OK
+     */
+    appStoreNotification(body: AppStoreNotificationRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/app/store/app-store/notifications";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAppStoreNotification(_response);
+        });
+    }
+
+    protected processAppStoreNotification(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Google Play real-time developer notification
+     * @param token (optional) 
+     * @return OK
+     */
+    googlePlayNotification(token: string | undefined, body: PubSubPushRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/app/store/google-play/notifications?";
+        if (token === null)
+            throw new globalThis.Error("The parameter 'token' cannot be null.");
+        else if (token !== undefined)
+            url_ += "token=" + encodeURIComponent("" + token) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGooglePlayNotification(_response);
+        });
+    }
+
+    protected processGooglePlayNotification(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * AdMob rewarded ad verification
+     * @return OK
+     */
+    adMobRewardCallback(): Promise<void> {
+        let url_ = this.baseUrl + "/api/app/store/admob/ssv";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAdMobRewardCallback(_response);
+        });
+    }
+
+    protected processAdMobRewardCallback(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
@@ -3391,6 +3646,571 @@ export class LanguagesClient {
             });
         }
         return Promise.resolve<void>(null as any);
+    }
+}
+
+export class MonetizationClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get monetization settings
+     * @return OK
+     */
+    getMonetizationSettings(): Promise<MonetizationSettingsDto> {
+        let url_ = this.baseUrl + "/api/Monetization/settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMonetizationSettings(_response);
+        });
+    }
+
+    protected processGetMonetizationSettings(response: Response): Promise<MonetizationSettingsDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MonetizationSettingsDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MonetizationSettingsDto>(null as any);
+    }
+
+    /**
+     * Update monetization settings
+     * @return No Content
+     */
+    updateMonetizationSettings(body: UpdateMonetizationSettingsCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Monetization/settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateMonetizationSettings(_response);
+        });
+    }
+
+    protected processUpdateMonetizationSettings(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get subscription plans
+     * @return OK
+     */
+    getSubscriptionPlans(): Promise<SubscriptionPlanDto[]> {
+        let url_ = this.baseUrl + "/api/Monetization/plans";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetSubscriptionPlans(_response);
+        });
+    }
+
+    protected processGetSubscriptionPlans(response: Response): Promise<SubscriptionPlanDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(SubscriptionPlanDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<SubscriptionPlanDto[]>(null as any);
+    }
+
+    /**
+     * Create subscription plan
+     * @return Created
+     */
+    createSubscriptionPlan(body: SaveSubscriptionPlanCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/Monetization/plans";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateSubscriptionPlan(_response);
+        });
+    }
+
+    protected processCreateSubscriptionPlan(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Update subscription plan
+     * @return No Content
+     */
+    updateSubscriptionPlan(id: number, body: SaveSubscriptionPlanCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Monetization/plans/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateSubscriptionPlan(_response);
+        });
+    }
+
+    protected processUpdateSubscriptionPlan(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete subscription plan
+     * @return No Content
+     */
+    deleteSubscriptionPlan(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Monetization/plans/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteSubscriptionPlan(_response);
+        });
+    }
+
+    protected processDeleteSubscriptionPlan(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get ad placements
+     * @return OK
+     */
+    getAdPlacements(): Promise<AdPlacementDto[]> {
+        let url_ = this.baseUrl + "/api/Monetization/ad-placements";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAdPlacements(_response);
+        });
+    }
+
+    protected processGetAdPlacements(response: Response): Promise<AdPlacementDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(AdPlacementDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AdPlacementDto[]>(null as any);
+    }
+
+    /**
+     * Update ad placement
+     * @return No Content
+     */
+    updateAdPlacement(id: number, body: UpdateAdPlacementCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Monetization/ad-placements/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateAdPlacement(_response);
+        });
+    }
+
+    protected processUpdateAdPlacement(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get app subscriptions
+     * @param email (optional) 
+     * @param source (optional) 
+     * @param active (optional) 
+     * @param page (optional) 
+     * @param pageSize (optional) 
+     * @return OK
+     */
+    getAppSubscriptions(email: string | undefined, source: number | undefined, active: boolean | undefined, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfAppSubscriptionDto> {
+        let url_ = this.baseUrl + "/api/Monetization/subscriptions?";
+        if (email === null)
+            throw new globalThis.Error("The parameter 'email' cannot be null.");
+        else if (email !== undefined)
+            url_ += "email=" + encodeURIComponent("" + email) + "&";
+        if (source === null)
+            throw new globalThis.Error("The parameter 'source' cannot be null.");
+        else if (source !== undefined)
+            url_ += "source=" + encodeURIComponent("" + source) + "&";
+        if (active === null)
+            throw new globalThis.Error("The parameter 'active' cannot be null.");
+        else if (active !== undefined)
+            url_ += "active=" + encodeURIComponent("" + active) + "&";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAppSubscriptions(_response);
+        });
+    }
+
+    protected processGetAppSubscriptions(response: Response): Promise<PaginatedListOfAppSubscriptionDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PaginatedListOfAppSubscriptionDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PaginatedListOfAppSubscriptionDto>(null as any);
+    }
+
+    /**
+     * Get monetization stats
+     * @param days (optional) 
+     * @return OK
+     */
+    getMonetizationStats(days: number | undefined): Promise<MonetizationStatsDto> {
+        let url_ = this.baseUrl + "/api/Monetization/stats?";
+        if (days === null)
+            throw new globalThis.Error("The parameter 'days' cannot be null.");
+        else if (days !== undefined)
+            url_ += "days=" + encodeURIComponent("" + days) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMonetizationStats(_response);
+        });
+    }
+
+    protected processGetMonetizationStats(response: Response): Promise<MonetizationStatsDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MonetizationStatsDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MonetizationStatsDto>(null as any);
     }
 }
 
@@ -7753,6 +8573,90 @@ export interface IAddAppCommentRequest {
     [key: string]: any;
 }
 
+export class AdPlacementDto implements IAdPlacementDto {
+    id!: number;
+    code!: string;
+    title!: string | undefined;
+    format!: string;
+    androidUnitId!: string | undefined;
+    iosUnitId!: string | undefined;
+    isEnabled!: boolean;
+    dailyLimit!: number;
+    cooldownSeconds!: number;
+    everyEpisodes!: number;
+
+    [key: string]: any;
+
+    constructor(data?: IAdPlacementDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.code = _data["code"];
+            this.title = _data["title"];
+            this.format = _data["format"];
+            this.androidUnitId = _data["androidUnitId"];
+            this.iosUnitId = _data["iosUnitId"];
+            this.isEnabled = _data["isEnabled"];
+            this.dailyLimit = _data["dailyLimit"];
+            this.cooldownSeconds = _data["cooldownSeconds"];
+            this.everyEpisodes = _data["everyEpisodes"];
+        }
+    }
+
+    static fromJS(data: any): AdPlacementDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AdPlacementDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["code"] = this.code;
+        data["title"] = this.title;
+        data["format"] = this.format;
+        data["androidUnitId"] = this.androidUnitId;
+        data["iosUnitId"] = this.iosUnitId;
+        data["isEnabled"] = this.isEnabled;
+        data["dailyLimit"] = this.dailyLimit;
+        data["cooldownSeconds"] = this.cooldownSeconds;
+        data["everyEpisodes"] = this.everyEpisodes;
+        return data;
+    }
+}
+
+export interface IAdPlacementDto {
+    id: number;
+    code: string;
+    title: string | undefined;
+    format: string;
+    androidUnitId: string | undefined;
+    iosUnitId: string | undefined;
+    isEnabled: boolean;
+    dailyLimit: number;
+    cooldownSeconds: number;
+    everyEpisodes: number;
+
+    [key: string]: any;
+}
+
 export class AIDto implements IAIDto {
     provider?: number;
     model?: string | undefined;
@@ -7885,6 +8789,74 @@ export interface IAIModelDto {
     [key: string]: any;
 }
 
+export class AppAdPlacementConfigDto implements IAppAdPlacementConfigDto {
+    code!: string;
+    format!: string;
+    unitId!: string;
+    dailyLimit!: number;
+    cooldownSeconds!: number;
+    everyEpisodes!: number;
+
+    [key: string]: any;
+
+    constructor(data?: IAppAdPlacementConfigDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.code = _data["code"];
+            this.format = _data["format"];
+            this.unitId = _data["unitId"];
+            this.dailyLimit = _data["dailyLimit"];
+            this.cooldownSeconds = _data["cooldownSeconds"];
+            this.everyEpisodes = _data["everyEpisodes"];
+        }
+    }
+
+    static fromJS(data: any): AppAdPlacementConfigDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppAdPlacementConfigDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["code"] = this.code;
+        data["format"] = this.format;
+        data["unitId"] = this.unitId;
+        data["dailyLimit"] = this.dailyLimit;
+        data["cooldownSeconds"] = this.cooldownSeconds;
+        data["everyEpisodes"] = this.everyEpisodes;
+        return data;
+    }
+}
+
+export interface IAppAdPlacementConfigDto {
+    code: string;
+    format: string;
+    unitId: string;
+    dailyLimit: number;
+    cooldownSeconds: number;
+    everyEpisodes: number;
+
+    [key: string]: any;
+}
+
 export class AppAuthResponse implements IAppAuthResponse {
     accessToken!: string;
     expiresIn!: number;
@@ -8008,66 +8980,6 @@ export interface IAppCommentDto {
     content?: string;
     created?: Date;
     isMine?: boolean;
-
-    [key: string]: any;
-}
-
-export class AppConfigDto implements IAppConfigDto {
-    freeEpisodes!: number;
-    adEpisodes!: number;
-    privacyUrl!: string | undefined;
-    termsUrl!: string | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: IAppConfigDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.freeEpisodes = _data["freeEpisodes"];
-            this.adEpisodes = _data["adEpisodes"];
-            this.privacyUrl = _data["privacyUrl"];
-            this.termsUrl = _data["termsUrl"];
-        }
-    }
-
-    static fromJS(data: any): AppConfigDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new AppConfigDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["freeEpisodes"] = this.freeEpisodes;
-        data["adEpisodes"] = this.adEpisodes;
-        data["privacyUrl"] = this.privacyUrl;
-        data["termsUrl"] = this.termsUrl;
-        return data;
-    }
-}
-
-export interface IAppConfigDto {
-    freeEpisodes: number;
-    adEpisodes: number;
-    privacyUrl: string | undefined;
-    termsUrl: string | undefined;
 
     [key: string]: any;
 }
@@ -8416,6 +9328,78 @@ export interface IAppMovieDto {
     [key: string]: any;
 }
 
+export class AppPlanConfigDto implements IAppPlanConfigDto {
+    code!: string;
+    title!: string;
+    description!: string | undefined;
+    productId!: string;
+    periodDays!: number;
+    trialDays!: number;
+    isHighlighted!: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IAppPlanConfigDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.code = _data["code"];
+            this.title = _data["title"];
+            this.description = _data["description"];
+            this.productId = _data["productId"];
+            this.periodDays = _data["periodDays"];
+            this.trialDays = _data["trialDays"];
+            this.isHighlighted = _data["isHighlighted"];
+        }
+    }
+
+    static fromJS(data: any): AppPlanConfigDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppPlanConfigDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["code"] = this.code;
+        data["title"] = this.title;
+        data["description"] = this.description;
+        data["productId"] = this.productId;
+        data["periodDays"] = this.periodDays;
+        data["trialDays"] = this.trialDays;
+        data["isHighlighted"] = this.isHighlighted;
+        return data;
+    }
+}
+
+export interface IAppPlanConfigDto {
+    code: string;
+    title: string;
+    description: string | undefined;
+    productId: string;
+    periodDays: number;
+    trialDays: number;
+    isHighlighted: boolean;
+
+    [key: string]: any;
+}
+
 export class AppPlaybackDto implements IAppPlaybackDto {
     type!: string;
     value!: string;
@@ -8474,6 +9458,7 @@ export class AppProfileDto implements IAppProfileDto {
     isVip!: boolean;
     vipPlan!: string | undefined;
     vipExpiresAt!: Date | undefined;
+    storeAccountToken!: string;
 
     [key: string]: any;
 
@@ -8497,6 +9482,7 @@ export class AppProfileDto implements IAppProfileDto {
             this.isVip = _data["isVip"];
             this.vipPlan = _data["vipPlan"];
             this.vipExpiresAt = _data["vipExpiresAt"] ? new Date(_data["vipExpiresAt"].toString()) : undefined as any;
+            this.storeAccountToken = _data["storeAccountToken"];
         }
     }
 
@@ -8518,6 +9504,7 @@ export class AppProfileDto implements IAppProfileDto {
         data["isVip"] = this.isVip;
         data["vipPlan"] = this.vipPlan;
         data["vipExpiresAt"] = this.vipExpiresAt ? this.vipExpiresAt.toISOString() : undefined as any;
+        data["storeAccountToken"] = this.storeAccountToken;
         return data;
     }
 }
@@ -8528,6 +9515,7 @@ export interface IAppProfileDto {
     isVip: boolean;
     vipPlan: string | undefined;
     vipExpiresAt: Date | undefined;
+    storeAccountToken: string;
 
     [key: string]: any;
 }
@@ -8636,6 +9624,114 @@ export interface IAppRegisterRequest {
     [key: string]: any;
 }
 
+export class AppRemoteConfigDto implements IAppRemoteConfigDto {
+    freeEpisodes?: number;
+    adEpisodes?: number;
+    privacyUrl?: string | undefined;
+    termsUrl?: string | undefined;
+    adsEnabled?: boolean;
+    purchasesEnabled?: boolean;
+    requireAdVerification?: boolean;
+    paywallVariant?: string;
+    paywallAfterRewardedAds?: number;
+    minAppVersion?: string | undefined;
+    placements?: AppAdPlacementConfigDto[];
+    plans?: AppPlanConfigDto[];
+
+    [key: string]: any;
+
+    constructor(data?: IAppRemoteConfigDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.freeEpisodes = _data["freeEpisodes"];
+            this.adEpisodes = _data["adEpisodes"];
+            this.privacyUrl = _data["privacyUrl"];
+            this.termsUrl = _data["termsUrl"];
+            this.adsEnabled = _data["adsEnabled"];
+            this.purchasesEnabled = _data["purchasesEnabled"];
+            this.requireAdVerification = _data["requireAdVerification"];
+            this.paywallVariant = _data["paywallVariant"];
+            this.paywallAfterRewardedAds = _data["paywallAfterRewardedAds"];
+            this.minAppVersion = _data["minAppVersion"];
+            if (Array.isArray(_data["placements"])) {
+                this.placements = [] as any;
+                for (let item of _data["placements"])
+                    this.placements!.push(AppAdPlacementConfigDto.fromJS(item));
+            }
+            if (Array.isArray(_data["plans"])) {
+                this.plans = [] as any;
+                for (let item of _data["plans"])
+                    this.plans!.push(AppPlanConfigDto.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): AppRemoteConfigDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppRemoteConfigDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["freeEpisodes"] = this.freeEpisodes;
+        data["adEpisodes"] = this.adEpisodes;
+        data["privacyUrl"] = this.privacyUrl;
+        data["termsUrl"] = this.termsUrl;
+        data["adsEnabled"] = this.adsEnabled;
+        data["purchasesEnabled"] = this.purchasesEnabled;
+        data["requireAdVerification"] = this.requireAdVerification;
+        data["paywallVariant"] = this.paywallVariant;
+        data["paywallAfterRewardedAds"] = this.paywallAfterRewardedAds;
+        data["minAppVersion"] = this.minAppVersion;
+        if (Array.isArray(this.placements)) {
+            data["placements"] = [];
+            for (let item of this.placements)
+                data["placements"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.plans)) {
+            data["plans"] = [];
+            for (let item of this.plans)
+                data["plans"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IAppRemoteConfigDto {
+    freeEpisodes?: number;
+    adEpisodes?: number;
+    privacyUrl?: string | undefined;
+    termsUrl?: string | undefined;
+    adsEnabled?: boolean;
+    purchasesEnabled?: boolean;
+    requireAdVerification?: boolean;
+    paywallVariant?: string;
+    paywallAfterRewardedAds?: number;
+    minAppVersion?: string | undefined;
+    placements?: AppAdPlacementConfigDto[];
+    plans?: AppPlanConfigDto[];
+
+    [key: string]: any;
+}
+
 export class AppSocialLoginRequest implements IAppSocialLoginRequest {
     idToken!: string | undefined;
     displayName!: string | undefined;
@@ -8684,6 +9780,206 @@ export class AppSocialLoginRequest implements IAppSocialLoginRequest {
 export interface IAppSocialLoginRequest {
     idToken: string | undefined;
     displayName: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AppStoreNotificationRequest implements IAppStoreNotificationRequest {
+    signedPayload!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppStoreNotificationRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.signedPayload = _data["signedPayload"];
+        }
+    }
+
+    static fromJS(data: any): AppStoreNotificationRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppStoreNotificationRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["signedPayload"] = this.signedPayload;
+        return data;
+    }
+}
+
+export interface IAppStoreNotificationRequest {
+    signedPayload: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AppStorePurchaseRequest implements IAppStorePurchaseRequest {
+    signedTransactions!: string[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppStorePurchaseRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["signedTransactions"])) {
+                this.signedTransactions = [] as any;
+                for (let item of _data["signedTransactions"])
+                    this.signedTransactions!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AppStorePurchaseRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppStorePurchaseRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.signedTransactions)) {
+            data["signedTransactions"] = [];
+            for (let item of this.signedTransactions)
+                data["signedTransactions"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IAppStorePurchaseRequest {
+    signedTransactions: string[] | undefined;
+
+    [key: string]: any;
+}
+
+export class AppSubscriptionDto implements IAppSubscriptionDto {
+    id!: number;
+    userId!: string;
+    email!: string | undefined;
+    plan!: string | undefined;
+    source!: string;
+    status!: string;
+    productId!: string | undefined;
+    expiresAt!: Date;
+    isActive!: boolean;
+    autoRenew!: boolean;
+    isSandbox!: boolean;
+    created!: Date;
+    verifiedAt!: Date | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAppSubscriptionDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.userId = _data["userId"];
+            this.email = _data["email"];
+            this.plan = _data["plan"];
+            this.source = _data["source"];
+            this.status = _data["status"];
+            this.productId = _data["productId"];
+            this.expiresAt = _data["expiresAt"] ? new Date(_data["expiresAt"].toString()) : undefined as any;
+            this.isActive = _data["isActive"];
+            this.autoRenew = _data["autoRenew"];
+            this.isSandbox = _data["isSandbox"];
+            this.created = _data["created"] ? new Date(_data["created"].toString()) : undefined as any;
+            this.verifiedAt = _data["verifiedAt"] ? new Date(_data["verifiedAt"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): AppSubscriptionDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AppSubscriptionDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["userId"] = this.userId;
+        data["email"] = this.email;
+        data["plan"] = this.plan;
+        data["source"] = this.source;
+        data["status"] = this.status;
+        data["productId"] = this.productId;
+        data["expiresAt"] = this.expiresAt ? this.expiresAt.toISOString() : undefined as any;
+        data["isActive"] = this.isActive;
+        data["autoRenew"] = this.autoRenew;
+        data["isSandbox"] = this.isSandbox;
+        data["created"] = this.created ? this.created.toISOString() : undefined as any;
+        data["verifiedAt"] = this.verifiedAt ? this.verifiedAt.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface IAppSubscriptionDto {
+    id: number;
+    userId: string;
+    email: string | undefined;
+    plan: string | undefined;
+    source: string;
+    status: string;
+    productId: string | undefined;
+    expiresAt: Date;
+    isActive: boolean;
+    autoRenew: boolean;
+    isSandbox: boolean;
+    created: Date;
+    verifiedAt: Date | undefined;
 
     [key: string]: any;
 }
@@ -10768,6 +12064,62 @@ export interface IGetProviderModelsQuery {
     [key: string]: any;
 }
 
+export class GooglePlayPurchaseRequest implements IGooglePlayPurchaseRequest {
+    purchaseTokens!: string[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IGooglePlayPurchaseRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["purchaseTokens"])) {
+                this.purchaseTokens = [] as any;
+                for (let item of _data["purchaseTokens"])
+                    this.purchaseTokens!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): GooglePlayPurchaseRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new GooglePlayPurchaseRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.purchaseTokens)) {
+            data["purchaseTokens"] = [];
+            for (let item of this.purchaseTokens)
+                data["purchaseTokens"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IGooglePlayPurchaseRequest {
+    purchaseTokens: string[] | undefined;
+
+    [key: string]: any;
+}
+
 export class HttpValidationProblemDetails implements IHttpValidationProblemDetails {
     type?: string | undefined;
     title?: string | undefined;
@@ -11016,6 +12368,205 @@ export class LoginRequest implements ILoginRequest {
 export interface ILoginRequest {
     email: string;
     password: string;
+
+    [key: string]: any;
+}
+
+export class MonetizationDayDto implements IMonetizationDayDto {
+    day!: Date;
+    rewardedVerified!: number;
+    episodesUnlocked!: number;
+    newSubscriptions!: number;
+
+    [key: string]: any;
+
+    constructor(data?: IMonetizationDayDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.day = _data["day"] ? new Date(_data["day"].toString()) : undefined as any;
+            this.rewardedVerified = _data["rewardedVerified"];
+            this.episodesUnlocked = _data["episodesUnlocked"];
+            this.newSubscriptions = _data["newSubscriptions"];
+        }
+    }
+
+    static fromJS(data: any): MonetizationDayDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new MonetizationDayDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["day"] = this.day ? formatDate(this.day) : undefined as any;
+        data["rewardedVerified"] = this.rewardedVerified;
+        data["episodesUnlocked"] = this.episodesUnlocked;
+        data["newSubscriptions"] = this.newSubscriptions;
+        return data;
+    }
+}
+
+export interface IMonetizationDayDto {
+    day: Date;
+    rewardedVerified: number;
+    episodesUnlocked: number;
+    newSubscriptions: number;
+
+    [key: string]: any;
+}
+
+export class MonetizationSettingsDto implements IMonetizationSettingsDto {
+    adsEnabled!: boolean;
+    purchasesEnabled!: boolean;
+    requireAdVerification!: boolean;
+    paywallVariant!: string;
+    paywallAfterRewardedAds!: number;
+    minAppVersion!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IMonetizationSettingsDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.adsEnabled = _data["adsEnabled"];
+            this.purchasesEnabled = _data["purchasesEnabled"];
+            this.requireAdVerification = _data["requireAdVerification"];
+            this.paywallVariant = _data["paywallVariant"];
+            this.paywallAfterRewardedAds = _data["paywallAfterRewardedAds"];
+            this.minAppVersion = _data["minAppVersion"];
+        }
+    }
+
+    static fromJS(data: any): MonetizationSettingsDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new MonetizationSettingsDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["adsEnabled"] = this.adsEnabled;
+        data["purchasesEnabled"] = this.purchasesEnabled;
+        data["requireAdVerification"] = this.requireAdVerification;
+        data["paywallVariant"] = this.paywallVariant;
+        data["paywallAfterRewardedAds"] = this.paywallAfterRewardedAds;
+        data["minAppVersion"] = this.minAppVersion;
+        return data;
+    }
+}
+
+export interface IMonetizationSettingsDto {
+    adsEnabled: boolean;
+    purchasesEnabled: boolean;
+    requireAdVerification: boolean;
+    paywallVariant: string;
+    paywallAfterRewardedAds: number;
+    minAppVersion: string | undefined;
+
+    [key: string]: any;
+}
+
+export class MonetizationStatsDto implements IMonetizationStatsDto {
+    activeVip!: number;
+    activeStoreSubscriptions!: number;
+    activeAdminGrants!: number;
+    days!: MonetizationDayDto[];
+
+    [key: string]: any;
+
+    constructor(data?: IMonetizationStatsDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.days = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.activeVip = _data["activeVip"];
+            this.activeStoreSubscriptions = _data["activeStoreSubscriptions"];
+            this.activeAdminGrants = _data["activeAdminGrants"];
+            if (Array.isArray(_data["days"])) {
+                this.days = [] as any;
+                for (let item of _data["days"])
+                    this.days!.push(MonetizationDayDto.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): MonetizationStatsDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new MonetizationStatsDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["activeVip"] = this.activeVip;
+        data["activeStoreSubscriptions"] = this.activeStoreSubscriptions;
+        data["activeAdminGrants"] = this.activeAdminGrants;
+        if (Array.isArray(this.days)) {
+            data["days"] = [];
+            for (let item of this.days)
+                data["days"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IMonetizationStatsDto {
+    activeVip: number;
+    activeStoreSubscriptions: number;
+    activeAdminGrants: number;
+    days: MonetizationDayDto[];
 
     [key: string]: any;
 }
@@ -11639,6 +13190,82 @@ export class PaginatedListOfAppMovieDto implements IPaginatedListOfAppMovieDto {
 
 export interface IPaginatedListOfAppMovieDto {
     items?: AppMovieDto[] | undefined;
+    pageNumber: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+}
+
+export class PaginatedListOfAppSubscriptionDto implements IPaginatedListOfAppSubscriptionDto {
+    items?: AppSubscriptionDto[] | undefined;
+    pageNumber!: number;
+    totalPages?: number;
+    totalCount?: number;
+    hasPreviousPage?: boolean;
+    hasNextPage?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: IPaginatedListOfAppSubscriptionDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(AppSubscriptionDto.fromJS(item));
+            }
+            this.pageNumber = _data["pageNumber"];
+            this.totalPages = _data["totalPages"];
+            this.totalCount = _data["totalCount"];
+            this.hasPreviousPage = _data["hasPreviousPage"];
+            this.hasNextPage = _data["hasNextPage"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedListOfAppSubscriptionDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedListOfAppSubscriptionDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["pageNumber"] = this.pageNumber;
+        data["totalPages"] = this.totalPages;
+        data["totalCount"] = this.totalCount;
+        data["hasPreviousPage"] = this.hasPreviousPage;
+        data["hasNextPage"] = this.hasNextPage;
+        return data;
+    }
+}
+
+export interface IPaginatedListOfAppSubscriptionDto {
+    items?: AppSubscriptionDto[] | undefined;
     pageNumber: number;
     totalPages?: number;
     totalCount?: number;
@@ -12780,6 +14407,110 @@ export interface IPromptTypeDto {
     [key: string]: any;
 }
 
+export class PubSubMessage implements IPubSubMessage {
+    messageId!: string | undefined;
+    data!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IPubSubMessage) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.messageId = _data["messageId"];
+            this.data = _data["data"];
+        }
+    }
+
+    static fromJS(data: any): PubSubMessage {
+        data = typeof data === 'object' ? data : {};
+        let result = new PubSubMessage();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["messageId"] = this.messageId;
+        data["data"] = this.data;
+        return data;
+    }
+}
+
+export interface IPubSubMessage {
+    messageId: string | undefined;
+    data: string | undefined;
+
+    [key: string]: any;
+}
+
+export class PubSubPushRequest implements IPubSubPushRequest {
+    message!: PubSubMessage | undefined;
+    subscription!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IPubSubPushRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.message = _data["message"] ? PubSubMessage.fromJS(_data["message"]) : undefined as any;
+            this.subscription = _data["subscription"];
+        }
+    }
+
+    static fromJS(data: any): PubSubPushRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new PubSubPushRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["message"] = this.message ? this.message.toJSON() : undefined as any;
+        data["subscription"] = this.subscription;
+        return data;
+    }
+}
+
+export interface IPubSubPushRequest {
+    message: PubSubMessage | undefined;
+    subscription: string | undefined;
+
+    [key: string]: any;
+}
+
 export class RefreshRequest implements IRefreshRequest {
     refreshToken!: string;
 
@@ -12936,6 +14667,94 @@ export interface ISaveAppWatchProgressRequest {
     positionSeconds: number;
     durationSeconds: number;
     watchedAt: Date | undefined;
+
+    [key: string]: any;
+}
+
+export class SaveSubscriptionPlanCommand implements ISaveSubscriptionPlanCommand {
+    id?: number;
+    code?: string | undefined;
+    title?: string | undefined;
+    description?: string | undefined;
+    appleProductId?: string | undefined;
+    googleProductId?: string | undefined;
+    periodDays?: number;
+    trialDays?: number;
+    isHighlighted?: boolean;
+    isActive?: boolean;
+    sortOrder?: number;
+
+    [key: string]: any;
+
+    constructor(data?: ISaveSubscriptionPlanCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.code = _data["code"];
+            this.title = _data["title"];
+            this.description = _data["description"];
+            this.appleProductId = _data["appleProductId"];
+            this.googleProductId = _data["googleProductId"];
+            this.periodDays = _data["periodDays"];
+            this.trialDays = _data["trialDays"];
+            this.isHighlighted = _data["isHighlighted"];
+            this.isActive = _data["isActive"];
+            this.sortOrder = _data["sortOrder"];
+        }
+    }
+
+    static fromJS(data: any): SaveSubscriptionPlanCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new SaveSubscriptionPlanCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["code"] = this.code;
+        data["title"] = this.title;
+        data["description"] = this.description;
+        data["appleProductId"] = this.appleProductId;
+        data["googleProductId"] = this.googleProductId;
+        data["periodDays"] = this.periodDays;
+        data["trialDays"] = this.trialDays;
+        data["isHighlighted"] = this.isHighlighted;
+        data["isActive"] = this.isActive;
+        data["sortOrder"] = this.sortOrder;
+        return data;
+    }
+}
+
+export interface ISaveSubscriptionPlanCommand {
+    id?: number;
+    code?: string | undefined;
+    title?: string | undefined;
+    description?: string | undefined;
+    appleProductId?: string | undefined;
+    googleProductId?: string | undefined;
+    periodDays?: number;
+    trialDays?: number;
+    isHighlighted?: boolean;
+    isActive?: boolean;
+    sortOrder?: number;
 
     [key: string]: any;
 }
@@ -13671,6 +15490,94 @@ export interface IStoryVideoTypeDto {
     title?: string | undefined;
     code?: string | undefined;
     baseStatus?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class SubscriptionPlanDto implements ISubscriptionPlanDto {
+    id!: number;
+    code!: string;
+    title!: string | undefined;
+    description!: string | undefined;
+    appleProductId!: string | undefined;
+    googleProductId!: string | undefined;
+    periodDays!: number;
+    trialDays!: number;
+    isHighlighted!: boolean;
+    isActive!: boolean;
+    sortOrder!: number;
+
+    [key: string]: any;
+
+    constructor(data?: ISubscriptionPlanDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.code = _data["code"];
+            this.title = _data["title"];
+            this.description = _data["description"];
+            this.appleProductId = _data["appleProductId"];
+            this.googleProductId = _data["googleProductId"];
+            this.periodDays = _data["periodDays"];
+            this.trialDays = _data["trialDays"];
+            this.isHighlighted = _data["isHighlighted"];
+            this.isActive = _data["isActive"];
+            this.sortOrder = _data["sortOrder"];
+        }
+    }
+
+    static fromJS(data: any): SubscriptionPlanDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new SubscriptionPlanDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["code"] = this.code;
+        data["title"] = this.title;
+        data["description"] = this.description;
+        data["appleProductId"] = this.appleProductId;
+        data["googleProductId"] = this.googleProductId;
+        data["periodDays"] = this.periodDays;
+        data["trialDays"] = this.trialDays;
+        data["isHighlighted"] = this.isHighlighted;
+        data["isActive"] = this.isActive;
+        data["sortOrder"] = this.sortOrder;
+        return data;
+    }
+}
+
+export interface ISubscriptionPlanDto {
+    id: number;
+    code: string;
+    title: string | undefined;
+    description: string | undefined;
+    appleProductId: string | undefined;
+    googleProductId: string | undefined;
+    periodDays: number;
+    trialDays: number;
+    isHighlighted: boolean;
+    isActive: boolean;
+    sortOrder: number;
 
     [key: string]: any;
 }
@@ -14451,6 +16358,82 @@ export interface IUpdateAccountTypeCommand {
     [key: string]: any;
 }
 
+export class UpdateAdPlacementCommand implements IUpdateAdPlacementCommand {
+    id!: number;
+    title!: string | undefined;
+    androidUnitId!: string | undefined;
+    iosUnitId!: string | undefined;
+    isEnabled!: boolean;
+    dailyLimit!: number;
+    cooldownSeconds!: number;
+    everyEpisodes!: number;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateAdPlacementCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.androidUnitId = _data["androidUnitId"];
+            this.iosUnitId = _data["iosUnitId"];
+            this.isEnabled = _data["isEnabled"];
+            this.dailyLimit = _data["dailyLimit"];
+            this.cooldownSeconds = _data["cooldownSeconds"];
+            this.everyEpisodes = _data["everyEpisodes"];
+        }
+    }
+
+    static fromJS(data: any): UpdateAdPlacementCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateAdPlacementCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["androidUnitId"] = this.androidUnitId;
+        data["iosUnitId"] = this.iosUnitId;
+        data["isEnabled"] = this.isEnabled;
+        data["dailyLimit"] = this.dailyLimit;
+        data["cooldownSeconds"] = this.cooldownSeconds;
+        data["everyEpisodes"] = this.everyEpisodes;
+        return data;
+    }
+}
+
+export interface IUpdateAdPlacementCommand {
+    id: number;
+    title: string | undefined;
+    androidUnitId: string | undefined;
+    iosUnitId: string | undefined;
+    isEnabled: boolean;
+    dailyLimit: number;
+    cooldownSeconds: number;
+    everyEpisodes: number;
+
+    [key: string]: any;
+}
+
 export class UpdateAICommand implements IUpdateAICommand {
     id?: number;
     title?: string | undefined;
@@ -14767,6 +16750,74 @@ export interface IUpdateLanguageCommand {
     id?: number;
     title?: string | undefined;
     code?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class UpdateMonetizationSettingsCommand implements IUpdateMonetizationSettingsCommand {
+    adsEnabled!: boolean;
+    purchasesEnabled!: boolean;
+    requireAdVerification!: boolean;
+    paywallVariant!: string | undefined;
+    paywallAfterRewardedAds!: number;
+    minAppVersion!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateMonetizationSettingsCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.adsEnabled = _data["adsEnabled"];
+            this.purchasesEnabled = _data["purchasesEnabled"];
+            this.requireAdVerification = _data["requireAdVerification"];
+            this.paywallVariant = _data["paywallVariant"];
+            this.paywallAfterRewardedAds = _data["paywallAfterRewardedAds"];
+            this.minAppVersion = _data["minAppVersion"];
+        }
+    }
+
+    static fromJS(data: any): UpdateMonetizationSettingsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateMonetizationSettingsCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["adsEnabled"] = this.adsEnabled;
+        data["purchasesEnabled"] = this.purchasesEnabled;
+        data["requireAdVerification"] = this.requireAdVerification;
+        data["paywallVariant"] = this.paywallVariant;
+        data["paywallAfterRewardedAds"] = this.paywallAfterRewardedAds;
+        data["minAppVersion"] = this.minAppVersion;
+        return data;
+    }
+}
+
+export interface IUpdateMonetizationSettingsCommand {
+    adsEnabled: boolean;
+    purchasesEnabled: boolean;
+    requireAdVerification: boolean;
+    paywallVariant: string | undefined;
+    paywallAfterRewardedAds: number;
+    minAppVersion: string | undefined;
 
     [key: string]: any;
 }
@@ -15873,6 +17924,12 @@ export interface IWorkEpisodeStatsDto {
     episodeSyncError?: string | undefined;
 
     [key: string]: any;
+}
+
+function formatDate(d: Date) {
+    return d.getFullYear() + '-' + 
+        (d.getMonth() < 9 ? ('0' + (d.getMonth()+1)) : (d.getMonth()+1)) + '-' +
+        (d.getDate() < 10 ? ('0' + d.getDate()) : d.getDate());
 }
 
 export class SwaggerException extends Error {

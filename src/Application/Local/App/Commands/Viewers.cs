@@ -1,5 +1,6 @@
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Domain.Entities;
+using SurveillanceCameras.Domain.Enums;
 
 namespace SurveillanceCameras.Application.Local.App.Commands;
 
@@ -42,12 +43,13 @@ public class SetAppViewerVipCommandHandler : IRequestHandler<SetAppViewerVipComm
 
     public async Task Handle(SetAppViewerVipCommand request, CancellationToken cancellationToken)
     {
+        // Chỉ sửa gói do quản trị viên cấp; gói mua qua cửa hàng do cửa hàng quyết định.
         var subscription = await _context.AppSubscriptions
-            .FirstOrDefaultAsync(x => x.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(x => x.UserId == request.UserId && x.Source == SubscriptionSource.Admin, cancellationToken);
 
         if (subscription is null)
         {
-            subscription = new AppSubscription { UserId = request.UserId };
+            subscription = new AppSubscription { UserId = request.UserId, Source = SubscriptionSource.Admin };
             _context.AppSubscriptions.Add(subscription);
         }
 

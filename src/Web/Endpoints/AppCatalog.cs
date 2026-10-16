@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -5,6 +7,8 @@ using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.App;
 using SurveillanceCameras.Application.Local.App.Commands;
+using SurveillanceCameras.Application.Local.App.Monetization;
+using SurveillanceCameras.Application.Local.App.Monetization.Queries;
 using SurveillanceCameras.Application.Local.App.Queries;
 using SurveillanceCameras.Infrastructure.Identity;
 
@@ -20,7 +24,7 @@ public class AppCatalog : IEndpointGroup
 
     public static void Map(RouteGroupBuilder groupBuilder)
     {
-        groupBuilder.MapGet(GetAppConfig, "config");
+        groupBuilder.MapGet(GetAppConfig, "config").Produces<AppRemoteConfigDto>().Produces(StatusCodes.Status304NotModified);
         groupBuilder.MapGet(GetAppLanguages, "languages");
         groupBuilder.MapGet(GetAppMovies, "movies");
         groupBuilder.MapGet(GetAppMovieById, "movies/{id}");
@@ -33,11 +37,20 @@ public class AppCatalog : IEndpointGroup
     public sealed record AddAppCommentRequest(string? Content);
 
     [EndpointSummary("Get app config")]
-    [EndpointDescription("Cấu hình app lấy khi khởi động: số tập miễn phí / mở bằng quảng cáo, link pháp lý")]
-    public static Ok<AppConfigDto> GetAppConfig(IOptions<AppOptions> options)
+    [EndpointDescription("Cấu hình app tải khi khởi động và cache lại: số tập miễn phí / mở bằng quảng cáo, link pháp lý, " +
+                         "quảng cáo (vị trí, ad unit theo nền tảng, giới hạn), gói VIP đang bán. Có ETag: gửi If-None-Match để nhận 304.")]
+    public static async Task<IResult> GetAppConfig(ISender sender, HttpContext httpContext, string? platform = null)
     {
-        var o = options.Value;
-        return TypedResults.Ok(new AppConfigDto(o.FreeEpisodes, o.AdEpisodes, o.PrivacyUrl, o.TermsUrl));
+        var config = await sender.Send(new GetAppRemoteConfigQuery(platform));
+        var json = JsonSerializer.SerializeToUtf8Bytes(config, JsonSerializerOptions.Web);
+        var etag = $"\"{Convert.ToHexStringLower(SHA256.HashData(json))[..16]}\"";
+
+        httpContext.Response.Headers.ETag = etag;
+        // Khác nhau theo người xem (VIP không có quảng cáo) nên chỉ cache riêng trên máy.
+        httpContext.Response.Headers.CacheControl = "private, no-cache";
+        return httpContext.Request.Headers.IfNoneMatch.ToString() == etag
+            ? TypedResults.StatusCode(StatusCodes.Status304NotModified)
+            : TypedResults.Ok(config);
     }
 
     [EndpointSummary("Get app languages")]

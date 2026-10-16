@@ -53,6 +53,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
 
     public DbSet<AppSubscription> AppSubscriptions => Set<AppSubscription>();
 
+    public DbSet<AppSubscriptionPlan> AppSubscriptionPlans => Set<AppSubscriptionPlan>();
+
+    public DbSet<AppStoreEvent> AppStoreEvents => Set<AppStoreEvent>();
+
+    public DbSet<AppAdPlacement> AppAdPlacements => Set<AppAdPlacement>();
+
+    public DbSet<AppAdReward> AppAdRewards => Set<AppAdReward>();
+
+    public DbSet<AppMonetizationSettings> AppMonetizationSettings => Set<AppMonetizationSettings>();
+
     public DbSet<StorageAccount> StorageAccounts => Set<StorageAccount>();
 
     protected override void OnModelCreating(ModelBuilder builder)

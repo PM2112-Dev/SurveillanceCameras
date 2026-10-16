@@ -43,6 +43,10 @@ import { UserProfileList } from './pages/UserProfiles/UserProfileList';
 import { UserProfileTypeList } from './pages/UserProfileTypes/UserProfileTypeList';
 import { UserProfileTypeForm } from './pages/UserProfileTypes/UserProfileTypeForm';
 import { ChapterForm } from './pages/Chapters/ChapterForm';
+import { MonetizationOverview } from './pages/Monetization/MonetizationOverview';
+import { SubscriptionPlans } from './pages/Monetization/SubscriptionPlans';
+import { AdPlacements } from './pages/Monetization/AdPlacements';
+import { AppSubscriptions } from './pages/Monetization/AppSubscriptions';
 
 export default function AppRoutes() {
   return (
@@ -72,6 +76,11 @@ export default function AppRoutes() {
         <Route path="/story-sources/new" element={<StorySourceForm />} />
         <Route path="/story-sources/:id" element={<StorySourceDetail />} />
         <Route path="/story-sources/:id/edit" element={<StorySourceForm />} />
+
+        <Route path="/monetization" element={<MonetizationOverview />} />
+        <Route path="/monetization/plans" element={<SubscriptionPlans />} />
+        <Route path="/monetization/ads" element={<AdPlacements />} />
+        <Route path="/monetization/subscriptions" element={<AppSubscriptions />} />
 
         <Route path="/categories" element={<CategoryList />} />
         <Route path="/categories/new" element={<CategoryForm />} />

@@ -7,6 +7,8 @@ using SurveillanceCameras.Domain.Constants;
 using SurveillanceCameras.Infrastructure.Data;
 using SurveillanceCameras.Infrastructure.Identity;
 
+using SurveillanceCameras.Application.Local.App.Monetization;
+
 namespace SurveillanceCameras.Web.Endpoints;
 
 /// <summary>
@@ -39,7 +41,12 @@ public class AppAuth : IEndpointGroup
 
     public sealed record AppRefreshRequest(string? RefreshToken);
 
-    public sealed record AppProfileDto(string Email, string DisplayName, bool IsVip, string? VipPlan, DateTimeOffset? VipExpiresAt);
+    /// <param name="StoreAccountToken">
+    /// Mã tài khoản app gắn vào giao dịch khi mua gói (StoreKit <c>appAccountToken</c>, Google Play
+    /// <c>obfuscatedAccountId</c>) để máy chủ biết gói thuộc ai.
+    /// </param>
+    public sealed record AppProfileDto(string Email, string DisplayName, bool IsVip, string? VipPlan, DateTimeOffset? VipExpiresAt,
+        string StoreAccountToken);
 
     public sealed record AppAuthResponse(string AccessToken, int ExpiresIn, string RefreshToken, AppProfileDto Profile);
 
@@ -228,12 +235,10 @@ public class AppAuth : IEndpointGroup
     internal static async Task<AppProfileDto> ProfileAsync(ApplicationUser user, ApplicationDbContext dbContext,
         TimeProvider timeProvider)
     {
-        var now = timeProvider.GetUtcNow();
-        var subscription = await dbContext.AppSubscriptions.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.ExpiresAt > now);
+        var subscription = await dbContext.ActiveSubscriptionAsync(user.Id, timeProvider.GetUtcNow(), CancellationToken.None);
 
         return new AppProfileDto(user.Email ?? "", DisplayNameOf(user) ?? "", subscription is not null,
-            subscription?.Plan, subscription?.ExpiresAt);
+            subscription?.Plan, subscription?.ExpiresAt, StoreAccount.TokenFor(user.Id).ToString());
     }
 
     internal static string? DisplayNameOf(ApplicationUser? user)
