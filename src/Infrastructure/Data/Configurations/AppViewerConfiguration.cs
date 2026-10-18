@@ -100,7 +100,32 @@ public class AppAdPlacementConfiguration : IEntityTypeConfiguration<AppAdPlaceme
         builder.Property(x => x.Title).HasMaxLength(100);
         builder.Property(x => x.AndroidUnitId).HasMaxLength(100);
         builder.Property(x => x.IosUnitId).HasMaxLength(100);
+        builder.Property(x => x.ScreenCode).HasMaxLength(50);
         builder.HasIndex(x => x.Code).IsUnique();
+    }
+}
+
+public class AppAdScreenConfiguration : IEntityTypeConfiguration<AppAdScreen>
+{
+    public void Configure(EntityTypeBuilder<AppAdScreen> builder)
+    {
+        builder.Property(x => x.Code).HasMaxLength(50).IsRequired();
+        builder.Property(x => x.Title).HasMaxLength(100);
+        builder.HasIndex(x => x.Code).IsUnique();
+    }
+}
+
+public class AppAdStatConfiguration : IEntityTypeConfiguration<AppAdStat>
+{
+    public void Configure(EntityTypeBuilder<AppAdStat> builder)
+    {
+        builder.Property(x => x.PlacementCode).HasMaxLength(50).IsRequired();
+        builder.Property(x => x.ScreenCode).HasMaxLength(50).IsRequired();
+        builder.Property(x => x.Platform).HasMaxLength(10).IsRequired();
+        builder.Property(x => x.Currency).HasMaxLength(3).IsRequired();
+        builder.Property(x => x.LastError).HasMaxLength(200);
+        builder.HasIndex(x => new { x.Day, x.PlacementCode, x.ScreenCode, x.Platform, x.Currency }).IsUnique();
+        builder.HasIndex(x => x.Day);
     }
 }
 

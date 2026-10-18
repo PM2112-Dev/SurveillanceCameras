@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.App.Monetization;
+using SurveillanceCameras.Application.Local.App.Monetization.Queries;
 using SurveillanceCameras.Domain.Constants;
 using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Infrastructure.Data;
@@ -24,7 +25,15 @@ public class Monetization : IEndpointGroup
         groupBuilder.MapDelete(DeleteSubscriptionPlan, "plans/{id}");
 
         groupBuilder.MapGet(GetAdPlacements, "ad-placements");
+        groupBuilder.MapPost(CreateAdPlacement, "ad-placements");
         groupBuilder.MapPut(UpdateAdPlacement, "ad-placements/{id}");
+        groupBuilder.MapDelete(DeleteAdPlacement, "ad-placements/{id}");
+
+        groupBuilder.MapGet(GetAdScreens, "ad-screens");
+        groupBuilder.MapPost(CreateAdScreen, "ad-screens");
+        groupBuilder.MapPut(UpdateAdScreen, "ad-screens/{id}");
+        groupBuilder.MapDelete(DeleteAdScreen, "ad-screens/{id}");
+        groupBuilder.MapGet(GetAdStats, "ad-stats");
 
         groupBuilder.MapGet(GetAppSubscriptions, "subscriptions");
         groupBuilder.MapGet(GetMonetizationStats, "stats");
@@ -78,14 +87,69 @@ public class Monetization : IEndpointGroup
     public static async Task<Ok<List<AdPlacementDto>>> GetAdPlacements(ISender sender)
         => TypedResults.Ok(await sender.Send(new GetAdPlacementsQuery()));
 
+    [EndpointSummary("Create ad placement")]
+    [EndpointDescription("Thêm vị trí quảng cáo (rewarded, interstitial, banner, native, app_open); được nhiều vị trí cùng loại, cùng màn")]
+    public static async Task<Created<int>> CreateAdPlacement(ISender sender, SaveAdPlacementCommand command)
+    {
+        var id = await sender.Send(command with { Id = 0 });
+        return TypedResults.Created($"/api/{nameof(Monetization)}/ad-placements/{id}", id);
+    }
+
     [EndpointSummary("Update ad placement")]
-    [EndpointDescription("Sửa ad unit, bật/tắt và giới hạn của một vị trí quảng cáo")]
-    public static async Task<Results<NoContent, BadRequest>> UpdateAdPlacement(ISender sender, int id, UpdateAdPlacementCommand command)
+    [EndpointDescription("Sửa ad unit, màn, thứ tự, bật/tắt và giới hạn của một vị trí quảng cáo")]
+    public static async Task<Results<NoContent, BadRequest>> UpdateAdPlacement(ISender sender, int id, SaveAdPlacementCommand command)
     {
         if (id != command.Id) return TypedResults.BadRequest();
         await sender.Send(command);
         return TypedResults.NoContent();
     }
+
+    [EndpointSummary("Delete ad placement")]
+    [EndpointDescription("Xoá vị trí quảng cáo tự thêm (vị trí có sẵn của app chỉ tắt được); thống kê cũ vẫn giữ")]
+    public static async Task<NoContent> DeleteAdPlacement(ISender sender, int id)
+    {
+        await sender.Send(new DeleteAdPlacementCommand(id));
+        return TypedResults.NoContent();
+    }
+
+    [EndpointSummary("Get ad screens")]
+    [EndpointDescription("Các màn hình của app đã khai báo để gắn quảng cáo và thống kê")]
+    public static async Task<Ok<List<AdScreenDto>>> GetAdScreens(ISender sender)
+        => TypedResults.Ok(await sender.Send(new GetAdScreensQuery()));
+
+    [EndpointSummary("Create ad screen")]
+    [EndpointDescription("Khai báo màn hình mới (mã phải trùng mã app dùng khi báo thống kê)")]
+    public static async Task<Created<int>> CreateAdScreen(ISender sender, SaveAdScreenCommand command)
+    {
+        var id = await sender.Send(command with { Id = 0 });
+        return TypedResults.Created($"/api/{nameof(Monetization)}/ad-screens/{id}", id);
+    }
+
+    [EndpointSummary("Update ad screen")]
+    [EndpointDescription("Đổi tên, bật/tắt hoặc thứ tự của màn; tắt màn thì quảng cáo của màn đó ngừng hiện")]
+    public static async Task<Results<NoContent, BadRequest>> UpdateAdScreen(ISender sender, int id, SaveAdScreenCommand command)
+    {
+        if (id != command.Id) return TypedResults.BadRequest();
+        await sender.Send(command);
+        return TypedResults.NoContent();
+    }
+
+    [EndpointSummary("Delete ad screen")]
+    [EndpointDescription("Xoá màn tự khai báo, khi không còn vị trí quảng cáo gắn với màn")]
+    public static async Task<NoContent> DeleteAdScreen(ISender sender, int id)
+    {
+        await sender.Send(new DeleteAdScreenCommand(id));
+        return TypedResults.NoContent();
+    }
+
+    [EndpointSummary("Get ad stats")]
+    [EndpointDescription("Thống kê quảng cáo: request, lấp đầy, hiển thị, bấm, thưởng, doanh thu; theo ngày, vị trí, màn, nền tảng, loại. " +
+                         "Lọc theo khoảng ngày (UTC), nền tảng, màn, vị trí, loại; kèm kỳ trước để so sánh")]
+    public static async Task<Ok<AdStatsDto>> GetAdStats(ISender sender, DateTimeOffset? from = null, DateTimeOffset? to = null,
+        string? platform = null, string? screen = null, string? placement = null, string? format = null)
+        => TypedResults.Ok(await sender.Send(new GetAdStatsQuery(
+            from is null ? null : DateOnly.FromDateTime(from.Value.UtcDateTime),
+            to is null ? null : DateOnly.FromDateTime(to.Value.UtcDateTime), platform, screen, placement, format)));
 
     public sealed record AppSubscriptionDto(int Id, string UserId, string? Email, string? Plan, string Source, string Status,
         string? ProductId, DateTimeOffset ExpiresAt, bool IsActive, bool AutoRenew, bool IsSandbox, DateTimeOffset Created,

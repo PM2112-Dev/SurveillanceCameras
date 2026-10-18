@@ -1897,6 +1897,48 @@ export class AppCatalogClient {
         }
         return Promise.resolve<AppEpisodeDto>(null as any);
     }
+
+    /**
+     * Record ad events
+     * @return No Content
+     */
+    recordAdEvents(body: AdEventsRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/app/ads/events";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRecordAdEvents(_response);
+        });
+    }
+
+    protected processRecordAdEvents(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
 }
 
 export class AppMeClient {
@@ -4031,10 +4073,65 @@ export class MonetizationClient {
     }
 
     /**
+     * Create ad placement
+     * @return Created
+     */
+    createAdPlacement(body: SaveAdPlacementCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/Monetization/ad-placements";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateAdPlacement(_response);
+        });
+    }
+
+    protected processCreateAdPlacement(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
      * Update ad placement
      * @return No Content
      */
-    updateAdPlacement(id: number, body: UpdateAdPlacementCommand): Promise<void> {
+    updateAdPlacement(id: number, body: SaveAdPlacementCommand): Promise<void> {
         let url_ = this.baseUrl + "/api/Monetization/ad-placements/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -4081,6 +4178,349 @@ export class MonetizationClient {
             });
         }
         return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete ad placement
+     * @return No Content
+     */
+    deleteAdPlacement(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Monetization/ad-placements/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteAdPlacement(_response);
+        });
+    }
+
+    protected processDeleteAdPlacement(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get ad screens
+     * @return OK
+     */
+    getAdScreens(): Promise<AdScreenDto[]> {
+        let url_ = this.baseUrl + "/api/Monetization/ad-screens";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAdScreens(_response);
+        });
+    }
+
+    protected processGetAdScreens(response: Response): Promise<AdScreenDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(AdScreenDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AdScreenDto[]>(null as any);
+    }
+
+    /**
+     * Create ad screen
+     * @return Created
+     */
+    createAdScreen(body: SaveAdScreenCommand): Promise<number> {
+        let url_ = this.baseUrl + "/api/Monetization/ad-screens";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateAdScreen(_response);
+        });
+    }
+
+    protected processCreateAdScreen(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result201 = resultData201 !== undefined ? resultData201 : null as any;
+    
+            return result201;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Update ad screen
+     * @return No Content
+     */
+    updateAdScreen(id: number, body: SaveAdScreenCommand): Promise<void> {
+        let url_ = this.baseUrl + "/api/Monetization/ad-screens/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateAdScreen(_response);
+        });
+    }
+
+    protected processUpdateAdScreen(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete ad screen
+     * @return No Content
+     */
+    deleteAdScreen(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Monetization/ad-screens/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteAdScreen(_response);
+        });
+    }
+
+    protected processDeleteAdScreen(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Get ad stats
+     * @param from (optional) 
+     * @param to (optional) 
+     * @param platform (optional) 
+     * @param screen (optional) 
+     * @param placement (optional) 
+     * @param format (optional) 
+     * @return OK
+     */
+    getAdStats(from: Date | undefined, to: Date | undefined, platform: string | undefined, screen: string | undefined, placement: string | undefined, format: string | undefined): Promise<AdStatsDto> {
+        let url_ = this.baseUrl + "/api/Monetization/ad-stats?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        if (platform === null)
+            throw new globalThis.Error("The parameter 'platform' cannot be null.");
+        else if (platform !== undefined)
+            url_ += "platform=" + encodeURIComponent("" + platform) + "&";
+        if (screen === null)
+            throw new globalThis.Error("The parameter 'screen' cannot be null.");
+        else if (screen !== undefined)
+            url_ += "screen=" + encodeURIComponent("" + screen) + "&";
+        if (placement === null)
+            throw new globalThis.Error("The parameter 'placement' cannot be null.");
+        else if (placement !== undefined)
+            url_ += "placement=" + encodeURIComponent("" + placement) + "&";
+        if (format === null)
+            throw new globalThis.Error("The parameter 'format' cannot be null.");
+        else if (format !== undefined)
+            url_ += "format=" + encodeURIComponent("" + format) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAdStats(_response);
+        });
+    }
+
+    protected processGetAdStats(response: Response): Promise<AdStatsDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AdStatsDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AdStatsDto>(null as any);
     }
 
     /**
@@ -8573,6 +9013,158 @@ export interface IAddAppCommentRequest {
     [key: string]: any;
 }
 
+export class AdEventItem implements IAdEventItem {
+    placement?: string | undefined;
+    screen?: string | undefined;
+    requests?: number;
+    filled?: number;
+    failed?: number;
+    impressions?: number;
+    clicks?: number;
+    rewarded?: number;
+    dismissed?: number;
+    revenueMicros?: number;
+    currency?: string | undefined;
+    error?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAdEventItem) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.placement = _data["placement"];
+            this.screen = _data["screen"];
+            this.requests = _data["requests"];
+            this.filled = _data["filled"];
+            this.failed = _data["failed"];
+            this.impressions = _data["impressions"];
+            this.clicks = _data["clicks"];
+            this.rewarded = _data["rewarded"];
+            this.dismissed = _data["dismissed"];
+            this.revenueMicros = _data["revenueMicros"];
+            this.currency = _data["currency"];
+            this.error = _data["error"];
+        }
+    }
+
+    static fromJS(data: any): AdEventItem {
+        data = typeof data === 'object' ? data : {};
+        let result = new AdEventItem();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["placement"] = this.placement;
+        data["screen"] = this.screen;
+        data["requests"] = this.requests;
+        data["filled"] = this.filled;
+        data["failed"] = this.failed;
+        data["impressions"] = this.impressions;
+        data["clicks"] = this.clicks;
+        data["rewarded"] = this.rewarded;
+        data["dismissed"] = this.dismissed;
+        data["revenueMicros"] = this.revenueMicros;
+        data["currency"] = this.currency;
+        data["error"] = this.error;
+        return data;
+    }
+}
+
+export interface IAdEventItem {
+    placement?: string | undefined;
+    screen?: string | undefined;
+    requests?: number;
+    filled?: number;
+    failed?: number;
+    impressions?: number;
+    clicks?: number;
+    rewarded?: number;
+    dismissed?: number;
+    revenueMicros?: number;
+    currency?: string | undefined;
+    error?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AdEventsRequest implements IAdEventsRequest {
+    platform!: string | undefined;
+    items!: AdEventItem[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAdEventsRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.platform = _data["platform"];
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(AdEventItem.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): AdEventsRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new AdEventsRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["platform"] = this.platform;
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IAdEventsRequest {
+    platform: string | undefined;
+    items: AdEventItem[] | undefined;
+
+    [key: string]: any;
+}
+
 export class AdPlacementDto implements IAdPlacementDto {
     id!: number;
     code!: string;
@@ -8584,6 +9176,10 @@ export class AdPlacementDto implements IAdPlacementDto {
     dailyLimit!: number;
     cooldownSeconds!: number;
     everyEpisodes!: number;
+    screenCode!: string | undefined;
+    priority!: number;
+    displaySeconds!: number;
+    everyItems!: number;
 
     [key: string]: any;
 
@@ -8612,6 +9208,10 @@ export class AdPlacementDto implements IAdPlacementDto {
             this.dailyLimit = _data["dailyLimit"];
             this.cooldownSeconds = _data["cooldownSeconds"];
             this.everyEpisodes = _data["everyEpisodes"];
+            this.screenCode = _data["screenCode"];
+            this.priority = _data["priority"];
+            this.displaySeconds = _data["displaySeconds"];
+            this.everyItems = _data["everyItems"];
         }
     }
 
@@ -8638,6 +9238,10 @@ export class AdPlacementDto implements IAdPlacementDto {
         data["dailyLimit"] = this.dailyLimit;
         data["cooldownSeconds"] = this.cooldownSeconds;
         data["everyEpisodes"] = this.everyEpisodes;
+        data["screenCode"] = this.screenCode;
+        data["priority"] = this.priority;
+        data["displaySeconds"] = this.displaySeconds;
+        data["everyItems"] = this.everyItems;
         return data;
     }
 }
@@ -8653,6 +9257,365 @@ export interface IAdPlacementDto {
     dailyLimit: number;
     cooldownSeconds: number;
     everyEpisodes: number;
+    screenCode: string | undefined;
+    priority: number;
+    displaySeconds: number;
+    everyItems: number;
+
+    [key: string]: any;
+}
+
+export class AdScreenDto implements IAdScreenDto {
+    id!: number;
+    code!: string;
+    title!: string | undefined;
+    isEnabled!: boolean;
+    sortOrder!: number;
+    placementCount!: number;
+
+    [key: string]: any;
+
+    constructor(data?: IAdScreenDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.code = _data["code"];
+            this.title = _data["title"];
+            this.isEnabled = _data["isEnabled"];
+            this.sortOrder = _data["sortOrder"];
+            this.placementCount = _data["placementCount"];
+        }
+    }
+
+    static fromJS(data: any): AdScreenDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AdScreenDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["code"] = this.code;
+        data["title"] = this.title;
+        data["isEnabled"] = this.isEnabled;
+        data["sortOrder"] = this.sortOrder;
+        data["placementCount"] = this.placementCount;
+        return data;
+    }
+}
+
+export interface IAdScreenDto {
+    id: number;
+    code: string;
+    title: string | undefined;
+    isEnabled: boolean;
+    sortOrder: number;
+    placementCount: number;
+
+    [key: string]: any;
+}
+
+export class AdStatRowDto implements IAdStatRowDto {
+    key!: string;
+    label!: string | undefined;
+    format!: string | undefined;
+    totals!: AdStatTotalsDto;
+    lastError!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAdStatRowDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.totals = new AdStatTotalsDto();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.key = _data["key"];
+            this.label = _data["label"];
+            this.format = _data["format"];
+            this.totals = _data["totals"] ? AdStatTotalsDto.fromJS(_data["totals"]) : new AdStatTotalsDto();
+            this.lastError = _data["lastError"];
+        }
+    }
+
+    static fromJS(data: any): AdStatRowDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AdStatRowDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["key"] = this.key;
+        data["label"] = this.label;
+        data["format"] = this.format;
+        data["totals"] = this.totals ? this.totals.toJSON() : undefined as any;
+        data["lastError"] = this.lastError;
+        return data;
+    }
+}
+
+export interface IAdStatRowDto {
+    key: string;
+    label: string | undefined;
+    format: string | undefined;
+    totals: AdStatTotalsDto;
+    lastError: string | undefined;
+
+    [key: string]: any;
+}
+
+export class AdStatsDto implements IAdStatsDto {
+    from!: Date;
+    to!: Date;
+    totals!: AdStatTotalsDto;
+    previous!: AdStatTotalsDto;
+    byDay!: AdStatRowDto[];
+    byPlacement!: AdStatRowDto[];
+    byScreen!: AdStatRowDto[];
+    byPlatform!: AdStatRowDto[];
+    byFormat!: AdStatRowDto[];
+
+    [key: string]: any;
+
+    constructor(data?: IAdStatsDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.totals = new AdStatTotalsDto();
+            this.previous = new AdStatTotalsDto();
+            this.byDay = [];
+            this.byPlacement = [];
+            this.byScreen = [];
+            this.byPlatform = [];
+            this.byFormat = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.from = _data["from"] ? new Date(_data["from"].toString()) : undefined as any;
+            this.to = _data["to"] ? new Date(_data["to"].toString()) : undefined as any;
+            this.totals = _data["totals"] ? AdStatTotalsDto.fromJS(_data["totals"]) : new AdStatTotalsDto();
+            this.previous = _data["previous"] ? AdStatTotalsDto.fromJS(_data["previous"]) : new AdStatTotalsDto();
+            if (Array.isArray(_data["byDay"])) {
+                this.byDay = [] as any;
+                for (let item of _data["byDay"])
+                    this.byDay!.push(AdStatRowDto.fromJS(item));
+            }
+            if (Array.isArray(_data["byPlacement"])) {
+                this.byPlacement = [] as any;
+                for (let item of _data["byPlacement"])
+                    this.byPlacement!.push(AdStatRowDto.fromJS(item));
+            }
+            if (Array.isArray(_data["byScreen"])) {
+                this.byScreen = [] as any;
+                for (let item of _data["byScreen"])
+                    this.byScreen!.push(AdStatRowDto.fromJS(item));
+            }
+            if (Array.isArray(_data["byPlatform"])) {
+                this.byPlatform = [] as any;
+                for (let item of _data["byPlatform"])
+                    this.byPlatform!.push(AdStatRowDto.fromJS(item));
+            }
+            if (Array.isArray(_data["byFormat"])) {
+                this.byFormat = [] as any;
+                for (let item of _data["byFormat"])
+                    this.byFormat!.push(AdStatRowDto.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): AdStatsDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AdStatsDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["from"] = this.from ? formatDate(this.from) : undefined as any;
+        data["to"] = this.to ? formatDate(this.to) : undefined as any;
+        data["totals"] = this.totals ? this.totals.toJSON() : undefined as any;
+        data["previous"] = this.previous ? this.previous.toJSON() : undefined as any;
+        if (Array.isArray(this.byDay)) {
+            data["byDay"] = [];
+            for (let item of this.byDay)
+                data["byDay"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.byPlacement)) {
+            data["byPlacement"] = [];
+            for (let item of this.byPlacement)
+                data["byPlacement"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.byScreen)) {
+            data["byScreen"] = [];
+            for (let item of this.byScreen)
+                data["byScreen"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.byPlatform)) {
+            data["byPlatform"] = [];
+            for (let item of this.byPlatform)
+                data["byPlatform"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.byFormat)) {
+            data["byFormat"] = [];
+            for (let item of this.byFormat)
+                data["byFormat"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IAdStatsDto {
+    from: Date;
+    to: Date;
+    totals: AdStatTotalsDto;
+    previous: AdStatTotalsDto;
+    byDay: AdStatRowDto[];
+    byPlacement: AdStatRowDto[];
+    byScreen: AdStatRowDto[];
+    byPlatform: AdStatRowDto[];
+    byFormat: AdStatRowDto[];
+
+    [key: string]: any;
+}
+
+export class AdStatTotalsDto implements IAdStatTotalsDto {
+    requests!: number;
+    filled!: number;
+    failed!: number;
+    impressions!: number;
+    clicks!: number;
+    rewarded!: number;
+    dismissed!: number;
+    revenue!: { [key: string]: number; };
+
+    [key: string]: any;
+
+    constructor(data?: IAdStatTotalsDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.revenue = {};
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.requests = _data["requests"];
+            this.filled = _data["filled"];
+            this.failed = _data["failed"];
+            this.impressions = _data["impressions"];
+            this.clicks = _data["clicks"];
+            this.rewarded = _data["rewarded"];
+            this.dismissed = _data["dismissed"];
+            if (_data["revenue"]) {
+                this.revenue = {} as any;
+                for (let key in _data["revenue"]) {
+                    if (_data["revenue"].hasOwnProperty(key))
+                        (this.revenue as any)![key] = _data["revenue"][key];
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): AdStatTotalsDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new AdStatTotalsDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["requests"] = this.requests;
+        data["filled"] = this.filled;
+        data["failed"] = this.failed;
+        data["impressions"] = this.impressions;
+        data["clicks"] = this.clicks;
+        data["rewarded"] = this.rewarded;
+        data["dismissed"] = this.dismissed;
+        if (this.revenue) {
+            data["revenue"] = {};
+            for (let key in this.revenue) {
+                if (this.revenue.hasOwnProperty(key))
+                    (data["revenue"] as any)[key] = (this.revenue as any)[key];
+            }
+        }
+        return data;
+    }
+}
+
+export interface IAdStatTotalsDto {
+    requests: number;
+    filled: number;
+    failed: number;
+    impressions: number;
+    clicks: number;
+    rewarded: number;
+    dismissed: number;
+    revenue: { [key: string]: number; };
 
     [key: string]: any;
 }
@@ -8796,6 +9759,10 @@ export class AppAdPlacementConfigDto implements IAppAdPlacementConfigDto {
     dailyLimit!: number;
     cooldownSeconds!: number;
     everyEpisodes!: number;
+    screen!: string | undefined;
+    priority!: number;
+    displaySeconds!: number;
+    everyItems!: number;
 
     [key: string]: any;
 
@@ -8820,6 +9787,10 @@ export class AppAdPlacementConfigDto implements IAppAdPlacementConfigDto {
             this.dailyLimit = _data["dailyLimit"];
             this.cooldownSeconds = _data["cooldownSeconds"];
             this.everyEpisodes = _data["everyEpisodes"];
+            this.screen = _data["screen"];
+            this.priority = _data["priority"];
+            this.displaySeconds = _data["displaySeconds"];
+            this.everyItems = _data["everyItems"];
         }
     }
 
@@ -8842,6 +9813,10 @@ export class AppAdPlacementConfigDto implements IAppAdPlacementConfigDto {
         data["dailyLimit"] = this.dailyLimit;
         data["cooldownSeconds"] = this.cooldownSeconds;
         data["everyEpisodes"] = this.everyEpisodes;
+        data["screen"] = this.screen;
+        data["priority"] = this.priority;
+        data["displaySeconds"] = this.displaySeconds;
+        data["everyItems"] = this.everyItems;
         return data;
     }
 }
@@ -8853,6 +9828,10 @@ export interface IAppAdPlacementConfigDto {
     dailyLimit: number;
     cooldownSeconds: number;
     everyEpisodes: number;
+    screen: string | undefined;
+    priority: number;
+    displaySeconds: number;
+    everyItems: number;
 
     [key: string]: any;
 }
@@ -9632,6 +10611,7 @@ export class AppRemoteConfigDto implements IAppRemoteConfigDto {
     adsEnabled?: boolean;
     purchasesEnabled?: boolean;
     requireAdVerification?: boolean;
+    adStatsEnabled?: boolean;
     paywallVariant?: string;
     paywallAfterRewardedAds?: number;
     minAppVersion?: string | undefined;
@@ -9662,6 +10642,7 @@ export class AppRemoteConfigDto implements IAppRemoteConfigDto {
             this.adsEnabled = _data["adsEnabled"];
             this.purchasesEnabled = _data["purchasesEnabled"];
             this.requireAdVerification = _data["requireAdVerification"];
+            this.adStatsEnabled = _data["adStatsEnabled"];
             this.paywallVariant = _data["paywallVariant"];
             this.paywallAfterRewardedAds = _data["paywallAfterRewardedAds"];
             this.minAppVersion = _data["minAppVersion"];
@@ -9698,6 +10679,7 @@ export class AppRemoteConfigDto implements IAppRemoteConfigDto {
         data["adsEnabled"] = this.adsEnabled;
         data["purchasesEnabled"] = this.purchasesEnabled;
         data["requireAdVerification"] = this.requireAdVerification;
+        data["adStatsEnabled"] = this.adStatsEnabled;
         data["paywallVariant"] = this.paywallVariant;
         data["paywallAfterRewardedAds"] = this.paywallAfterRewardedAds;
         data["minAppVersion"] = this.minAppVersion;
@@ -9723,6 +10705,7 @@ export interface IAppRemoteConfigDto {
     adsEnabled?: boolean;
     purchasesEnabled?: boolean;
     requireAdVerification?: boolean;
+    adStatsEnabled?: boolean;
     paywallVariant?: string;
     paywallAfterRewardedAds?: number;
     minAppVersion?: string | undefined;
@@ -12439,6 +13422,7 @@ export class MonetizationSettingsDto implements IMonetizationSettingsDto {
     paywallVariant!: string;
     paywallAfterRewardedAds!: number;
     minAppVersion!: string | undefined;
+    adStatsEnabled?: boolean;
 
     [key: string]: any;
 
@@ -12448,6 +13432,9 @@ export class MonetizationSettingsDto implements IMonetizationSettingsDto {
                 if (data.hasOwnProperty(property))
                     (this as any)[property] = (data as any)[property];
             }
+        }
+        if (!data) {
+            this.adStatsEnabled = true;
         }
     }
 
@@ -12463,6 +13450,7 @@ export class MonetizationSettingsDto implements IMonetizationSettingsDto {
             this.paywallVariant = _data["paywallVariant"];
             this.paywallAfterRewardedAds = _data["paywallAfterRewardedAds"];
             this.minAppVersion = _data["minAppVersion"];
+            this.adStatsEnabled = _data["adStatsEnabled"] !== undefined ? _data["adStatsEnabled"] : true;
         }
     }
 
@@ -12485,6 +13473,7 @@ export class MonetizationSettingsDto implements IMonetizationSettingsDto {
         data["paywallVariant"] = this.paywallVariant;
         data["paywallAfterRewardedAds"] = this.paywallAfterRewardedAds;
         data["minAppVersion"] = this.minAppVersion;
+        data["adStatsEnabled"] = this.adStatsEnabled;
         return data;
     }
 }
@@ -12496,6 +13485,7 @@ export interface IMonetizationSettingsDto {
     paywallVariant: string;
     paywallAfterRewardedAds: number;
     minAppVersion: string | undefined;
+    adStatsEnabled?: boolean;
 
     [key: string]: any;
 }
@@ -14611,6 +15601,170 @@ export interface IRegisterRequest {
     [key: string]: any;
 }
 
+export class SaveAdPlacementCommand implements ISaveAdPlacementCommand {
+    id?: number;
+    code?: string | undefined;
+    title?: string | undefined;
+    format?: string | undefined;
+    androidUnitId?: string | undefined;
+    iosUnitId?: string | undefined;
+    isEnabled?: boolean;
+    dailyLimit?: number;
+    cooldownSeconds?: number;
+    everyEpisodes?: number;
+    screenCode?: string | undefined;
+    priority?: number;
+    displaySeconds?: number;
+    everyItems?: number;
+
+    [key: string]: any;
+
+    constructor(data?: ISaveAdPlacementCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.code = _data["code"];
+            this.title = _data["title"];
+            this.format = _data["format"];
+            this.androidUnitId = _data["androidUnitId"];
+            this.iosUnitId = _data["iosUnitId"];
+            this.isEnabled = _data["isEnabled"];
+            this.dailyLimit = _data["dailyLimit"];
+            this.cooldownSeconds = _data["cooldownSeconds"];
+            this.everyEpisodes = _data["everyEpisodes"];
+            this.screenCode = _data["screenCode"];
+            this.priority = _data["priority"];
+            this.displaySeconds = _data["displaySeconds"];
+            this.everyItems = _data["everyItems"];
+        }
+    }
+
+    static fromJS(data: any): SaveAdPlacementCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new SaveAdPlacementCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["code"] = this.code;
+        data["title"] = this.title;
+        data["format"] = this.format;
+        data["androidUnitId"] = this.androidUnitId;
+        data["iosUnitId"] = this.iosUnitId;
+        data["isEnabled"] = this.isEnabled;
+        data["dailyLimit"] = this.dailyLimit;
+        data["cooldownSeconds"] = this.cooldownSeconds;
+        data["everyEpisodes"] = this.everyEpisodes;
+        data["screenCode"] = this.screenCode;
+        data["priority"] = this.priority;
+        data["displaySeconds"] = this.displaySeconds;
+        data["everyItems"] = this.everyItems;
+        return data;
+    }
+}
+
+export interface ISaveAdPlacementCommand {
+    id?: number;
+    code?: string | undefined;
+    title?: string | undefined;
+    format?: string | undefined;
+    androidUnitId?: string | undefined;
+    iosUnitId?: string | undefined;
+    isEnabled?: boolean;
+    dailyLimit?: number;
+    cooldownSeconds?: number;
+    everyEpisodes?: number;
+    screenCode?: string | undefined;
+    priority?: number;
+    displaySeconds?: number;
+    everyItems?: number;
+
+    [key: string]: any;
+}
+
+export class SaveAdScreenCommand implements ISaveAdScreenCommand {
+    id!: number;
+    code!: string | undefined;
+    title!: string | undefined;
+    isEnabled!: boolean;
+    sortOrder!: number;
+
+    [key: string]: any;
+
+    constructor(data?: ISaveAdScreenCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.code = _data["code"];
+            this.title = _data["title"];
+            this.isEnabled = _data["isEnabled"];
+            this.sortOrder = _data["sortOrder"];
+        }
+    }
+
+    static fromJS(data: any): SaveAdScreenCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new SaveAdScreenCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["code"] = this.code;
+        data["title"] = this.title;
+        data["isEnabled"] = this.isEnabled;
+        data["sortOrder"] = this.sortOrder;
+        return data;
+    }
+}
+
+export interface ISaveAdScreenCommand {
+    id: number;
+    code: string | undefined;
+    title: string | undefined;
+    isEnabled: boolean;
+    sortOrder: number;
+
+    [key: string]: any;
+}
+
 export class SaveAppWatchProgressRequest implements ISaveAppWatchProgressRequest {
     episodeNumber!: number;
     positionSeconds!: number;
@@ -16358,82 +17512,6 @@ export interface IUpdateAccountTypeCommand {
     [key: string]: any;
 }
 
-export class UpdateAdPlacementCommand implements IUpdateAdPlacementCommand {
-    id!: number;
-    title!: string | undefined;
-    androidUnitId!: string | undefined;
-    iosUnitId!: string | undefined;
-    isEnabled!: boolean;
-    dailyLimit!: number;
-    cooldownSeconds!: number;
-    everyEpisodes!: number;
-
-    [key: string]: any;
-
-    constructor(data?: IUpdateAdPlacementCommand) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.id = _data["id"];
-            this.title = _data["title"];
-            this.androidUnitId = _data["androidUnitId"];
-            this.iosUnitId = _data["iosUnitId"];
-            this.isEnabled = _data["isEnabled"];
-            this.dailyLimit = _data["dailyLimit"];
-            this.cooldownSeconds = _data["cooldownSeconds"];
-            this.everyEpisodes = _data["everyEpisodes"];
-        }
-    }
-
-    static fromJS(data: any): UpdateAdPlacementCommand {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdateAdPlacementCommand();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["id"] = this.id;
-        data["title"] = this.title;
-        data["androidUnitId"] = this.androidUnitId;
-        data["iosUnitId"] = this.iosUnitId;
-        data["isEnabled"] = this.isEnabled;
-        data["dailyLimit"] = this.dailyLimit;
-        data["cooldownSeconds"] = this.cooldownSeconds;
-        data["everyEpisodes"] = this.everyEpisodes;
-        return data;
-    }
-}
-
-export interface IUpdateAdPlacementCommand {
-    id: number;
-    title: string | undefined;
-    androidUnitId: string | undefined;
-    iosUnitId: string | undefined;
-    isEnabled: boolean;
-    dailyLimit: number;
-    cooldownSeconds: number;
-    everyEpisodes: number;
-
-    [key: string]: any;
-}
-
 export class UpdateAICommand implements IUpdateAICommand {
     id?: number;
     title?: string | undefined;
@@ -16761,6 +17839,7 @@ export class UpdateMonetizationSettingsCommand implements IUpdateMonetizationSet
     paywallVariant!: string | undefined;
     paywallAfterRewardedAds!: number;
     minAppVersion!: string | undefined;
+    adStatsEnabled?: boolean;
 
     [key: string]: any;
 
@@ -16770,6 +17849,9 @@ export class UpdateMonetizationSettingsCommand implements IUpdateMonetizationSet
                 if (data.hasOwnProperty(property))
                     (this as any)[property] = (data as any)[property];
             }
+        }
+        if (!data) {
+            this.adStatsEnabled = true;
         }
     }
 
@@ -16785,6 +17867,7 @@ export class UpdateMonetizationSettingsCommand implements IUpdateMonetizationSet
             this.paywallVariant = _data["paywallVariant"];
             this.paywallAfterRewardedAds = _data["paywallAfterRewardedAds"];
             this.minAppVersion = _data["minAppVersion"];
+            this.adStatsEnabled = _data["adStatsEnabled"] !== undefined ? _data["adStatsEnabled"] : true;
         }
     }
 
@@ -16807,6 +17890,7 @@ export class UpdateMonetizationSettingsCommand implements IUpdateMonetizationSet
         data["paywallVariant"] = this.paywallVariant;
         data["paywallAfterRewardedAds"] = this.paywallAfterRewardedAds;
         data["minAppVersion"] = this.minAppVersion;
+        data["adStatsEnabled"] = this.adStatsEnabled;
         return data;
     }
 }
@@ -16818,6 +17902,7 @@ export interface IUpdateMonetizationSettingsCommand {
     paywallVariant: string | undefined;
     paywallAfterRewardedAds: number;
     minAppVersion: string | undefined;
+    adStatsEnabled?: boolean;
 
     [key: string]: any;
 }

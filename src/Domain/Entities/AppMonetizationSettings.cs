@@ -23,4 +23,7 @@ public class AppMonetizationSettings : BaseAuditableEntity
 
     /// <summary>Phiên bản app tối thiểu (vd. <c>1.2.0</c>); bản cũ hơn được nhắc cập nhật.</summary>
     public string? MinAppVersion { get; set; }
+
+    /// <summary>Tắt thì app ngừng gửi thống kê quảng cáo (số request, hiển thị, bấm, doanh thu).</summary>
+    public bool AdStatsEnabled { get; set; } = true;
 }
