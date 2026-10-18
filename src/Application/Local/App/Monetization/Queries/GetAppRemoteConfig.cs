@@ -28,13 +28,17 @@ public class GetAppRemoteConfigQueryHandler : IRequestHandler<GetAppRemoteConfig
         var settings = await _context.SettingsAsync(cancellationToken);
         var isVip = await _context.IsVipAsync(_user.Id, _timeProvider.GetUtcNow(), cancellationToken);
 
+        var disabledScreens = (await _context.AppAdScreens.AsNoTracking().Where(x => !x.IsEnabled).Select(x => x.Code).ToListAsync(cancellationToken))
+            .ToHashSet();
         var placements = (await _context.PlacementsAsync(cancellationToken))
-            .Where(x => x.IsEnabled)
-            .Select(x => new { x.Code, x.Format, x.DailyLimit, x.CooldownSeconds, x.EveryEpisodes, Unit = ios ? x.IosUnitId : x.AndroidUnitId })
-            .Where(x => !string.IsNullOrWhiteSpace(x.Unit) && x.Code != null)
-            .OrderBy(x => x.Code)
-            .Select(x => new AppAdPlacementConfigDto(x.Code!, Monetization.FormatName(x.Format), x.Unit!.Trim(), x.DailyLimit,
-                x.CooldownSeconds, x.EveryEpisodes))
+            .Where(x => x.IsEnabled && (x.ScreenCode == null || !disabledScreens.Contains(x.ScreenCode)))
+            .Select(x => new { Placement = x, Unit = ios ? x.IosUnitId : x.AndroidUnitId })
+            .Where(x => !string.IsNullOrWhiteSpace(x.Unit) && x.Placement.Code != null)
+            .OrderBy(x => x.Placement.Priority).ThenBy(x => x.Placement.Code, StringComparer.Ordinal)
+            .Select(x => new AppAdPlacementConfigDto(x.Placement.Code!, Monetization.FormatName(x.Placement.Format), x.Unit!.Trim(),
+                x.Placement.DailyLimit, x.Placement.CooldownSeconds, x.Placement.EveryEpisodes,
+                string.IsNullOrWhiteSpace(x.Placement.ScreenCode) ? null : x.Placement.ScreenCode, x.Placement.Priority,
+                x.Placement.DisplaySeconds, x.Placement.EveryItems))
             .ToList();
 
         var plans = (await _context.AppSubscriptionPlans.AsNoTracking()
@@ -57,6 +61,7 @@ public class GetAppRemoteConfigQueryHandler : IRequestHandler<GetAppRemoteConfig
             AdsEnabled = settings.AdsEnabled && !isVip && placements.Count > 0,
             PurchasesEnabled = settings.PurchasesEnabled && plans.Count > 0,
             RequireAdVerification = settings.RequireAdVerification,
+            AdStatsEnabled = settings.AdStatsEnabled,
             PaywallVariant = settings.PaywallVariant,
             PaywallAfterRewardedAds = settings.PaywallAfterRewardedAds,
             MinAppVersion = settings.MinAppVersion,

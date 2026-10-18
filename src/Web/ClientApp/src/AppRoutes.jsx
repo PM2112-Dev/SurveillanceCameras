@@ -46,6 +46,8 @@ import { ChapterForm } from './pages/Chapters/ChapterForm';
 import { MonetizationOverview } from './pages/Monetization/MonetizationOverview';
 import { SubscriptionPlans } from './pages/Monetization/SubscriptionPlans';
 import { AdPlacements } from './pages/Monetization/AdPlacements';
+import { AdScreens } from './pages/Monetization/AdScreens';
+import { AdStats } from './pages/Monetization/AdStats';
 import { AppSubscriptions } from './pages/Monetization/AppSubscriptions';
 
 export default function AppRoutes() {
@@ -80,6 +82,8 @@ export default function AppRoutes() {
         <Route path="/monetization" element={<MonetizationOverview />} />
         <Route path="/monetization/plans" element={<SubscriptionPlans />} />
         <Route path="/monetization/ads" element={<AdPlacements />} />
+        <Route path="/monetization/ad-screens" element={<AdScreens />} />
+        <Route path="/monetization/ad-stats" element={<AdStats />} />
         <Route path="/monetization/subscriptions" element={<AppSubscriptions />} />
 
         <Route path="/categories" element={<CategoryList />} />

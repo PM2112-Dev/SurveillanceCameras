@@ -374,7 +374,13 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<int>("DailyLimit")
                         .HasColumnType("integer");
 
+                    b.Property<int>("DisplaySeconds")
+                        .HasColumnType("integer");
+
                     b.Property<int>("EveryEpisodes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EveryItems")
                         .HasColumnType("integer");
 
                     b.Property<int>("Format")
@@ -392,6 +398,13 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ScreenCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Title")
                         .HasMaxLength(100)
@@ -465,6 +478,145 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.HasIndex("UserId", "EpisodeId", "ConsumedAt");
 
                     b.ToTable("AppAdRewards");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppAdScreen", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("AppAdScreens");
+                });
+
+            modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppAdStat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BaseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Clicks")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<DateOnly>("Day")
+                        .HasColumnType("date");
+
+                    b.Property<long>("Dismissed")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Failed")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Filled")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Format")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Impressions")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PlacementCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<long>("Requests")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RevenueMicros")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Rewarded")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ScreenCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Day");
+
+                    b.HasIndex("Day", "PlacementCode", "ScreenCode", "Platform", "Currency")
+                        .IsUnique();
+
+                    b.ToTable("AppAdStats");
                 });
 
             modelBuilder.Entity("SurveillanceCameras.Domain.Entities.AppBookmark", b =>
@@ -608,6 +760,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AdStatsEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("AdsEnabled")
                         .HasColumnType("boolean");

@@ -11,6 +11,9 @@ public record AppRemoteConfigDto
     public bool AdsEnabled { get; init; }
     public bool PurchasesEnabled { get; init; }
     public bool RequireAdVerification { get; init; }
+
+    /// <summary>Tắt thì app không cần gửi thống kê quảng cáo.</summary>
+    public bool AdStatsEnabled { get; init; } = true;
     public string PaywallVariant { get; init; } = "A";
     public int PaywallAfterRewardedAds { get; init; }
     public string? MinAppVersion { get; init; }
@@ -19,9 +22,14 @@ public record AppRemoteConfigDto
     public List<AppPlanConfigDto> Plans { get; init; } = [];
 }
 
-/// <param name="Format"><c>rewarded</c>, <c>interstitial</c> hoặc <c>banner</c>.</param>
+/// <param name="Format"><c>rewarded</c>, <c>interstitial</c>, <c>banner</c>, <c>native</c> hoặc <c>app_open</c>.</param>
 /// <param name="UnitId">Ad unit ID cho nền tảng của app đang hỏi.</param>
-public record AppAdPlacementConfigDto(string Code, string Format, string UnitId, int DailyLimit, int CooldownSeconds, int EveryEpisodes);
+/// <param name="Screen">Mã màn hiện quảng cáo; <c>null</c> là mọi màn.</param>
+/// <param name="Priority">Nhiều vị trí cùng loại, cùng màn: thử theo thứ tự này (số nhỏ trước).</param>
+/// <param name="DisplaySeconds">Native: tự tắt sau bấy nhiêu giây; 0 là không tự tắt.</param>
+/// <param name="EveryItems">Native: chèn sau mỗi bấy nhiêu mục của danh sách; 0 là một lần ở đầu.</param>
+public record AppAdPlacementConfigDto(string Code, string Format, string UnitId, int DailyLimit, int CooldownSeconds, int EveryEpisodes,
+    string? Screen, int Priority, int DisplaySeconds, int EveryItems);
 
 /// <param name="ProductId">Product ID trên cửa hàng của nền tảng đang hỏi; app lấy giá thật từ cửa hàng theo ID này.</param>
 public record AppPlanConfigDto(string Code, string Title, string? Description, string ProductId, int PeriodDays, int TrialDays, bool IsHighlighted);

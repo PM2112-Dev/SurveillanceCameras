@@ -19,7 +19,9 @@ import {
   BadgeDollarSign,
   Crown,
   Megaphone,
-  UserCheck
+  UserCheck,
+  LayoutList,
+  BarChart3
 } from 'lucide-react';
 
 const menuSections = [
@@ -44,6 +46,8 @@ const menuSections = [
       { to: '/monetization', label: 'Kiếm tiền', icon: BadgeDollarSign, end: true },
       { to: '/monetization/plans', label: 'Gói VIP', icon: Crown },
       { to: '/monetization/ads', label: 'Quảng cáo', icon: Megaphone },
+      { to: '/monetization/ad-screens', label: 'Màn hình quảng cáo', icon: LayoutList },
+      { to: '/monetization/ad-stats', label: 'Thống kê quảng cáo', icon: BarChart3 },
       { to: '/monetization/subscriptions', label: 'Người đăng ký', icon: UserCheck }
     ]
   },

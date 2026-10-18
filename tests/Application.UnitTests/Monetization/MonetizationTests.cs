@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using Shouldly;
 using SurveillanceCameras.Application.Common.Exceptions;
@@ -336,5 +337,124 @@ public class MonetizationTests
         StoreAccount.TokenFor("admin-1").ShouldBe(StoreAccount.TokenFor("admin-1"));
         StoreAccount.TokenFor("admin-1").ShouldNotBe(StoreAccount.TokenFor("admin-2"));
         await Task.CompletedTask;
+    }
+
+    // ── Quảng cáo: nhiều vị trí, màn hình, thống kê ──
+
+    [Test]
+    public async Task RemoteConfig_OrdersByPriority_AndDropsPlacementsOfDisabledScreens()
+    {
+        using var db = TestDb.Create();
+        db.AppAdScreens.AddRange(new AppAdScreen { Code = "home", Title = "Home" }, new AppAdScreen { Code = "search", Title = "Search", IsEnabled = false });
+        db.AppAdPlacements.AddRange(
+            new AppAdPlacement { Code = "native_b", Format = AdFormat.Native, AndroidUnitId = "b", ScreenCode = "home", Priority = 2, DisplaySeconds = 15, EveryItems = 6 },
+            new AppAdPlacement { Code = "native_a", Format = AdFormat.Native, AndroidUnitId = "a", ScreenCode = "home", Priority = 1 },
+            new AppAdPlacement { Code = "native_search", Format = AdFormat.Native, AndroidUnitId = "s", ScreenCode = "search" },
+            new AppAdPlacement { Code = "app_open", Format = AdFormat.AppOpen, AndroidUnitId = "o" },
+            new AppAdPlacement { Code = "off", Format = AdFormat.Banner, AndroidUnitId = "x", ScreenCode = "home", IsEnabled = false });
+        await db.SaveChangesAsync();
+
+        var config = await new GetAppRemoteConfigQueryHandler(db, User(Viewer), new Clock(Now), Options).Handle(new("android"), CancellationToken.None);
+
+        config.Placements.Select(x => x.Code).ShouldBe(["app_open", "native_a", "native_b"]);
+        var b = config.Placements.Single(x => x.Code == "native_b");
+        (b.Format, b.Screen, b.DisplaySeconds, b.EveryItems).ShouldBe(("native", "home", 15, 6));
+        config.Placements.Single(x => x.Code == "app_open").Format.ShouldBe("app_open");
+    }
+
+    [Test]
+    public async Task RecordAdEvents_AccumulatesPerDayPlacementScreenAndPlatform_AndIgnoresUnknownPlacements()
+    {
+        using var db = TestDb.Create();
+        db.AppAdPlacements.Add(new AppAdPlacement { Code = "native_home", Format = AdFormat.Native, AndroidUnitId = "a", ScreenCode = "home" });
+        await db.SaveChangesAsync();
+        var handler = new RecordAdEventsCommandHandler(db, new Clock(Now));
+
+        await handler.Handle(new("android", [
+            new AdEventItem { Placement = "native_home", Screen = "home", Requests = 3, Filled = 2, Failed = 1, Error = "no fill" },
+            new AdEventItem { Placement = "native_home", Screen = "home", Impressions = 2, Clicks = 1, RevenueMicros = 5000, Currency = "usd" },
+            new AdEventItem { Placement = "does_not_exist", Screen = "home", Requests = 9 }]), CancellationToken.None);
+        await handler.Handle(new("android", [new AdEventItem { Placement = "native_home", Screen = "home", Requests = 1, Impressions = 1 }]), CancellationToken.None);
+        await handler.Handle(new("ios", [new AdEventItem { Placement = "native_home", Screen = "search", Requests = 4 }]), CancellationToken.None);
+
+        var rows = await db.AppAdStats.AsNoTracking().OrderBy(x => x.Platform).ThenBy(x => x.ScreenCode).ToListAsync();
+        rows.Count.ShouldBe(2);
+        var android = rows[0];
+        (android.Platform, android.ScreenCode, android.Format).ShouldBe(("android", "home", AdFormat.Native));
+        (android.Requests, android.Filled, android.Failed, android.Impressions, android.Clicks, android.RevenueMicros)
+            .ShouldBe((4, 2, 1, 3, 1, 5000));
+        android.LastError.ShouldBe("no fill");
+        (rows[1].Platform, rows[1].ScreenCode, rows[1].Requests).ShouldBe(("ios", "search", 4));
+    }
+
+    [Test]
+    public async Task RecordAdEvents_DoesNothingWhenStatsAreSwitchedOff()
+    {
+        using var db = TestDb.Create();
+        db.AppAdPlacements.Add(new AppAdPlacement { Code = "native_home", Format = AdFormat.Native, AndroidUnitId = "a", ScreenCode = "home" });
+        db.AppMonetizationSettings.Add(new AppMonetizationSettings { AdStatsEnabled = false });
+        await db.SaveChangesAsync();
+
+        await new RecordAdEventsCommandHandler(db, new Clock(Now))
+            .Handle(new("android", [new AdEventItem { Placement = "native_home", Screen = "home", Requests = 1 }]), CancellationToken.None);
+
+        (await db.AppAdStats.CountAsync()).ShouldBe(0);
+    }
+
+    [Test]
+    public async Task AdStats_GroupsByPlacementScreenAndDay_AndComparesWithThePreviousPeriod()
+    {
+        using var db = TestDb.Create();
+        var today = DateOnly.FromDateTime(Now.UtcDateTime);
+        db.AppAdPlacements.Add(new AppAdPlacement { Code = "native_home", Title = "Native Home", Format = AdFormat.Native, AndroidUnitId = "a", ScreenCode = "home" });
+        db.AppAdScreens.Add(new AppAdScreen { Code = "home", Title = "Khám phá" });
+        db.AppAdStats.AddRange(
+            new AppAdStat { Day = today, PlacementCode = "native_home", ScreenCode = "home", Platform = "android", Format = AdFormat.Native, Requests = 10, Filled = 8, Impressions = 6, Clicks = 1, RevenueMicros = 2000 },
+            new AppAdStat { Day = today.AddDays(-1), PlacementCode = "native_home", ScreenCode = "home", Platform = "ios", Format = AdFormat.Native, Requests = 5, Filled = 5, Impressions = 5 },
+            new AppAdStat { Day = today.AddDays(-2), PlacementCode = "native_home", ScreenCode = "home", Platform = "ios", Format = AdFormat.Native, Requests = 7, Impressions = 7 });
+        await db.SaveChangesAsync();
+        var handler = new GetAdStatsQueryHandler(db, new Clock(Now));
+
+        var stats = await handler.Handle(new(today.AddDays(-1), today, null, null, null, null), CancellationToken.None);
+        (stats.Totals.Requests, stats.Totals.Impressions, stats.Totals.Revenue["USD"]).ShouldBe((15, 11, 2000));
+        stats.Previous.Requests.ShouldBe(7);
+        stats.ByDay.Select(x => x.Totals.Requests).ShouldBe([5, 10]);
+        var placement = stats.ByPlacement.Single();
+        (placement.Key, placement.Label, placement.Format).ShouldBe(("native_home", "Native Home", "native"));
+        stats.ByScreen.Single().Label.ShouldBe("Khám phá");
+        stats.ByPlatform.Select(x => (x.Key, x.Totals.Requests)).ShouldBe([("android", 10), ("ios", 5)]);
+
+        var ios = await handler.Handle(new(today.AddDays(-1), today, "ios", null, null, "native"), CancellationToken.None);
+        ios.Totals.Requests.ShouldBe(5);
+    }
+
+    [Test]
+    public async Task AdPlacements_CanHaveSeveralOfTheSameFormat_ButBannerAndNativeNeedAScreen()
+    {
+        using var db = TestDb.Create();
+        db.AppAdScreens.Add(new AppAdScreen { Code = "home", Title = "Home" });
+        await db.SaveChangesAsync();
+        var validator = new SaveAdPlacementCommandValidator(db);
+        var handler = new SaveAdPlacementCommandHandler(db);
+
+        SaveAdPlacementCommand Native(string code, string? screen) => new()
+        {
+            Code = code, Title = code, Format = "native", AndroidUnitId = "ca-app-pub-1234567890123456/1234567890", ScreenCode = screen
+        };
+
+        (await validator.ValidateAsync(Native("native_1", null))).IsValid.ShouldBeFalse();
+        (await validator.ValidateAsync(Native("native_1", "ghost"))).IsValid.ShouldBeFalse();
+        await handler.Handle(Native("native_1", "home"), CancellationToken.None);
+        (await validator.ValidateAsync(Native("native_1", "home"))).IsValid.ShouldBeFalse(); // trùng mã
+        var second = Native("native_2", "home");
+        (await validator.ValidateAsync(second)).IsValid.ShouldBeTrue();
+        await handler.Handle(second with { Priority = 2, DisplaySeconds = 20, EveryItems = 5 }, CancellationToken.None);
+
+        var list = await new GetAdPlacementsQueryHandler(db).Handle(new(), CancellationToken.None);
+        list.Where(x => x.Format == "native" && x.ScreenCode == "home").Select(x => x.Code).ShouldContain("native_1");
+        list.Single(x => x.Code == "native_2").DisplaySeconds.ShouldBe(20);
+
+        await Should.ThrowAsync<ValidationException>(() => new DeleteAdScreenCommandHandler(db)
+            .Handle(new(db.AppAdScreens.Single(x => x.Code == "home").Id), CancellationToken.None));
     }
 }

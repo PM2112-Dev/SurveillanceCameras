@@ -17,7 +17,28 @@ public class AppAdPlacement : BaseAuditableEntity
     /// <summary>Banner cuối màn Khám phá.</summary>
     public const string BannerHome = "banner_home";
 
+    /// <summary>Quảng cáo native chèn trong danh sách (mã màn xem <see cref="AppAdScreen"/>).</summary>
+    public const string NativeHome = "native_home";
+
+    /// <summary>Quảng cáo khi mở app hoặc quay lại app.</summary>
+    public const string AppOpen = "app_open";
+
     public AdFormat Format { get; set; }
+
+    /// <summary>
+    /// Mã màn (<see cref="AppAdScreen.Code"/>) hiện quảng cáo; để trống là mọi màn. Banner và native chỉ hiện ở màn này.
+    /// Nhiều vị trí cùng loại, cùng màn được phép: app thử lần lượt theo <see cref="Priority"/> cho tới khi có quảng cáo.
+    /// </summary>
+    public string? ScreenCode { get; set; }
+
+    /// <summary>Thứ tự thử khi nhiều vị trí cùng loại, cùng màn: số nhỏ trước.</summary>
+    public int Priority { get; set; }
+
+    /// <summary>Native: tự tắt sau bấy nhiêu giây kể từ lúc hiện; 0 là không tự tắt.</summary>
+    public int DisplaySeconds { get; set; }
+
+    /// <summary>Native: chèn một quảng cáo sau mỗi bao nhiêu mục của danh sách; 0 là chỉ chèn một lần ở đầu.</summary>
+    public int EveryItems { get; set; }
 
     public string? AndroidUnitId { get; set; }
 

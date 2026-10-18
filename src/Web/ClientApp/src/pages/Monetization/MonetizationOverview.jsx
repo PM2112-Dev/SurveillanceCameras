@@ -53,6 +53,10 @@ function SettingsForm({ settings, onSaved }) {
             Chỉ bật sau khi đã khai báo URL callback <code>/api/app/store/admob/ssv</code> cho ad unit thật trên AdMob; nếu không,
             người xem sẽ không mở được tập bằng quảng cáo.
           </small>
+          <label>
+            <input type="checkbox" role="switch" checked={form.adStatsEnabled ?? true} onChange={e => update({ adStatsEnabled: e.target.checked })} />
+            Thu thập thống kê quảng cáo (request, hiển thị, bấm, doanh thu)
+          </label>
         </fieldset>
         <div className="grid">
           <label>

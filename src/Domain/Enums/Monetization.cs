@@ -45,7 +45,13 @@ public enum AdFormat
     /// <summary>Quảng cáo toàn màn hình chen giữa các tập.</summary>
     Interstitial = 2,
 
-    Banner = 3
+    Banner = 3,
+
+    /// <summary>Quảng cáo native: app tự vẽ khung theo giao diện, chèn vào danh sách.</summary>
+    Native = 4,
+
+    /// <summary>Quảng cáo khi mở app / quay lại app.</summary>
+    AppOpen = 5
 }
 
 /// <summary>Cửa hàng gửi thông báo về gói đăng ký.</summary>

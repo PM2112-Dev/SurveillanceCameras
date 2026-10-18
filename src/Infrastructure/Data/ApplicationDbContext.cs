@@ -61,6 +61,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
 
     public DbSet<AppAdReward> AppAdRewards => Set<AppAdReward>();
 
+    public DbSet<AppAdScreen> AppAdScreens => Set<AppAdScreen>();
+
+    public DbSet<AppAdStat> AppAdStats => Set<AppAdStat>();
+
     public DbSet<AppMonetizationSettings> AppMonetizationSettings => Set<AppMonetizationSettings>();
 
     public DbSet<StorageAccount> StorageAccounts => Set<StorageAccount>();

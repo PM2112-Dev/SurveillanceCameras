@@ -8,6 +8,7 @@ using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.App;
 using SurveillanceCameras.Application.Local.App.Commands;
 using SurveillanceCameras.Application.Local.App.Monetization;
+using SurveillanceCameras.Application.Local.App.Monetization.Commands;
 using SurveillanceCameras.Application.Local.App.Monetization.Queries;
 using SurveillanceCameras.Application.Local.App.Queries;
 using SurveillanceCameras.Infrastructure.Identity;
@@ -32,6 +33,18 @@ public class AppCatalog : IEndpointGroup
         groupBuilder.MapGet(GetAppMovieComments, "movies/{id}/comments");
         groupBuilder.MapPost(AddAppMovieComment, "movies/{id}/comments").RequireAuthorization();
         groupBuilder.MapPost(UnlockAppEpisode, "episodes/{id}/unlock").RequireAuthorization();
+        groupBuilder.MapPost(RecordAdEvents, "ads/events");
+    }
+
+    public sealed record AdEventsRequest(string? Platform, List<AdEventItem>? Items);
+
+    [EndpointSummary("Record ad events")]
+    [EndpointDescription("App gửi lô thống kê quảng cáo đã gom (request, lấp đầy, hiển thị, bấm, thưởng, doanh thu) theo vị trí và màn. " +
+                         "Không cần đăng nhập; tối đa 200 dòng mỗi lần")]
+    public static async Task<NoContent> RecordAdEvents(ISender sender, AdEventsRequest request)
+    {
+        await sender.Send(new RecordAdEventsCommand(request.Platform, request.Items));
+        return TypedResults.NoContent();
     }
 
     public sealed record AddAppCommentRequest(string? Content);

@@ -50,6 +50,10 @@ public interface IApplicationDbContext
 
     DbSet<AppAdReward> AppAdRewards { get; }
 
+    DbSet<AppAdScreen> AppAdScreens { get; }
+
+    DbSet<AppAdStat> AppAdStats { get; }
+
     DbSet<AppMonetizationSettings> AppMonetizationSettings { get; }
 
     DbSet<StorageAccount> StorageAccounts { get; }
