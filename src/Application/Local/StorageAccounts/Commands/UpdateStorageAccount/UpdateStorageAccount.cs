@@ -59,15 +59,23 @@ public class UpdateStorageAccountCommandHandler : IRequestHandler<UpdateStorageA
         var cloudflareAccountId = request.CloudflareAccountId!.Trim();
         var publicBaseUrl = request.PublicBaseUrl!.Trim().TrimEnd('/');
 
-        // Link phát của các tập đã lưu được dựng từ bucket và địa chỉ công khai: đổi là link cũ chết.
-        var movesBucket = bucket != entity.Bucket || cloudflareAccountId != entity.CloudflareAccountId
-                                                  || publicBaseUrl != entity.PublicBaseUrl;
+        // File của các tập đã lưu nằm trong bucket này: đổi bucket là link cũ chết.
+        var movesBucket = bucket != entity.Bucket || cloudflareAccountId != entity.CloudflareAccountId;
         if (movesBucket && await _context.Episodes.AnyAsync(x => x.StorageAccountId == entity.Id, cancellationToken))
         {
             throw new Common.Exceptions.ValidationException([
                 new FluentValidation.Results.ValidationFailure(nameof(request.Bucket),
-                    "Tài khoản đang lưu video của các tập phim nên không đổi được Account ID, bucket hay địa chỉ công khai. Tạo tài khoản lưu trữ mới thay vì sửa.")
+                    "Tài khoản đang lưu video của các tập phim nên không đổi được Account ID hay bucket. Tạo tài khoản lưu trữ mới thay vì sửa.")
             ]);
+        }
+
+        // Chỉ đổi địa chỉ công khai (vd. từ r2.dev sang tên miền riêng): file vẫn ở chỗ cũ, ghép lại link phát các tập.
+        if (publicBaseUrl != entity.PublicBaseUrl)
+        {
+            var stored = await _context.Episodes
+                .Where(x => x.StorageAccountId == entity.Id && x.StorageKey != null)
+                .ToListAsync(cancellationToken);
+            foreach (var episode in stored) episode.StreamUrl = $"{publicBaseUrl}/{episode.StorageKey}";
         }
 
         entity.Title = request.Title!.Trim();

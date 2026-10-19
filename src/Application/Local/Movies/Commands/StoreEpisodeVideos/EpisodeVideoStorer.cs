@@ -87,6 +87,8 @@ public class EpisodeVideoStorer
         try
         {
             var size = await DownloadAsync(episode, temp, cancellationToken);
+            // App phát ngay khi tải được đoạn đầu file, nên mục lục của video phải nằm ở đầu.
+            if (Mp4FastStart.Apply(temp)) _logger.LogInformation("Tập {EpisodeId}: đã đưa mục lục video lên đầu file", episode.Id);
             var account = await UploadAsync(episode, temp, size, cancellationToken);
 
             episode.StreamUrl = account.PublicUrl(episode.StorageKey!);

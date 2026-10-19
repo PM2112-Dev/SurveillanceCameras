@@ -6,6 +6,7 @@ using SurveillanceCameras.Application.Common.Exceptions;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Local.Movies.Commands.StoreEpisodeVideos;
 using SurveillanceCameras.Application.Local.StorageAccounts.Commands.TrimStorageAccount;
+using SurveillanceCameras.Application.Local.StorageAccounts.Commands.UpdateStorageAccount;
 using SurveillanceCameras.Application.Repository.TikTok;
 using SurveillanceCameras.Application.Repository.VideoStorage;
 using SurveillanceCameras.Domain.Entities;
@@ -171,5 +172,29 @@ public class TrimStorageAccountTests
 
         await Should.ThrowAsync<VideoStorageException>(() => TrimAsync(apply: true));
         _db.Episodes.Count(x => x.StreamUrl != null).ShouldBe(6);
+    }
+
+    private Task UpdateAsync(string bucket, string publicBaseUrl)
+    {
+        var currentUser = new Mock<IUser>();
+        currentUser.Setup(x => x.Id).Returns(Owner);
+        var handler = new UpdateStorageAccountCommandHandler(_db, currentUser.Object, new Mock<ISecretProtector>().Object);
+        return handler.Handle(new UpdateStorageAccountCommand
+        {
+            Id = _account.Id, Title = "R2", CloudflareAccountId = "acc", AccessKeyId = "key", Bucket = bucket,
+            PublicBaseUrl = publicBaseUrl, QuotaBytes = 500 * Mb, IsEnabled = true
+        }, CancellationToken.None);
+    }
+
+    [Test]
+    public async Task SwitchingToCustomDomainRewritesStreamLinksButMovingBucketIsRefused()
+    {
+        await UpdateAsync("movie-01", "https://video.example.com/");
+
+        var episode = _db.Episodes.First(x => x.StorageKey == "movies/Ít lượt xem/1.mp4");
+        episode.StreamUrl.ShouldBe("https://video.example.com/movies/Ít lượt xem/1.mp4");
+        _db.Episodes.Count(x => x.StreamUrl!.StartsWith("https://video.example.com/")).ShouldBe(6);
+
+        await Should.ThrowAsync<ValidationException>(() => UpdateAsync("movie-02", "https://video.example.com"));
     }
 }

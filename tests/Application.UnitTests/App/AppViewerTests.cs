@@ -38,7 +38,7 @@ public class AppViewerTests
             Title = "Lửa Thánh", Type = WorkType.Movie, IsPublished = true, ViewCount = 500, CreatedBy = Admin,
             Language = new Language { Title = "Tiếng Anh", Code = "en", CreatedBy = Admin },
             Episodes = Enumerable.Range(1, 4)
-                .Select(n => new Episode { EpisodeNumber = n, ExternalId = $"tt{n}", CreatedBy = Admin })
+                .Select(n => new Episode { EpisodeNumber = n, ExternalId = $"tt{n}", ThumbnailUrl = $"https://img.example.com/{n}.jpg", CreatedBy = Admin })
                 .ToList()
         };
         movie.Episodes.First().StreamUrl = "https://cdn.example.com/1.mp4";
@@ -112,6 +112,8 @@ public class AppViewerTests
         episodes[1].Playback.ShouldBe(new AppPlaybackDto("tiktok", "tt2"));
         episodes[2].Playback.ShouldBeNull();
         episodes[3].Playback.ShouldBeNull();
+        // Ảnh tập luôn có, kể cả tập bị khoá, để app hiện trong lúc chờ.
+        episodes[3].ThumbnailUrl.ShouldBe("https://img.example.com/4.jpg");
     }
 
     [Test]
