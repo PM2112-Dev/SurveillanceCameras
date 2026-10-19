@@ -66,6 +66,9 @@ public class AppEpisodeDto
 
     /// <summary>Chỉ có khi người gọi xem được tập này (<see cref="Access"/> là <c>free</c>).</summary>
     public AppPlaybackDto? Playback { get; init; }
+
+    /// <summary>Ảnh khung hình của tập, app hiện trong lúc chờ video tải.</summary>
+    public string? ThumbnailUrl { get; init; }
 }
 
 public class AppCommentDto
@@ -207,6 +210,7 @@ public static class AppQueries
             Number = episode.EpisodeNumber,
             DurationSeconds = episode.DurationSeconds,
             Access = access,
+            ThumbnailUrl = episode.ThumbnailUrl,
             Playback = access != AppAccess.Free ? null
                 : !string.IsNullOrWhiteSpace(episode.StreamUrl) ? new AppPlaybackDto("stream", episode.StreamUrl)
                 : !string.IsNullOrWhiteSpace(episode.ExternalId) ? new AppPlaybackDto("tiktok", episode.ExternalId)

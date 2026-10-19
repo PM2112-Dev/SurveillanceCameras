@@ -79,7 +79,8 @@ export function StorageAccountForm() {
           onChange={event => update({ publicBaseUrl: event.target.value })} placeholder="VD: https://pub-xxxx.r2.dev" />
         <small>
           Bật Public Access cho bucket (r2.dev hoặc domain riêng) rồi dán địa chỉ vào đây — link phát của từng tập được
-          ghép từ địa chỉ này.
+          ghép từ địa chỉ này. Nên dùng domain riêng: video được Cloudflare cache nên app phát nhanh hơn, còn r2.dev bị
+          giới hạn tốc độ. Đổi địa chỉ thì link phát của các tập đã lưu được cập nhật theo.
         </small>
       </label>
 

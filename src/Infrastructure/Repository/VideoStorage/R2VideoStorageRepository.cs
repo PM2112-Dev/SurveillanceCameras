@@ -26,6 +26,8 @@ public sealed class R2VideoStorageRepository : IVideoStorageRepository
             Key = key,
             FilePath = filePath,
             ContentType = contentType,
+            // Tên file có phần ngẫu nhiên và không bao giờ bị ghi đè, nên trình duyệt và CDN được giữ bản sao lâu dài.
+            Headers = { CacheControl = "public, max-age=31536000, immutable" },
             // R2 không hỗ trợ ký nội dung kiểu streaming (chunked) của SDK.
             DisablePayloadSigning = true
         }, cancellationToken), cancellationToken);
