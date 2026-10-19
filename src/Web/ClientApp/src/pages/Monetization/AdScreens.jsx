@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { SaveAdScreenCommand } from '../../web-api-client';
 import { getErrorMessage, monetizationClient } from '../../api/clients';
 import { useAsyncData } from '../../hooks/useAsyncData';
 import { PageHeader } from '../../components/common/PageHeader';
 import { ErrorAlert, LoadingBlock } from '../../components/common/StateBlocks';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
+import { formatLabel, placementRule } from './AdPlacements';
 
 const builtIn = ['splash', 'home', 'search', 'recommended', 'watch', 'library', 'profile', 'downloads'];
 const blank = { id: 0, code: '', title: '', isEnabled: true, sortOrder: 0, placementCount: 0 };
@@ -52,10 +54,32 @@ function ScreenForm({ screen, onSaved, onCancel }) {
   );
 }
 
+/** Các quảng cáo gắn với một màn: mỗi dòng dẫn sang trang Quảng cáo đã lọc theo màn. */
+function ScreenPlacements({ code, placements }) {
+  if (placements.length === 0) return <span className="cell-sub">Chưa có quảng cáo</span>;
+  return (
+    <ul className="plain-list" style={{ margin: 0, paddingLeft: '1.1em' }}>
+      {placements.map(p => (
+        <li key={p.id} style={{ opacity: p.isEnabled ? 1 : 0.55 }}>
+          <Link to={`/monetization/ads?screen=${encodeURIComponent(code)}&format=${p.format}`}>{p.title || p.code}</Link>
+          {' '}<span className="cell-sub">{formatLabel[p.format] ?? p.format} · {placementRule(p)}{p.isEnabled ? '' : ' · đang tắt'}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function AdScreens() {
   const [version, setVersion] = useState(0);
   const [editing, setEditing] = useState(null);
+  const [params] = useSearchParams();
+  const focus = params.get('screen');
   const { data, loading, error } = useAsyncData(() => monetizationClient.getAdScreens(), [version]);
+  const placements = useAsyncData(() => monetizationClient.getAdPlacements(), [version]);
+  const all = placements.data ?? [];
+  const forScreen = code => all.filter(p => p.screenCode === code);
+  const everywhere = all.filter(p => !p.screenCode);
+  const orphaned = all.filter(p => p.screenCode && !data?.some(s => s.code === p.screenCode));
   const saved = () => { setEditing(null); setVersion(v => v + 1); };
 
   return (
@@ -70,23 +94,46 @@ export function AdScreens() {
       {data && (
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Mã</th><th>Tên</th><th>Trạng thái</th><th>Số vị trí</th><th /></tr></thead>
+            <thead><tr><th>Mã</th><th>Tên</th><th>Trạng thái</th><th>Quảng cáo của màn</th><th /></tr></thead>
             <tbody>
               {editing === 'new' && <ScreenForm screen={blank} onSaved={saved} onCancel={() => setEditing(null)} />}
               {data.map(screen => editing === screen.id
                 ? <ScreenForm key={screen.id} screen={screen} onSaved={saved} />
                 : (
-                  <tr key={screen.id}>
+                  <tr key={screen.id} style={focus === screen.code ? { boxShadow: 'inset 4px 0 0 #7442be', background: 'rgba(116, 66, 190, 0.08)' } : undefined}>
                     <td><code>{screen.code}</code></td>
                     <td>{screen.title}</td>
                     <td><span className={`status-badge ${screen.isEnabled ? 'ok' : ''}`}>{screen.isEnabled ? 'Bật' : 'Tắt'}</span></td>
-                    <td>{screen.placementCount}</td>
-                    <td><button type="button" className="secondary" onClick={() => setEditing(screen.id)}>Sửa</button></td>
+                    <td>
+                      <ScreenPlacements code={screen.code} placements={forScreen(screen.code)} />
+                      {!screen.isEnabled && forScreen(screen.code).length > 0 && <div className="cell-sub">Màn đang tắt nên các quảng cáo trên không hiện.</div>}
+                    </td>
+                    <td>
+                      <button type="button" className="secondary" onClick={() => setEditing(screen.id)}>Sửa</button>{' '}
+                      <Link role="button" className="secondary" to={`/monetization/ads?screen=${encodeURIComponent(screen.code)}`}>Quảng cáo</Link>
+                    </td>
                   </tr>
                 ))}
+              <tr>
+                <td colSpan={2}><em>Không gắn màn</em></td><td />
+                <td>
+                  {everywhere.length === 0 ? <span className="cell-sub">Không có</span> : (
+                    <ul style={{ margin: 0, paddingLeft: '1.1em' }}>
+                      {everywhere.map(p => <li key={p.id}><Link to={`/monetization/ads?screen=_all&format=${p.format}`}>{p.title || p.code}</Link> <span className="cell-sub">{formatLabel[p.format] ?? p.format} · hiện mọi màn</span></li>)}
+                    </ul>
+                  )}
+                </td>
+                <td />
+              </tr>
             </tbody>
           </table>
         </div>
+      )}
+      {orphaned.length > 0 && (
+        <p className="hint">
+          Có quảng cáo gắn mã màn chưa khai báo ở đây: {orphaned.map(p => <span key={p.id}><Link to={`/monetization/ads?screen=${encodeURIComponent(p.screenCode)}`}>{p.title || p.code}</Link> (<code>{p.screenCode}</code>) </span>)}
+          — thêm màn có mã đó hoặc đổi màn của quảng cáo.
+        </p>
       )}
     </>
   );

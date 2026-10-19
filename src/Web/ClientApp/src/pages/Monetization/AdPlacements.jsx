@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { SaveAdPlacementCommand } from '../../web-api-client';
 import { getErrorMessage, monetizationClient } from '../../api/clients';
 import { useAsyncData } from '../../hooks/useAsyncData';
@@ -19,6 +20,20 @@ const formatHint = {
 const builtIn = ['rewarded_unlock', 'interstitial_episode', 'banner_home'];
 const needsScreen = format => format === 'banner' || format === 'native';
 const isTestUnit = id => id?.startsWith('ca-app-pub-3940256099942544/');
+
+/** Tóm tắt luật hiện quảng cáo của một vị trí, theo loại. */
+export function placementRule(p) {
+  const parts = [];
+  if (p.format === 'native') {
+    parts.push(p.everyItems > 0 ? `chèn sau mỗi ${p.everyItems} mục` : 'một lần ở đầu danh sách');
+    if (p.displaySeconds > 0) parts.push(`tự tắt sau ${p.displaySeconds}s`);
+  }
+  if (p.format === 'interstitial' && p.everyEpisodes > 0) parts.push(`sau mỗi ${p.everyEpisodes} tập`);
+  if (p.format === 'interstitial' && !(p.everyEpisodes > 0)) parts.push('tắt (chưa đặt số tập)');
+  if ((p.format === 'interstitial' || p.format === 'app_open') && p.cooldownSeconds > 0) parts.push(`nghỉ ${p.cooldownSeconds}s`);
+  if (p.dailyLimit > 0 && p.format !== 'banner' && p.format !== 'native') parts.push(`tối đa ${p.dailyLimit}/ngày`);
+  return parts.length ? parts.join(' · ') : '—';
+}
 
 const blank = {
   id: 0, code: '', title: '', format: 'native', androidUnitId: '', iosUnitId: '', isEnabled: true, dailyLimit: 0, cooldownSeconds: 0,
@@ -64,10 +79,10 @@ function PlacementForm({ placement, screens, onSaved, onDeleted, onCancel }) {
   };
 
   return (
-    <section className="profile-card" style={{ marginBottom: 'var(--pico-spacing)' }}>
+    <section className="profile-card" style={{ margin: 0 }}>
       <h2>
         {creating ? 'Thêm vị trí quảng cáo' : form.title}{' '}
-        {!creating && <small><code>{form.code}</code> · {formatLabel[f] ?? f}{form.screenCode && <> · màn <code>{form.screenCode}</code></>}</small>}
+        {!creating && <small><code>{form.code}</code> · {formatLabel[f] ?? f}</small>}
       </h2>
       <form onSubmit={submit}>
         {creating && (
@@ -130,7 +145,7 @@ function PlacementForm({ placement, screens, onSaved, onDeleted, onCancel }) {
         <ErrorAlert message={error} />
         <div className="actions">
           <button type="submit" disabled={saving} aria-busy={saving}>{creating ? 'Thêm vị trí' : 'Lưu'}</button>
-          {creating && <button type="button" className="secondary" onClick={onCancel}>Huỷ</button>}
+          <button type="button" className="secondary" onClick={onCancel}>{creating ? 'Huỷ' : 'Đóng'}</button>
           {!creating && !builtIn.includes(form.code) && (
             <button type="button" className="danger" disabled={saving} onClick={() => setConfirmDelete(true)}>Xoá</button>
           )}
@@ -143,35 +158,110 @@ function PlacementForm({ placement, screens, onSaved, onDeleted, onCancel }) {
   );
 }
 
+const unitSummary = (id, label) => id
+  ? <span title={id}>{label}{isTestUnit(id) && <span className="status-badge" title="Ad unit thử nghiệm của Google"> thử</span>}</span>
+  : <span className="cell-sub">{label} —</span>;
+
 export function AdPlacements() {
   const [version, setVersion] = useState(0);
-  const [adding, setAdding] = useState(false);
-  const [filter, setFilter] = useState('');
+  const [editing, setEditing] = useState(null); // 'new' | id
+  const [params, setParams] = useSearchParams();
+  const format = params.get('format') ?? '';
+  const screen = params.get('screen') ?? '';
+  const status = params.get('status') ?? '';
+  const setFilter = (name, value) => setParams(current => {
+    const next = new URLSearchParams(current);
+    if (value) next.set(name, value); else next.delete(name);
+    return next;
+  }, { replace: true });
   const { data, loading, error } = useAsyncData(() => monetizationClient.getAdPlacements(), [version]);
   const screens = useAsyncData(() => monetizationClient.getAdScreens(), [version]);
-  const reload = () => setVersion(v => v + 1);
-  const shown = data?.filter(p => !filter || p.format === filter);
+  const screenList = screens.data ?? [];
+  const screenOf = code => screenList.find(s => s.code === code);
+  const saved = () => { setEditing(null); setVersion(v => v + 1); };
+
+  const shown = (data ?? [])
+    .filter(p => !format || p.format === format)
+    .filter(p => !screen || (screen === '_all' ? !p.screenCode : p.screenCode === screen))
+    .filter(p => !status || (status === 'on' ? p.isEnabled : !p.isEnabled))
+    // Nhóm theo màn (theo thứ tự màn), trong màn theo loại rồi thứ tự thử.
+    .sort((a, b) => {
+      const order = code => { const i = screenList.findIndex(s => s.code === code); return code ? (i < 0 ? 999 : i) : -1; };
+      return order(a.screenCode) - order(b.screenCode) || a.format.localeCompare(b.format) || a.priority - b.priority || a.id - b.id;
+    });
 
   return (
     <>
       <PageHeader title="Quảng cáo AdMob" description="Vị trí hiện quảng cáo trong app. Mỗi loại có thể có nhiều vị trí; người dùng VIP không thấy quảng cáo nào." />
       <p className="hint">
         App ID của AdMob được gắn lúc build app (Android: <code>-Pluma.admobAppId</code>, iOS: <code>GADApplicationIdentifier</code> trong Info.plist).
-        Ở đây quản lý ad unit, màn hiển thị và giới hạn. Màn hình khai báo ở trang <a href="/monetization/ad-screens">Màn hình quảng cáo</a>.
+        Ở đây quản lý ad unit, màn hiển thị và giới hạn. Màn hình khai báo ở trang <Link to="/monetization/ad-screens">Màn hình quảng cáo</Link>.
       </p>
       <div className="filter-bar">
-        <select value={filter} onChange={e => setFilter(e.target.value)}>
+        <select value={format} onChange={e => setFilter('format', e.target.value)} aria-label="Loại quảng cáo">
           <option value="">Mọi loại</option>
           {Object.entries(formatLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
-        <button type="button" onClick={() => setAdding(true)} disabled={adding}>Thêm vị trí</button>
+        <select value={screen} onChange={e => setFilter('screen', e.target.value)} aria-label="Màn hiển thị">
+          <option value="">Mọi màn</option>
+          <option value="_all">Không gắn màn (hiện mọi màn)</option>
+          {screenList.map(s => <option key={s.code} value={s.code}>{s.title} ({s.placementCount})</option>)}
+        </select>
+        <select value={status} onChange={e => setFilter('status', e.target.value)} aria-label="Trạng thái">
+          <option value="">Bật và tắt</option>
+          <option value="on">Đang bật</option>
+          <option value="off">Đang tắt</option>
+        </select>
+        <button type="button" onClick={() => setEditing('new')} disabled={editing === 'new'}>Thêm vị trí</button>
       </div>
-      {adding && <PlacementForm placement={blank} screens={screens.data ?? []} onCancel={() => setAdding(false)}
-        onSaved={() => { setAdding(false); reload(); }} />}
       {loading && !data ? <LoadingBlock /> : <ErrorAlert message={error || screens.error} />}
-      {shown?.map(placement => (
-        <PlacementForm key={`${placement.id}-${version}`} placement={placement} screens={screens.data ?? []} onSaved={reload} onDeleted={reload} />
-      ))}
+      {data && (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Vị trí</th><th>Loại</th><th>Màn hiển thị</th><th>Luật hiển thị</th><th>Ad unit</th><th>Thứ tự</th><th>Trạng thái</th><th /></tr>
+            </thead>
+            <tbody>
+              {editing === 'new' && (
+                <tr><td colSpan={8}>
+                  <PlacementForm placement={blank} screens={screenList} onCancel={() => setEditing(null)} onSaved={saved} />
+                </td></tr>
+              )}
+              {shown.map(p => {
+                const s = screenOf(p.screenCode);
+                return (
+                  <Fragment key={p.id}>
+                    <tr>
+                      <td><strong>{p.title || p.code}</strong><div className="cell-sub"><code>{p.code}</code></div></td>
+                      <td>{formatLabel[p.format] ?? p.format}</td>
+                      <td>
+                        {!p.screenCode
+                          ? <span className="cell-sub">{needsScreen(p.format) ? 'Chưa chọn màn' : 'Mọi màn'}</span>
+                          : <>
+                              <Link to={`/monetization/ad-screens?screen=${encodeURIComponent(p.screenCode)}`}>{s?.title ?? p.screenCode}</Link>
+                              {!s && <span className="status-badge" title="Mã màn chưa được khai báo ở trang Màn hình quảng cáo"> chưa khai báo</span>}
+                              {s && !s.isEnabled && <span className="status-badge" title="Màn đang tắt nên quảng cáo này không hiện"> màn tắt</span>}
+                            </>}
+                      </td>
+                      <td>{placementRule(p)}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{unitSummary(p.androidUnitId, 'Android')}<br />{unitSummary(p.iosUnitId, 'iOS')}</td>
+                      <td>{p.priority}</td>
+                      <td><span className={`status-badge ${p.isEnabled ? 'ok' : ''}`}>{p.isEnabled ? 'Bật' : 'Tắt'}</span></td>
+                      <td><button type="button" className="secondary" onClick={() => setEditing(editing === p.id ? null : p.id)}>{editing === p.id ? 'Đóng' : 'Sửa'}</button></td>
+                    </tr>
+                    {editing === p.id && (
+                      <tr><td colSpan={8}>
+                        <PlacementForm placement={p} screens={screenList} onCancel={() => setEditing(null)} onSaved={saved} onDeleted={saved} />
+                      </td></tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+              {shown.length === 0 && <tr><td colSpan={8} className="cell-sub">Không có vị trí nào khớp bộ lọc.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
     </>
   );
 }
