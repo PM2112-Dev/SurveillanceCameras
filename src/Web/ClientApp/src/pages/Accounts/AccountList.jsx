@@ -123,8 +123,9 @@ export function AccountList() {
       />
 
       <p className="hint">
-        Bấm <strong>Mở Chrome</strong> để máy chủ mở Chrome tại trang đăng nhập của loại tài khoản (Base URL của
-        loại tài khoản), sau đó tự đăng nhập trong cửa sổ đó. Chrome được giữ mở và cookie mới tự động được cập nhật
+        Bấm <strong>Đăng nhập</strong> để máy chủ mở Chrome tại trang đăng nhập của loại tài khoản (Base URL của
+        loại tài khoản), sau đó tự đăng nhập trong cửa sổ đó. Cách này dùng chung cho mọi nền tảng, không riêng TikTok;
+        nền tảng mới thêm ở <Link to="/account-types/new">Loại tài khoản</Link>. Chrome được giữ mở và cookie mới tự động được cập nhật
         vào tài khoản mỗi khi thay đổi.
       </p>
 
@@ -186,25 +187,34 @@ export function AccountList() {
                       {running ? (
                         <button
                           type="button"
-                          className="icon-btn"
-                          title="Đóng Chrome"
+                          className="secondary"
+                          title="Đóng Chrome (cookie đã lưu được giữ lại)"
                           disabled={busy}
                           aria-busy={busy}
                           onClick={() => runSessionAction(item, id => accountsClient.stopAccountSession(id))}
                         >
-                          {!busy && <Square size={16} aria-hidden="true" />}
+                          {!busy && <Square size={16} aria-hidden="true" />} Đóng Chrome
                         </button>
                       ) : (
-                        <button
-                          type="button"
-                          className="icon-btn"
-                          title={host ? `Mở Chrome để đăng nhập ${host}` : 'Loại tài khoản chưa có Base URL (trang đăng nhập)'}
-                          disabled={busy || !host}
-                          aria-busy={busy}
-                          onClick={() => runSessionAction(item, id => accountsClient.startAccountSession(id))}
-                        >
-                          {!busy && <LogIn size={16} aria-hidden="true" />}
-                        </button>
+                        host ? (
+                          <button
+                            type="button"
+                            title={`Mở Chrome tại ${host} để đăng nhập và lấy cookie`}
+                            disabled={busy}
+                            aria-busy={busy}
+                            onClick={() => runSessionAction(item, id => accountsClient.startAccountSession(id))}
+                          >
+                            {!busy && <LogIn size={16} aria-hidden="true" />} {item.cookie ? 'Đăng nhập lại' : 'Đăng nhập'}
+                          </button>
+                        ) : (
+                          <Link
+                            to={item.accountTypeId ? `/account-types/${item.accountTypeId}` : '/account-types'}
+                            className="cell-sub"
+                            title="Loại tài khoản chưa có trang đăng nhập (Base URL)"
+                          >
+                            Thêm trang đăng nhập
+                          </Link>
+                        )
                       )}
                       {host?.endsWith('tiktok.com') && (
                         <Link to={`/accounts/${item.id}/tiktok`} className="icon-btn" title="Tra cứu kênh TikTok">
