@@ -26,7 +26,13 @@ public class WikicvCrawlOfflineTests
     }
 
     private static CrawlContext Context(string? cookie = "sessionid=x")
-        => new(RankingUrl, cookie, CrawlConfig.Parse(File.ReadAllText(PresetPath)));
+    {
+        var config = CrawlConfig.Parse(File.ReadAllText(PresetPath));
+        // Preset giãn cách 3 giây giữa hai request; test offline không cần chờ.
+        Assert.That(config.RequestDelayMs, Is.GreaterThanOrEqualTo(2000), "Preset wikicv phải giãn cách request.");
+        config.RequestDelayMs = 0;
+        return new CrawlContext(RankingUrl, cookie, config);
+    }
 
     /// <summary>Một trang bảng xếp hạng: 20 truyện kèm khung phân trang kiểu wikicv (cửa sổ 10 số, nút sang phải và trang cuối).</summary>
     private static string RankingPage(int page, int lastPage)
