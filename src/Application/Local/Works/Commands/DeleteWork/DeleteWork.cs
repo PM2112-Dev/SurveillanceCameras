@@ -1,3 +1,4 @@
+using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Security;
 
@@ -27,7 +28,7 @@ public class DeleteWorkCommandHandler : IRequestHandler<DeleteWorkCommand>
     public async Task Handle(DeleteWorkCommand request, CancellationToken cancellationToken)
     {
         var entity = await _context.Works
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id && x.Type == WorkType.Story, cancellationToken);
         
         Guard.Against.NotFound(request.Id, entity);
         

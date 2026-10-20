@@ -1,3 +1,4 @@
+using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Domain.Entities;
 
@@ -60,7 +61,7 @@ public class UpdateWorkCommandHandler : IRequestHandler<UpdateWorkCommand>
     public async Task Handle(UpdateWorkCommand request, CancellationToken cancellationToken)
     {
         var entity = await  _context.Works
-            .FirstOrDefaultAsync(x=> x.Id == request.Id && x.CreatedBy == _user.Id, cancellationToken);
+            .FirstOrDefaultAsync(x=> x.Id == request.Id && x.CreatedBy == _user.Id && x.Type == WorkType.Story, cancellationToken);
         
         Guard.Against.NotFound(request.Id, entity);
 

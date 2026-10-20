@@ -1,3 +1,4 @@
+using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Local.Episodes.IntegrationEvents;
 
@@ -20,7 +21,7 @@ public class RequestWorkEpisodeSyncCommandHandler : IRequestHandler<RequestWorkE
     public async Task Handle(RequestWorkEpisodeSyncCommand request, CancellationToken cancellationToken)
     {
         var story = await _context.Works
-            .FirstOrDefaultAsync(x => x.Id == request.WorkId && x.CreatedBy == _user.Id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == request.WorkId && x.CreatedBy == _user.Id && x.Type == WorkType.Story, cancellationToken);
 
         Guard.Against.NotFound(request.WorkId, story);
 

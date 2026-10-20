@@ -25,7 +25,7 @@ public class RetryWorkEpisodesCommandHandler : IRequestHandler<RetryWorkEpisodes
     public async Task<int> Handle(RetryWorkEpisodesCommand request, CancellationToken cancellationToken)
     {
         var story = await _context.Works
-            .FirstOrDefaultAsync(x => x.Id == request.WorkId && x.CreatedBy == _user.Id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == request.WorkId && x.CreatedBy == _user.Id && x.Type == WorkType.Story, cancellationToken);
 
         Guard.Against.NotFound(request.WorkId, story);
 

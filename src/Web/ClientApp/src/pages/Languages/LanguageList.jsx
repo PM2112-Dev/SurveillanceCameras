@@ -4,7 +4,7 @@ import { CrudList } from '../../components/common/CrudList';
 export function LanguageList() {
   return (
     <CrudList
-      title="Ngôn ngữ"
+      title="Ngôn ngữ phim"
       description="Ngôn ngữ của phim và tập. Khi đồng bộ drama TikTok, hệ thống gán ngôn ngữ theo textLanguage của video và tự thêm mã chưa khai báo."
       basePath="/languages"
       createLabel="Thêm ngôn ngữ"

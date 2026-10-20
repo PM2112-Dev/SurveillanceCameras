@@ -10,7 +10,7 @@ export function StoryList() {
   return (
     <CrudList
       title="Truyện"
-      description="Truyện tạo từ nguồn truyện (AI biên tập tên/giới thiệu). Bấm tên truyện để xem chương."
+      description="Truyện chữ tạo từ nguồn truyện (AI biên tập tên/giới thiệu), đăng lên nền tảng truyện. Không gồm phim — phim nằm ở mục Phim. Bấm tên truyện để xem chương."
       basePath="/stories"
       createLabel="Thêm truyện"
       deleteTitle="Xoá truyện"

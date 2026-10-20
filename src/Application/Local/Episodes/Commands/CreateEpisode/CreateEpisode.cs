@@ -1,3 +1,4 @@
+using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Domain.Entities;
 
@@ -49,7 +50,7 @@ public class CreateEpisodeCommandHandler : IRequestHandler<CreateEpisodeCommand,
     public async Task<int> Handle(CreateEpisodeCommand request, CancellationToken cancellationToken)
     {
         var storyExists = await _context.Works
-            .AnyAsync(x => x.Id == request.WorkId && x.CreatedBy == _user.Id, cancellationToken);
+            .AnyAsync(x => x.Id == request.WorkId && x.CreatedBy == _user.Id && x.Type == WorkType.Story, cancellationToken);
         if (!storyExists) throw new NotFoundException(request.WorkId.ToString(), nameof(Work));
 
         var entity = new Episode

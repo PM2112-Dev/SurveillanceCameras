@@ -1,3 +1,4 @@
+using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Local.Works.Queries.DTOs;
 using SurveillanceCameras.Application.Local.Works.Queries.GetWorks;
@@ -29,7 +30,7 @@ public class GetWorkByIdQueryHandler : IRequestHandler<GetWorkByIdQuery, WorkDto
     public async Task<WorkDto> Handle(GetWorkByIdQuery request, CancellationToken cancellationToken)
     {
         var entity = await _context.Works
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id && x.Type == WorkType.Story, cancellationToken);
 
         Guard.Against.NotFound(request.Id, entity);
 

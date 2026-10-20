@@ -1,3 +1,4 @@
+using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Local.Episodes.Queries.DTOs;
 
@@ -28,7 +29,7 @@ public class GetEpisodeByIdQueryHandler : IRequestHandler<GetEpisodeByIdQuery, E
     public async Task<EpisodeDto> Handle(GetEpisodeByIdQuery request, CancellationToken cancellationToken)
     {
         var dto = await _context.Episodes
-            .Where(x => x.Id == request.Id && x.CreatedBy == _user.Id)
+            .Where(x => x.Id == request.Id && x.CreatedBy == _user.Id && x.Work!.Type == WorkType.Story)
             .ProjectTo<EpisodeDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
 

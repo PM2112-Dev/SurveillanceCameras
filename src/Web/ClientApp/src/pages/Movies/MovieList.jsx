@@ -13,7 +13,7 @@ export function MovieList() {
   return (
     <CrudList
       title="Phim"
-      description="Phim đồng bộ từ drama của kênh TikTok đã lưu. Vào Kênh đã lưu → biểu tượng phim để chọn drama cần đồng bộ."
+      description="Phim video nhiều tập (không phải truyện chữ), đồng bộ từ drama của kênh TikTok đã lưu. Vào Kênh đã lưu → biểu tượng phim để chọn drama cần đồng bộ."
       basePath="/movies"
       editable={false}
       emptyMessage="Chưa có phim nào. Vào Kênh đã lưu, mở danh sách drama của kênh TikTok và chọn drama để đồng bộ."

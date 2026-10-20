@@ -39,7 +39,7 @@ public class GetEpisodesQueryHandler : IRequestHandler<GetEpisodesQuery, Paginat
 
     public async Task<PaginatedList<EpisodeBriefDto>> Handle(GetEpisodesQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Episodes.Where(x => x.WorkId == request.WorkId && x.CreatedBy == _user.Id);
+        var query = _context.Episodes.Where(x => x.WorkId == request.WorkId && x.CreatedBy == _user.Id && x.Work!.Type == WorkType.Story);
 
         if (!string.IsNullOrWhiteSpace(request.Title))
             query = query.Where(x => (x.NameRaw != null && x.NameRaw.Contains(request.Title))

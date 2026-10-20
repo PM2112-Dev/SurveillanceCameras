@@ -29,15 +29,20 @@ const menuSections = [
     items: [{ to: '/', label: 'Tổng quan', icon: LayoutDashboard, end: true }]
   },
   {
-    heading: 'Nội dung',
+    heading: 'Truyện chữ',
     items: [
       { to: '/web-sources', label: 'Nguồn web', icon: Globe },
       { to: '/story-sources', label: 'Nguồn truyện', icon: BookOpen },
       { to: '/categories', label: 'Thể loại', icon: Tags },
       { to: '/stories', label: 'Truyện', icon: Library },
-      { to: '/movies', label: 'Phim', icon: Film },
-      { to: '/languages', label: 'Ngôn ngữ', icon: Languages },
       { to: '/story-video-types', label: 'Loại video truyện', icon: Clapperboard }
+    ]
+  },
+  {
+    heading: 'Phim (từ TikTok)',
+    items: [
+      { to: '/movies', label: 'Phim', icon: Film },
+      { to: '/languages', label: 'Ngôn ngữ phim', icon: Languages }
     ]
   },
   {
