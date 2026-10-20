@@ -1,4 +1,5 @@
 {
+  "loginRequiredText": "Đăng nhập để xem nội dung",
   "storyList": {
     "item": ".book-item",
     "title": ".book-title",
@@ -11,6 +12,9 @@
     },
     "pagination": {
       "pageSize": 20,
+      "lastPage": "ul.pagination a[href*='start=']@href",
+      "lastPagePattern": "[?&]start=(\\d+)",
+      "lastPageIsOffset": true,
       "nextPage": "ul.pagination li:last-child:not(.disabled) a[href*='start=']"
     }
   },
@@ -50,6 +54,8 @@
   },
   "chapter": {
     "title": "#bookContent p.book-title:nth-of-type(2)",
-    "content": "#bookContentBody"
+    "content": "#bookContentBody",
+    "remove": [".gliaplayer-container", ".tpm-unit", "iframe", "ins"],
+    "dropTitleParagraph": true
   }
 }

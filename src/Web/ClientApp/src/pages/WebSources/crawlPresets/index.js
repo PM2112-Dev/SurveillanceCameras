@@ -8,6 +8,6 @@ export const CRAWL_PRESETS = [
     key: 'wikicv',
     label: 'Wikicv',
     config: wikicv,
-    note: 'Trang xếp hạng/tìm kiếm cần cookie đăng nhập; phân trang danh sách chưa kiểm chứng.'
+    note: 'Trang bảng xếp hạng (/bang-xep-hang) và tìm kiếm (/tim-kiem) cần cookie đăng nhập: bật “Cần cookie” và chọn tài khoản wikicv đã đăng nhập (thiếu thì báo lỗi rõ ràng). Chúng chia 20 truyện/trang, tối đa khoảng 1000; /truyen-nam không cần đăng nhập, 50 truyện và không phân trang.'
   }
 ];
