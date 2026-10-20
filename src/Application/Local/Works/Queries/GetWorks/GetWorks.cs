@@ -1,3 +1,4 @@
+using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.Works.Queries.DTOs;
@@ -34,7 +35,7 @@ public class GetWorksQueryHandler : IRequestHandler<GetWorksQuery, PaginatedList
     public async Task<PaginatedList<WorkDto>> Handle(GetWorksQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Works
-            .Where(x=> x.CreatedBy == _user.Id);
+            .Where(x => x.CreatedBy == _user.Id && x.Type == WorkType.Story);
         
         if (!string.IsNullOrWhiteSpace(request.Title))
             query = query.Where(x => x.Title != null && x.Title.Contains(request.Title));

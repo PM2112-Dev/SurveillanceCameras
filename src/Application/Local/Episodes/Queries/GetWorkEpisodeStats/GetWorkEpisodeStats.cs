@@ -37,7 +37,7 @@ public class GetWorkEpisodeStatsQueryHandler : IRequestHandler<GetWorkEpisodeSta
     {
         var story = await _context.Works
             .AsNoTracking()
-            .Where(x => x.Id == request.WorkId && x.CreatedBy == _user.Id)
+            .Where(x => x.Id == request.WorkId && x.CreatedBy == _user.Id && x.Type == WorkType.Story)
             .Select(x => new { x.EpisodesSyncedAt, x.EpisodeSyncError })
             .FirstOrDefaultAsync(cancellationToken);
 
