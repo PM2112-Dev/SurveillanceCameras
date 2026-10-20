@@ -37,7 +37,7 @@ export function AccountForm() {
       .finally(() => setLoading(false));
   }, [id, isEdit]);
 
-  const handleSubmit = event => {
+  const handleSubmit = (event, thenLogin = false) => {
     event.preventDefault();
     setSaving(true);
     setError('');
@@ -54,6 +54,10 @@ export function AccountForm() {
         );
 
     request
+      // Tạo xong thì mở Chrome luôn; lỗi mở Chrome (loại chưa có trang đăng nhập…) vẫn giữ tài khoản đã tạo.
+      .then(created => thenLogin && !isEdit
+        ? accountsClient.startAccountSession(Number(created)).catch(err => { throw new Error(`Đã tạo tài khoản nhưng chưa mở được Chrome: ${getErrorMessage(err)}`); })
+        : undefined)
       .then(() => navigate('/accounts'))
       .catch(err => setError(getErrorMessage(err)))
       .finally(() => setSaving(false));
@@ -94,7 +98,7 @@ export function AccountForm() {
         </label>
 
         <p className="hint">
-          Cookie không nhập tay ở đây. Sau khi lưu, vào danh sách tài khoản và bấm “Mở Chrome” để đăng nhập trang của loại tài khoản;
+          Cookie không nhập tay ở đây. Chọn loại tài khoản (nền tảng) rồi bấm “Tạo và đăng nhập”, hoặc sau khi lưu bấm “Đăng nhập” ở danh sách, để mở Chrome tại trang đăng nhập của loại đó;
           cookie sẽ được lấy và cập nhật tự động.
         </p>
 
@@ -102,6 +106,13 @@ export function AccountForm() {
           <button type="button" className="secondary" onClick={() => navigate('/accounts')}>
             Huỷ
           </button>
+          {!isEdit && (
+            <button type="button" className="secondary" disabled={saving || !form.accountTypeId || !form.title}
+              title="Tạo tài khoản rồi mở Chrome tại trang đăng nhập của loại đã chọn"
+              onClick={event => handleSubmit(event, true)}>
+              Tạo và đăng nhập
+            </button>
+          )}
           <button type="submit" disabled={saving} aria-busy={saving}>
             {isEdit ? 'Lưu thay đổi' : 'Tạo mới'}
           </button>

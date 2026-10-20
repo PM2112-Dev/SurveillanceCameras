@@ -4,6 +4,15 @@ import { EntityForm, useEntityForm } from '../../components/common/EntityForm';
 
 const initial = { title: '', baseUrl: '', loginCookieName: '' };
 
+/** Nền tảng thường gặp: điền sẵn trang đăng nhập và cookie báo đã đăng nhập. Chỉ là gợi ý, sửa được. */
+const presets = [
+  { key: 'tiktok', title: 'TikTok', baseUrl: 'https://www.tiktok.com/login', loginCookieName: 'sessionid' },
+  { key: 'facebook', title: 'Facebook', baseUrl: 'https://www.facebook.com/login', loginCookieName: 'c_user' },
+  { key: 'youtube', title: 'YouTube (Google)', baseUrl: 'https://accounts.google.com/ServiceLogin?service=youtube', loginCookieName: 'SID' },
+  { key: 'instagram', title: 'Instagram', baseUrl: 'https://www.instagram.com/accounts/login/', loginCookieName: 'sessionid' },
+  { key: 'x', title: 'X (Twitter)', baseUrl: 'https://x.com/i/flow/login', loginCookieName: 'auth_token' }
+];
+
 export function AccountTypeForm() {
   const state = useEntityForm({
     initial,
@@ -24,6 +33,20 @@ export function AccountTypeForm() {
 
   return (
     <EntityForm title={state.isEdit ? 'Sửa loại tài khoản' : 'Thêm loại tài khoản'} state={state}>
+      {!state.isEdit && (
+        <label>
+          Chọn nền tảng có sẵn
+          <select value="" onChange={event => {
+            const preset = presets.find(p => p.key === event.target.value);
+            if (preset) update({ title: preset.title, baseUrl: preset.baseUrl, loginCookieName: preset.loginCookieName });
+          }}>
+            <option value="">— Tự nhập bên dưới —</option>
+            {presets.map(p => <option key={p.key} value={p.key}>{p.title}</option>)}
+          </select>
+          <small>Điền sẵn trang đăng nhập và cookie nhận biết đã đăng nhập; kiểm tra lại nếu nền tảng đổi cách đăng nhập.</small>
+        </label>
+      )}
+
       <label>
         Tên loại tài khoản <span className="required">*</span>
         <input
@@ -46,7 +69,7 @@ export function AccountTypeForm() {
           placeholder="VD: https://www.tiktok.com/login"
         />
         <small>
-          Bấm “Mở Chrome” ở tài khoản thuộc loại này, máy chủ sẽ mở trang này để đăng nhập và lưu cookie của cả tên miền.
+          Bấm “Đăng nhập” ở tài khoản thuộc loại này, máy chủ sẽ mở Chrome tại trang này để bạn đăng nhập và lưu cookie của cả tên miền. Nền tảng nào cũng dùng cách này.
         </small>
       </label>
 
