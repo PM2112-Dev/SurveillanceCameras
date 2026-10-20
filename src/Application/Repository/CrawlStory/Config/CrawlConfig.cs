@@ -43,6 +43,13 @@ public class CrawlConfig
     /// </summary>
     public string? LoginRequiredText { get; set; }
 
+    /// <summary>
+    /// Khoảng cách tối thiểu (mili giây) giữa hai request tới trang nguồn, tính chung cho mọi luồng đang crawl trang đó.
+    /// Trang hay chặn IP khi gọi dồn dập (wikicv) nên đặt vài giây. Cấu hình chung <c>CrawlStory:HostIntervalsMs</c> trong
+    /// appsettings cũng áp cho nguồn đã lưu cấu hình cũ; giá trị lớn hơn được dùng.
+    /// </summary>
+    public int? RequestDelayMs { get; set; }
+
     /// <summary>Header gửi kèm mọi request (vd. User-Agent riêng).</summary>
     public Dictionary<string, string>? Headers { get; set; }
 

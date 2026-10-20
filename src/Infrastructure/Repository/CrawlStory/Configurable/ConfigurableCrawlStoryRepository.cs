@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 using SurveillanceCameras.Application.Common.Exceptions;
@@ -18,10 +19,12 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
     private const int MaxRedirects = 5;
 
     private readonly HttpClient _httpClient;
+    private readonly CrawlStoryOptions _options;
 
-    public ConfigurableCrawlStoryRepository(IHttpClientFactory httpClientFactory)
+    public ConfigurableCrawlStoryRepository(IHttpClientFactory httpClientFactory, IOptions<CrawlStoryOptions>? options = null)
     {
         _httpClient = httpClientFactory.CreateClient(HttpClientName);
+        _options = options?.Value ?? new CrawlStoryOptions();
     }
 
     public Task<CrawlPageDto<StoryCrawlDto>> FetchStoryListAsync(CrawlContext context, int page,
@@ -254,7 +257,13 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
             HttpResponseMessage response;
             try
             {
+                // Xếp hàng theo host trước mỗi request (kể cả bước chuyển hướng): nguồn chặn IP khi bị gọi dồn dập.
+                await CrawlRequestThrottle.WaitAsync(uri.Host, _options.IntervalFor(uri.Host, context.Config?.RequestDelayMs), cancellationToken);
                 response = await _httpClient.SendAsync(request, cancellationToken);
+            }
+            catch (TimeoutException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                throw new CrawlException(ex.Message, ex);
             }
             // Mọi lỗi mạng/hết giờ, kể cả TimeoutRejectedException của lớp resilience (Polly).
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
@@ -269,6 +278,17 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
                 {
                     uri = ToAllowedUri(new Uri(uri, location).ToString(), baseUri);
                     continue;
+                }
+
+                if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden)
+                {
+                    // Bị chặn/giới hạn: dừng gọi host này một lúc thay vì để các luồng khác tiếp tục dồn request.
+                    var cooldown = response.Headers.RetryAfter?.Delta
+                                   ?? TimeSpan.FromSeconds(_options.BlockedCooldownSeconds);
+                    CrawlRequestThrottle.Block(uri.Host, TimeSpan.FromSeconds(Math.Clamp(cooldown.TotalSeconds, 30, 3600)));
+                    throw new CrawlException(
+                        $"Trang nguồn chặn/giới hạn request ({(int)response.StatusCode}) tới {uri} — hệ thống tạm nghỉ không gọi {uri.Host}. " +
+                        "Tăng requestDelayMs của nguồn web (hoặc CrawlStory:HostIntervalsMs), kiểm tra cookie, đổi IP nếu đã bị cấm.");
                 }
 
                 if (!response.IsSuccessStatusCode)

@@ -61,6 +61,7 @@ public static class DependencyInjection
 
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 
+#pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers còn ở dạng thử nghiệm
         builder.Services.AddHttpClient(ConfigurableCrawlStoryRepository.HttpClientName, client =>
             {
                 client.Timeout = TimeSpan.FromSeconds(30);
@@ -75,7 +76,12 @@ public static class DependencyInjection
                 AllowAutoRedirect = false,
                 UseCookies = false,
                 AutomaticDecompression = System.Net.DecompressionMethods.All
-            });
+            })
+            // Resilience mặc định tự thử lại tới 3 lần (và coi request chậm quá 10 giây là lỗi): khi nguồn chặn IP, số request
+            // gửi đi bị nhân lên. Crawl tự giãn cách và nghỉ khi bị chặn (CrawlRequestThrottle) nên không thử lại ngầm.
+            .RemoveAllResilienceHandlers();
+#pragma warning restore EXTEXP0001
+        builder.Services.Configure<CrawlStoryOptions>(builder.Configuration.GetSection(CrawlStoryOptions.SectionName));
         builder.Services.AddScoped<ConfigurableCrawlStoryRepository>();
 
         // Bỏ resilience mặc định của ServiceDefaults (AddStandardResilienceHandler: tổng 30 giây/request, tự thử lại cả POST)
