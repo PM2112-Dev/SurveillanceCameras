@@ -74,6 +74,36 @@ public class ConfigurableCrawlStoryRepositoryLiveTests
         Assert.That(chapter.Paragraphs, Is.Not.Empty);
     }
 
+    /// <summary>
+    /// Trang bảng xếp hạng của wikicv cần đăng nhập. Đặt biến môi trường <c>WIKICV_COOKIE</c> (chuỗi Cookie copy từ trình duyệt đã
+    /// đăng nhập) và <c>WIKICV_RANKING_URL</c> (tuỳ chọn) rồi chạy; không đặt thì bỏ qua.
+    /// </summary>
+    [Test]
+    public async Task Wikicv_RankingList_WithCookie_PagesThroughResults()
+    {
+        var cookie = Environment.GetEnvironmentVariable("WIKICV_COOKIE");
+        if (string.IsNullOrWhiteSpace(cookie)) Assert.Ignore("Chưa đặt WIKICV_COOKIE.");
+
+        var url = Environment.GetEnvironmentVariable("WIKICV_RANKING_URL") ?? "https://wikicv.org/bang-xep-hang?so=4";
+        var context = Context("wikicv", url) with { Cookie = cookie };
+        var repository = CreateRepository();
+
+        var first = await repository.FetchStoryListAsync(context, 1);
+        Log($"RANKING p1: {first.Items.Count} items, total={first.TotalPages}, next={first.HasNextPage}");
+        Assert.That(first.Items, Has.Count.EqualTo(20));
+        Assert.That(first.TotalPages, Is.GreaterThan(1));
+        Assert.That(first.HasNextPage, Is.True);
+
+        var second = await repository.FetchStoryListAsync(context, 2);
+        Assert.That(second.Items.Select(s => s.Link).Intersect(first.Items.Select(s => s.Link)), Is.Empty);
+
+        var beyond = await repository.FetchStoryListAsync(context, first.TotalPages!.Value + 2);
+        Assert.That(beyond.Items, Is.Empty);
+
+        var anonymous = context with { Cookie = null };
+        Assert.ThrowsAsync<Application.Common.Exceptions.CrawlException>(() => repository.FetchStoryListAsync(anonymous, 1));
+    }
+
     /// <summary>Giống lúc đồng bộ: tải chi tiết cả một trang truyện song song (5 luồng) trên cùng một repository.</summary>
     [TestCase("wikidichzz", "https://wikidichzz.com/danh-sach/truyen-full")]
     public async Task StoryDetails_InParallel_AllHaveDescription(string preset, string baseUrl)

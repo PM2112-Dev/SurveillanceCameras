@@ -36,6 +36,13 @@ public class CrawlConfig
     /// </summary>
     public string? CacheBuster { get; set; }
 
+    /// <summary>
+    /// Đoạn chữ xuất hiện trên trang khi nguồn đòi đăng nhập (vd. <c>"Đăng nhập để xem nội dung"</c> của wikicv). Trang đó
+    /// vẫn trả HTTP 200 nhưng không có dữ liệu, nên không khai báo thì crawl chỉ thấy "không có truyện" mà không biết lý do.
+    /// Khớp thì ném lỗi chỉ rõ cần cookie đăng nhập.
+    /// </summary>
+    public string? LoginRequiredText { get; set; }
+
     /// <summary>Header gửi kèm mọi request (vd. User-Agent riêng).</summary>
     public Dictionary<string, string>? Headers { get; set; }
 
@@ -90,6 +97,12 @@ public class CrawlPaginationConfig
 
     /// <summary>Selector các số trong khung phân trang; số lớn nhất là trang cuối.</summary>
     public string? LastPage { get; set; }
+
+    /// <summary>
+    /// Regex (nhóm 1) lấy số từ giá trị của <see cref="LastPage"/> trước khi đọc, dùng khi số nằm lẫn trong chuỗi
+    /// (vd. <c>start=(\d+)</c> trên href <c>?gender=…&amp;start=980</c>).
+    /// </summary>
+    public string? LastPagePattern { get; set; }
 
     /// <summary>Số lấy từ <see cref="LastPage"/> là offset (vd. <c>data-start</c>) chứ không phải số trang.</summary>
     public bool LastPageIsOffset { get; set; }
@@ -166,4 +179,10 @@ public class CrawlChapterConfig
 
     /// <summary>Selector các phần tử cần bỏ khỏi nội dung (quảng cáo, nút…); script/style luôn bị bỏ.</summary>
     public List<string>? Remove { get; set; }
+
+    /// <summary>
+    /// Bỏ đoạn đầu của nội dung nếu nó chỉ lặp lại tên chương (một số trang chèn tên chương vào thân bài, khiến bài
+    /// sau khi dịch/đăng bị lặp tên).
+    /// </summary>
+    public bool DropTitleParagraph { get; set; }
 }

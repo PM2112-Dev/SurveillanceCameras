@@ -102,11 +102,19 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
             foreach (var element in CrawlSelector.Select(content, selector)) element.Remove();
         }
 
+        var title = CrawlSelector.One(page.Document, config.Title, page.Url);
+        var paragraphs = CrawlSelector.Paragraphs(content);
+        if (config.DropTitleParagraph && paragraphs.Count > 1 && title is not null
+            && string.Equals(paragraphs[0], title, StringComparison.OrdinalIgnoreCase))
+        {
+            paragraphs.RemoveAt(0);
+        }
+
         return new ChapterContentDto
         {
             Url = page.Url.ToString(),
-            Title = CrawlSelector.One(page.Document, config.Title, page.Url),
-            Paragraphs = CrawlSelector.Paragraphs(content)
+            Title = title,
+            Paragraphs = paragraphs
         };
     }
 
@@ -183,6 +191,13 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
 
         var items = CrawlSelector.Select(loaded.Document, config.Item);
         var totalPages = TotalPages(loaded, pagination);
+        // Khung phân trang chỉ liệt kê các trang khác trang đang xem, nên ở trang cuối số lớn nhất nhỏ hơn thực tế một trang.
+        // Nguồn cũng trả lại trang cuối khi xin vượt quá nó: quá một trang so với số đếm được thì coi như hết, không lặp lại.
+        if (totalPages is { } counted && counted < page)
+        {
+            if (page > counted + 1) return new ListPage(loaded.Url, [], counted, false);
+            totalPages = page;
+        }
 
         bool hasNextPage;
         if (totalPages is { } total) hasNextPage = page < total;
@@ -197,7 +212,7 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
         if (string.IsNullOrWhiteSpace(pagination?.LastPage)) return null;
 
         var numbers = CrawlSelector.All(page.Document, pagination.LastPage, page.Url)
-            .Select(CrawlSelector.ParseNumber)
+            .Select(value => CrawlSelector.ParseNumber(ExtractNumber(value, pagination.LastPagePattern)))
             .OfType<int>()
             .ToList();
 
@@ -209,6 +224,14 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
         return pagination.PageSize is > 0 and var size
             ? max / size + 1
             : throw new CrawlException("pagination.lastPageIsOffset cần có pagination.pageSize.");
+    }
+
+    private static string? ExtractNumber(string value, string? pattern)
+    {
+        if (string.IsNullOrWhiteSpace(pattern)) return value;
+
+        var match = Regex.Match(value, pattern);
+        return match.Success ? match.Groups[match.Groups.Count > 1 ? 1 : 0].Value : null;
     }
 
     // ── Tải trang ─────────────────────────────────────────────────────────────
@@ -258,6 +281,14 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
                 var html = await response.Content.ReadAsStringAsync(cancellationToken);
                 // Parser tạo mới mỗi lần: repository có thể được gọi song song (vd. đồng bộ nhiều truyện).
                 var document = await new HtmlParser().ParseDocumentAsync(html, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(context.Config?.LoginRequiredText)
+                    && html.Contains(context.Config.LoginRequiredText, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new CrawlException(string.IsNullOrWhiteSpace(context.Cookie)
+                        ? $"Trang {uri} yêu cầu đăng nhập (\"{context.Config.LoginRequiredText}\"). Bật “Cần cookie” cho nguồn web và chọn tài khoản đã đăng nhập."
+                        : $"Trang {uri} vẫn yêu cầu đăng nhập (\"{context.Config.LoginRequiredText}\") dù đã có cookie — cookie đã hết hạn hoặc tài khoản bị đăng xuất. Đăng nhập lại ở mục Tài khoản.");
+                }
+
                 return new LoadedPage(uri, html, document);
             }
         }
