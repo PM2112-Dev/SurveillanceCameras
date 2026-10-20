@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
 using Shouldly;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Local.CrawlStories.Commands.SyncCrawledStories;
+using SurveillanceCameras.Application.Local.CrawlStories.Commands.SyncStoryDetail;
 using SurveillanceCameras.Application.Repository.CrawlStory;
 using SurveillanceCameras.Application.Repository.CrawlStory.DTOs;
 using SurveillanceCameras.Domain.Entities;
@@ -51,7 +53,8 @@ public class SyncCrawledStoriesCategoryTests
         var user = new Mock<IUser>();
         user.Setup(x => x.Id).Returns(Owner);
 
-        await new SyncCrawledStoriesCommandHandler(_db, user.Object, factory.Object).Handle(new SyncCrawledStoriesCommand
+        // Đồng bộ chỉ lưu thông tin từ danh sách và xếp hàng; thể loại/giới thiệu do lệnh lấy chi tiết (consumer) gán.
+        await new SyncCrawledStoriesCommandHandler(_db, user.Object).Handle(new SyncCrawledStoriesCommand
         {
             WebSourceId = _webSource.Id,
             Stories = [new SyncCrawledStoryItem { Link = StoryUrl, Title = "Truyện A" }]
@@ -60,6 +63,12 @@ public class SyncCrawledStoriesCategoryTests
         // TestDb không có người dùng đăng nhập nên interceptor không điền CreatedBy như khi chạy thật.
         foreach (var source in _db.StorySources.Where(x => x.CreatedBy == null)) source.CreatedBy = Owner;
         await _db.SaveChangesAsync();
+
+        foreach (var source in await _db.StorySources.ToListAsync())
+        {
+            await new SyncStoryDetailCommandHandler(_db, factory.Object, NullLogger<SyncStoryDetailCommandHandler>.Instance)
+                .Handle(new SyncStoryDetailCommand(source.Id, IsNew: false), CancellationToken.None);
+        }
     }
 
     private Task<StorySource> SavedSourceAsync()

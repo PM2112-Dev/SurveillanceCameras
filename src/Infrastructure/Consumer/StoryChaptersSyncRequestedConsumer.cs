@@ -14,6 +14,7 @@ namespace SurveillanceCameras.Infrastructure.Consumer;
 public sealed class StoryChaptersSyncRequestedConsumer : KafkaConsumerBase<StoryChaptersSyncRequestedIntegrationEvent>
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger _logger;
 
     public StoryChaptersSyncRequestedConsumer(
         IServiceScopeFactory scopeFactory,
@@ -23,13 +24,15 @@ public sealed class StoryChaptersSyncRequestedConsumer : KafkaConsumerBase<Story
         : base(options, topicRegistry, logger)
     {
         _scopeFactory = scopeFactory;
+        _logger = logger;
     }
 
-    protected override async Task HandleAsync(StoryChaptersSyncRequestedIntegrationEvent integrationEvent, CancellationToken cancellationToken)
-    {
-        await using var scope = _scopeFactory.CreateAsyncScope();
-        var sender = scope.ServiceProvider.GetRequiredService<ISender>();
+    protected override Task HandleAsync(StoryChaptersSyncRequestedIntegrationEvent integrationEvent, CancellationToken cancellationToken)
+        => CrawlBlockedRetry.RunAsync(async ct =>
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var sender = scope.ServiceProvider.GetRequiredService<ISender>();
 
-        await sender.Send(new SyncWorkEpisodesPageCommand(integrationEvent.StoryId, integrationEvent.Page), cancellationToken);
-    }
+            await sender.Send(new SyncWorkEpisodesPageCommand(integrationEvent.StoryId, integrationEvent.Page), ct);
+        }, _logger, cancellationToken);
 }

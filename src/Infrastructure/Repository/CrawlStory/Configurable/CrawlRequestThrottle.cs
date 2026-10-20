@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using SurveillanceCameras.Application.Common.Exceptions;
 
 namespace SurveillanceCameras.Infrastructure.Repository.CrawlStory.Configurable;
 
@@ -25,7 +26,7 @@ public static class CrawlRequestThrottle
     /// Chờ tới lượt gọi <paramref name="host"/>. Mỗi lời gọi giữ một "ô giờ" riêng nên các luồng được xếp hàng, mỗi ô cách ô
     /// trước <paramref name="interval"/> (cộng ngẫu nhiên nhẹ). <paramref name="interval"/> bằng 0 thì không chờ.
     /// </summary>
-    /// <exception cref="TimeoutException">Host đang trong thời gian nghỉ sau khi bị chặn; <see cref="Exception.Message"/> nói bao giờ gọi lại được.</exception>
+    /// <exception cref="CrawlBlockedException">Host đang trong thời gian nghỉ sau khi bị chặn; <see cref="CrawlBlockedException.RetryAt"/> là lúc gọi lại được.</exception>
     public static async Task WaitAsync(string host, TimeSpan interval, CancellationToken cancellationToken,
         Func<DateTimeOffset>? clock = null, Random? random = null)
     {
@@ -36,7 +37,9 @@ public static class CrawlRequestThrottle
         lock (state.Lock)
         {
             if (state.BlockedUntil > now)
-                throw new TimeoutException($"Đang tạm nghỉ không gọi {host} do nguồn đã chặn request; thử lại sau {state.BlockedUntil.ToLocalTime():HH:mm:ss}.");
+                throw new CrawlBlockedException(
+                    $"Đang tạm nghỉ không gọi {host} do nguồn đã chặn request; thử lại sau {state.BlockedUntil.ToLocalTime():HH:mm:ss}.",
+                    state.BlockedUntil);
 
             if (interval <= TimeSpan.Zero) return;
 

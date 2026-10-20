@@ -1,10 +1,6 @@
-using System.Collections.Concurrent;
 using SurveillanceCameras.Application.Common.Exceptions;
 using SurveillanceCameras.Application.Common.Interfaces;
-using SurveillanceCameras.Application.Local.Categories;
-using SurveillanceCameras.Application.Local.StorySources.IntegrationEvents;
-using SurveillanceCameras.Application.Repository.CrawlStory;
-using SurveillanceCameras.Application.Repository.CrawlStory.DTOs;
+using SurveillanceCameras.Application.Local.CrawlStories.IntegrationEvents;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.CrawlStories.Commands.SyncCrawledStories;
@@ -12,8 +8,9 @@ namespace SurveillanceCameras.Application.Local.CrawlStories.Commands.SyncCrawle
 /// <summary>
 /// Lưu các truyện đã chọn trong danh sách crawl vào <see cref="StorySource"/>. Truyện đã có (cùng nguồn web + link)
 /// thì cập nhật thông tin, chưa có thì thêm mới — gọi lại nhiều lần không sinh bản trùng.
-/// Mỗi truyện được tải thêm trang chi tiết để lấy giới thiệu (trang danh sách không có); tải lỗi thì vẫn lưu
-/// thông tin từ danh sách. Thể loại trên trang chi tiết trùng tên Category trong hệ thống thì được gán vào nguồn truyện.
+/// Chỉ lưu thông tin từ danh sách rồi xếp từng truyện vào Kafka (<see cref="StoryDetailSyncRequestedIntegrationEvent"/>):
+/// trang chi tiết (giới thiệu, thể loại) được consumer lấy lần lượt, mỗi lần cách nhau theo giãn cách của nguồn web, nên
+/// không gọi dồn dập vào trang nguồn và yêu cầu trả về ngay (xem <see cref="SyncStoryDetail.SyncStoryDetailCommand"/>).
 /// </summary>
 public record SyncCrawledStoriesCommand : IRequest<SyncCrawledStoriesResult>
 {
@@ -39,9 +36,8 @@ public record SyncCrawledStoryItem
     public int? ChapterCount { get; init; }
 }
 
-/// <param name="DetailFailed">Số truyện không tải được trang chi tiết (chỉ lưu thông tin từ danh sách).</param>
-/// <param name="DetailError">Lỗi đầu tiên khi tải trang chi tiết, để biết nguyên nhân.</param>
-public record SyncCrawledStoriesResult(int Created, int Updated, int DetailFailed, string? DetailError);
+/// <param name="Queued">Số truyện đã xếp hàng chờ lấy trang chi tiết (xử lý ở nền, lần lượt).</param>
+public record SyncCrawledStoriesResult(int Created, int Updated, int Queued);
 
 public class SyncCrawledStoriesCommandValidator : AbstractValidator<SyncCrawledStoriesCommand>
 {
@@ -62,18 +58,13 @@ public class SyncCrawledStoriesCommandValidator : AbstractValidator<SyncCrawledS
 
 public class SyncCrawledStoriesCommandHandler : IRequestHandler<SyncCrawledStoriesCommand, SyncCrawledStoriesResult>
 {
-    // Số trang chi tiết tải song song: đủ nhanh mà không dồn dập vào trang nguồn.
-    private const int DetailConcurrency = 5;
-
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
-    private readonly ICrawlStoryRepositoryFactory _factory;
 
-    public SyncCrawledStoriesCommandHandler(IApplicationDbContext context, IUser user, ICrawlStoryRepositoryFactory factory)
+    public SyncCrawledStoriesCommandHandler(IApplicationDbContext context, IUser user)
     {
         _context = context;
         _user = user;
-        _factory = factory;
     }
 
     public async Task<SyncCrawledStoriesResult> Handle(SyncCrawledStoriesCommand request, CancellationToken cancellationToken)
@@ -95,17 +86,13 @@ public class SyncCrawledStoriesCommandHandler : IRequestHandler<SyncCrawledStori
         var stories = request.Stories.DistinctBy(s => s.Link).ToList();
         var links = stories.Select(s => s.Link).ToList();
 
-        // Tải chi tiết trước khi ghi DB: lỗi giữa chừng (hoặc người dùng huỷ) thì không lưu dở dang.
-        var (details, failed, firstError) = await FetchDetailsAsync(request.WebSourceId, stories, cancellationToken);
-
         var existing = await _context.StorySources
             .Where(x => x.CreatedBy == _user.Id && x.WebSourceId == request.WebSourceId && links.Contains(x.LinkRaw!))
-            .Include(x => x.Categories)
             .ToListAsync(cancellationToken);
-        var categories = await CategoryMatcher.LoadAsync(_context, _user.Id, cancellationToken);
         var byLink = existing.GroupBy(x => x.LinkRaw!).ToDictionary(g => g.Key, g => g.First());
 
         var newSources = new List<StorySource>();
+        var all = new List<StorySource>();
         foreach (var story in stories)
         {
             if (!byLink.TryGetValue(story.Link, out var entity))
@@ -115,74 +102,33 @@ public class SyncCrawledStoriesCommandHandler : IRequestHandler<SyncCrawledStori
                 newSources.Add(entity);
             }
 
-            // Ưu tiên trang chi tiết (đầy đủ hơn), rồi tới trang danh sách; không có thì giữ dữ liệu đang lưu.
-            details.TryGetValue(story.Link, out var detail);
-            entity.Title = detail?.Title ?? story.Title ?? entity.Title;
-            entity.Author = detail?.Author ?? story.Author ?? entity.Author;
-            entity.Description = detail?.Description ?? entity.Description;
-            entity.ImageUrl = detail?.CoverUrl ?? story.CoverUrl ?? entity.ImageUrl;
-            entity.Status = detail?.Status ?? story.Status ?? entity.Status;
-            entity.TotalChapters = detail?.ChapterCount ?? story.ChapterCount ?? entity.TotalChapters;
-            categories.AssignTo(entity, detail?.Genres);
+            // Thông tin từ danh sách; trang chi tiết (đầy đủ hơn) được consumer lấy sau và ghi đè.
+            entity.Title = story.Title ?? entity.Title;
+            entity.Author = story.Author ?? entity.Author;
+            entity.ImageUrl = story.CoverUrl ?? entity.ImageUrl;
+            entity.Status = story.Status ?? entity.Status;
+            entity.TotalChapters = story.ChapterCount ?? entity.TotalChapters;
+            all.Add(entity);
         }
 
-        // Lưu lần một để có Id, rồi phát sự kiện cho từng nguồn mới: lần lưu thứ hai ghi OutboxMessage cùng transaction,
-        // consumer sẽ dùng AI biên tập tên/giới thiệu và tạo Story (nguồn đã có trước đó không bị tạo lại).
+        // Lưu lần một để nguồn mới có Id, rồi phát sự kiện cho từng truyện: lần lưu thứ hai ghi OutboxMessage cùng transaction,
+        // nên đã lưu truyện thì chắc chắn có yêu cầu lấy chi tiết đi kèm.
         await _context.ExecuteInTransactionAsync(async ct =>
         {
             await _context.SaveChangesAsync(ct);
 
-            foreach (var source in newSources)
+            foreach (var source in all)
             {
-                source.AddIntegrationEvent(new StorySourceCreatedIntegrationEvent
+                source.AddIntegrationEvent(new StoryDetailSyncRequestedIntegrationEvent
                 {
                     StorySourceId = source.Id,
-                    Title = source.Title,
-                    WebSourceId = source.WebSourceId,
-                    LinkRaw = source.LinkRaw
+                    IsNew = newSources.Contains(source)
                 }, ct);
             }
 
             await _context.SaveChangesAsync(ct);
         }, cancellationToken);
 
-        return new SyncCrawledStoriesResult(newSources.Count, stories.Count - newSources.Count, failed, firstError);
-    }
-
-    private async Task<(IReadOnlyDictionary<string, StoryDataDto> Details, int Failed, string? FirstError)> FetchDetailsAsync(
-        int webSourceId, IReadOnlyList<SyncCrawledStoryItem> stories, CancellationToken cancellationToken)
-    {
-        var details = new ConcurrentDictionary<string, StoryDataDto>();
-        var errors = new ConcurrentQueue<string>();
-
-        CrawlSource source;
-        try
-        {
-            source = await CrawlSource.LoadAsync(_context, _user.Id, _factory, webSourceId, cancellationToken);
-        }
-        catch (CrawlException ex)
-        {
-            return (details, stories.Count, ex.Message);
-        }
-
-        // Cấu hình không có phần "story" thì không có trang chi tiết để lấy: chỉ lưu thông tin danh sách.
-        if (source.Context.Config is { Story: null })
-            return (details, 0, null);
-
-        await Parallel.ForEachAsync(stories,
-            new ParallelOptions { MaxDegreeOfParallelism = DetailConcurrency, CancellationToken = cancellationToken },
-            async (story, ct) =>
-            {
-                try
-                {
-                    details[story.Link] = await source.Repository.FetchStoryAsync(source.Context, story.Link, ct);
-                }
-                catch (CrawlException ex)
-                {
-                    errors.Enqueue($"{story.Title}: {ex.Message}");
-                }
-            });
-
-        return (details, errors.Count, errors.TryPeek(out var first) ? first : null);
+        return new SyncCrawledStoriesResult(newSources.Count, stories.Count - newSources.Count, all.Count);
     }
 }

@@ -9969,6 +9969,7 @@ export class AppEpisodeDto implements IAppEpisodeDto {
     durationSeconds?: number | undefined;
     access?: string;
     playback?: AppPlaybackDto | undefined;
+    thumbnailUrl?: string | undefined;
 
     [key: string]: any;
 
@@ -9992,6 +9993,7 @@ export class AppEpisodeDto implements IAppEpisodeDto {
             this.durationSeconds = _data["durationSeconds"];
             this.access = _data["access"];
             this.playback = _data["playback"] ? AppPlaybackDto.fromJS(_data["playback"]) : undefined as any;
+            this.thumbnailUrl = _data["thumbnailUrl"];
         }
     }
 
@@ -10013,6 +10015,7 @@ export class AppEpisodeDto implements IAppEpisodeDto {
         data["durationSeconds"] = this.durationSeconds;
         data["access"] = this.access;
         data["playback"] = this.playback ? this.playback.toJSON() : undefined as any;
+        data["thumbnailUrl"] = this.thumbnailUrl;
         return data;
     }
 }
@@ -10023,6 +10026,7 @@ export interface IAppEpisodeDto {
     durationSeconds?: number | undefined;
     access?: string;
     playback?: AppPlaybackDto | undefined;
+    thumbnailUrl?: string | undefined;
 
     [key: string]: any;
 }
@@ -16799,8 +16803,7 @@ export interface ISyncCrawledStoriesCommand {
 export class SyncCrawledStoriesResult implements ISyncCrawledStoriesResult {
     created!: number;
     updated!: number;
-    detailFailed!: number;
-    detailError!: string | undefined;
+    queued!: number;
 
     [key: string]: any;
 
@@ -16821,8 +16824,7 @@ export class SyncCrawledStoriesResult implements ISyncCrawledStoriesResult {
             }
             this.created = _data["created"];
             this.updated = _data["updated"];
-            this.detailFailed = _data["detailFailed"];
-            this.detailError = _data["detailError"];
+            this.queued = _data["queued"];
         }
     }
 
@@ -16841,8 +16843,7 @@ export class SyncCrawledStoriesResult implements ISyncCrawledStoriesResult {
         }
         data["created"] = this.created;
         data["updated"] = this.updated;
-        data["detailFailed"] = this.detailFailed;
-        data["detailError"] = this.detailError;
+        data["queued"] = this.queued;
         return data;
     }
 }
@@ -16850,8 +16851,7 @@ export class SyncCrawledStoriesResult implements ISyncCrawledStoriesResult {
 export interface ISyncCrawledStoriesResult {
     created: number;
     updated: number;
-    detailFailed: number;
-    detailError: string | undefined;
+    queued: number;
 
     [key: string]: any;
 }

@@ -48,8 +48,9 @@ public class CrawlRequestThrottleTests
     {
         CrawlRequestThrottle.Block(Host, TimeSpan.FromMinutes(5));
 
-        var ex = Assert.ThrowsAsync<TimeoutException>(() => CrawlRequestThrottle.WaitAsync(Host, TimeSpan.Zero, CancellationToken.None));
+        var ex = Assert.ThrowsAsync<CrawlBlockedException>(() => CrawlRequestThrottle.WaitAsync(Host, TimeSpan.Zero, CancellationToken.None));
         Assert.That(ex!.Message, Does.Contain(Host).And.Contain("tạm nghỉ"));
+        Assert.That(ex.RetryAt, Is.GreaterThan(DateTimeOffset.UtcNow.AddMinutes(4)));
         Assert.DoesNotThrowAsync(() => CrawlRequestThrottle.WaitAsync("other-host.example", TimeSpan.Zero, CancellationToken.None));
     }
 
@@ -91,12 +92,12 @@ public class CrawlRequestThrottleTests
         Assert.That(sent[1] - sent[0], Is.GreaterThanOrEqualTo(TimeSpan.FromMilliseconds(130)));
 
         respond429 = true;
-        var ex = Assert.ThrowsAsync<CrawlException>(() => repository.FetchStoryListAsync(context, 1));
+        var ex = Assert.ThrowsAsync<CrawlBlockedException>(() => repository.FetchStoryListAsync(context, 1));
         Assert.That(ex!.Message, Does.Contain("429").And.Contain("tạm nghỉ"));
         var afterBlock = sent.Count;
 
         // Đang nghỉ: không gửi thêm request nào nữa.
-        var again = Assert.ThrowsAsync<CrawlException>(() => repository.FetchStoryListAsync(context, 1));
+        var again = Assert.ThrowsAsync<CrawlBlockedException>(() => repository.FetchStoryListAsync(context, 1));
         Assert.That(again!.Message, Does.Contain("tạm nghỉ"));
         Assert.That(sent, Has.Count.EqualTo(afterBlock));
     }
