@@ -45,6 +45,22 @@ public class Work : BaseAuditableEntity
     /// <summary>Lần gần nhất cập nhật thông tin truyện (giới thiệu, trạng thái…) lên TYT thành công.</summary>
     public DateTimeOffset? TytUpdatedAt { get; set; }
 
+    // ── Lịch đăng chương lên TYT ──────────────────────────────────────────────
+    /// <summary>Khi nào đăng chương đã xử lý xong lên TYT (chỉ áp khi truyện đã có <see cref="TytStoryId"/>).</summary>
+    public TytUploadMode TytUploadMode { get; set; } = TytUploadMode.Manual;
+
+    /// <summary>Số chương đăng mỗi lượt (chế độ theo giờ/ngày).</summary>
+    public int TytUploadBatchSize { get; set; } = 1;
+
+    /// <summary>Chế độ theo giờ: cách nhau bao nhiêu giờ giữa hai lượt đăng.</summary>
+    public int TytUploadEveryHours { get; set; } = 1;
+
+    /// <summary>Chế độ theo ngày: giờ đăng mỗi ngày, dạng "HH:mm" (giờ máy chủ).</summary>
+    public string? TytUploadDailyTime { get; set; }
+
+    /// <summary>Lần gần nhất tác vụ khôi phục lỗi đưa truyện lên TYT chạy lại — để không thử dồn dập.</summary>
+    public DateTimeOffset? TytRetryQueuedAt { get; set; }
+
     public string? Description { get; set; }
 
     public string? Author { get; set; }

@@ -50,6 +50,12 @@ public class CrawlConfig
     /// </summary>
     public int? RequestDelayMs { get; set; }
 
+    /// <summary>
+    /// Số request tối đa mỗi phút tới trang nguồn (cửa sổ trượt 60 giây, tính chung cho mọi luồng). Dùng cùng
+    /// <see cref="RequestDelayMs"/>; cấu hình chung <c>CrawlStory:HostRequestsPerMinute</c> cũng áp, lấy giá trị nhỏ hơn.
+    /// </summary>
+    public int? MaxRequestsPerMinute { get; set; }
+
     /// <summary>Header gửi kèm mọi request (vd. User-Agent riêng).</summary>
     public Dictionary<string, string>? Headers { get; set; }
 

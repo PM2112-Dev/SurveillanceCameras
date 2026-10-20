@@ -1,6 +1,7 @@
 using SurveillanceCameras.Application.Local.StoryVideoTypes.Queries.DTOs;
 using SurveillanceCameras.Application.Local.StorySources.Queries.DTOs;
 using SurveillanceCameras.Domain.Entities;
+using SurveillanceCameras.Domain.Enums;
 
 namespace SurveillanceCameras.Application.Local.Works.Queries.DTOs;
 
@@ -20,6 +21,15 @@ public class WorkDto : BaseDto
     public string? TytError { get; init; }
 
     public DateTimeOffset? TytUpdatedAt { get; init; }
+
+    /// <summary>Khi nào đăng chương lên TYT: tay / ngay khi xong / mỗi N giờ / mỗi ngày.</summary>
+    public TytUploadMode TytUploadMode { get; init; }
+
+    public int TytUploadBatchSize { get; init; }
+
+    public int TytUploadEveryHours { get; init; }
+
+    public string? TytUploadDailyTime { get; init; }
     
     public string? Description { get; init; }
     

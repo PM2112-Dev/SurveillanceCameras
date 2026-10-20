@@ -36,6 +36,42 @@ public class CrawlRequestThrottleTests
     }
 
     [Test]
+    public async Task RateLimit_AllowsAtMostNRequestsPerWindow_AndPushesTheRestToTheNextWindow()
+    {
+        var window = TimeSpan.FromMilliseconds(400);
+        var watch = Stopwatch.StartNew();
+
+        // 5 request mỗi cửa sổ: 5 request đầu qua ngay, request thứ 6–7 phải đợi tới khi cửa sổ đầu trôi qua.
+        var finished = await Task.WhenAll(Enumerable.Range(0, 7).Select(async _ =>
+        {
+            await CrawlRequestThrottle.WaitAsync(Host, TimeSpan.Zero, CancellationToken.None, maxRequests: 5, window: window);
+            return watch.Elapsed;
+        }));
+
+        var ordered = finished.Order().ToList();
+        Assert.That(ordered[4], Is.LessThan(window / 2), "5 request đầu không phải đợi");
+        Assert.That(ordered[5], Is.GreaterThanOrEqualTo(window - TimeSpan.FromMilliseconds(40)), "request thứ 6 phải đợi hết cửa sổ");
+        // Mọi cửa sổ trượt dài `window` đều chứa không quá 5 request.
+        for (var i = 5; i < ordered.Count; i++)
+            Assert.That(ordered[i] - ordered[i - 5], Is.GreaterThanOrEqualTo(window - TimeSpan.FromMilliseconds(40)));
+    }
+
+    [Test]
+    public void Options_TakeTheStricterOfHostAndSourceRateLimit()
+    {
+        var options = new CrawlStoryOptions
+        {
+            HostRequestsPerMinute = new(StringComparer.OrdinalIgnoreCase) { ["wikicv.org"] = 5 }
+        };
+
+        Assert.That(options.PerMinuteFor("WIKICV.org", null), Is.EqualTo(5));
+        Assert.That(options.PerMinuteFor("wikicv.org", 3), Is.EqualTo(3));
+        Assert.That(options.PerMinuteFor("wikicv.org", 20), Is.EqualTo(5));
+        Assert.That(options.PerMinuteFor("khac.test", null), Is.EqualTo(0));
+        Assert.That(options.PerMinuteFor("khac.test", 8), Is.EqualTo(8));
+    }
+
+    [Test]
     public async Task ZeroInterval_DoesNotWait()
     {
         var watch = Stopwatch.StartNew();

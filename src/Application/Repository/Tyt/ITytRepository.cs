@@ -28,4 +28,19 @@ public interface ITytRepository
     /// truyện tạo gần nhất. Không có thì trả về <c>null</c>.
     /// </summary>
     Task<string?> GetStoryIdAsync(TytContext context, string title, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Kiểm tra phiên đăng nhập TYT của tài khoản còn dùng được không (một request nhẹ tới trang quản lý truyện).
+    /// </summary>
+    /// <exception cref="Common.Exceptions.TytException">Chưa đăng nhập, phiên hết hạn hoặc TYT từ chối/lỗi.</exception>
+    Task CheckSessionAsync(TytContext context, CancellationToken cancellationToken = default);
+
+    /// <summary>Đăng chương mới vào truyện.</summary>
+    /// <returns>Id chương vừa tạo trên TYT; <c>null</c> nếu TYT không trả về (chương vẫn đã được đăng).</returns>
+    Task<string?> CreateChapterAsync(TytContext context, string storyId, TytChapterRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Sửa nội dung chương đã đăng.</summary>
+    Task UpdateChapterAsync(TytContext context, string storyId, string chapterId, TytChapterRequest request,
+        CancellationToken cancellationToken = default);
 }

@@ -1186,6 +1186,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<int?>("PromptId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTimeOffset?>("QueuedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -1215,6 +1218,12 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
 
                     b.Property<string>("TytChapterId")
                         .HasColumnType("text");
+
+                    b.Property<string>("TytUploadError")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("TytUploadedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("VideoUrl")
                         .HasColumnType("text");
@@ -1812,11 +1821,26 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<string>("TytError")
                         .HasColumnType("text");
 
+                    b.Property<DateTimeOffset?>("TytRetryQueuedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("TytStoryId")
                         .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("TytUpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("TytUploadBatchSize")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TytUploadDailyTime")
+                        .HasColumnType("text");
+
+                    b.Property<int>("TytUploadEveryHours")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TytUploadMode")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("UserProfileId")
                         .HasColumnType("integer");
