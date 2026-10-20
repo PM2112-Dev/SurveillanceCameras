@@ -60,12 +60,10 @@ export function CrawledStoryList() {
 
     webSourcesClient.syncCrawledStories(webSourceId, new SyncCrawledStoriesCommand({ webSourceId, stories }))
       .then(result => {
-        setSyncMessage(`Đã đồng bộ ${stories.length} truyện: thêm mới ${result.created}, cập nhật ${result.updated}.`
-          + (result.created > 0 ? ' AI đang biên tập tên/giới thiệu để tạo truyện ở nền — xem ở mục Nguồn truyện.' : ''));
-        if (result.detailFailed > 0) {
-          setSyncError(`${result.detailFailed} truyện không lấy được trang chi tiết (chưa có giới thiệu), `
-            + `đã lưu thông tin từ danh sách. Lỗi đầu tiên: ${result.detailError}`);
-        }
+        setSyncMessage(`Đã lưu ${stories.length} truyện (thêm mới ${result.created}, cập nhật ${result.updated}). `
+          + `${result.queued} truyện đang được xếp hàng để lấy trang chi tiết lần lượt ở nền, cách nhau theo giãn cách của nguồn web; `
+          + 'giới thiệu và thể loại sẽ có dần'
+          + (result.created > 0 ? ', sau đó AI biên tập tên/giới thiệu để tạo truyện — theo dõi ở mục Nguồn truyện.' : '.'));
         setSelected(new Map());
         setReloadKey(key => key + 1);
       })

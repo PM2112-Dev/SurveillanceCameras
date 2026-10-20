@@ -74,7 +74,7 @@ public class SyncWorkEpisodesPageCommandHandler : IRequestHandler<SyncWorkEpisod
                 .ToList();
             hasNextPage = page.HasNextPage;
         }
-        catch (CrawlException ex)
+        catch (CrawlException ex) when (ex is not CrawlBlockedException)
         {
             // Không ném lại: lỗi của trang nguồn (cấu hình sai, bị chặn…) thử lại ngay cũng vô ích — người dùng xem lỗi
             // và bấm đồng bộ lại.

@@ -57,7 +57,7 @@ public class FetchEpisodeContentCommandHandler : IRequestHandler<FetchEpisodeCon
             paragraphs = content.Paragraphs;
             if (!string.IsNullOrWhiteSpace(content.Title)) chapter.NameRaw = content.Title;
         }
-        catch (CrawlException ex)
+        catch (CrawlException ex) when (ex is not CrawlBlockedException)
         {
             _logger.LogWarning("Chapter {ChapterId}: tải nội dung lỗi: {Error}", chapter.Id, ex.Message);
             chapter.Status = EpisodeStatus.FetchFailed;

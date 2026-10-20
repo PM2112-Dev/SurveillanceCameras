@@ -55,6 +55,7 @@ public static class KafkaDependencyInjection
         if (!IsDesignTimeTooling())
         {
             builder.Services.AddHostedService<OutboxProcessor>();
+            builder.Services.AddHostedService<StoryDetailSyncRequestedConsumer>();
             builder.Services.AddHostedService<StorySourceCreatedConsumer>();
             builder.Services.AddHostedService<StoryChaptersSyncRequestedConsumer>();
             builder.Services.AddHostedService<ChapterFetchRequestedConsumer>();

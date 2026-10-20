@@ -254,16 +254,14 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
             var cookieHeader = StoredCookieHeader.Build(context.Cookie);
             if (cookieHeader.Length > 0) request.Headers.TryAddWithoutValidation("Cookie", cookieHeader);
 
+            // Xếp hàng theo host trước mỗi request (kể cả bước chuyển hướng): nguồn chặn IP khi bị gọi dồn dập. Nằm ngoài khối
+            // try bên dưới để CrawlBlockedException (đang tạm nghỉ) đi nguyên tới nơi chờ-thử-lại, không bị bọc thành lỗi mạng.
+            await CrawlRequestThrottle.WaitAsync(uri.Host, _options.IntervalFor(uri.Host, context.Config?.RequestDelayMs), cancellationToken);
+
             HttpResponseMessage response;
             try
             {
-                // Xếp hàng theo host trước mỗi request (kể cả bước chuyển hướng): nguồn chặn IP khi bị gọi dồn dập.
-                await CrawlRequestThrottle.WaitAsync(uri.Host, _options.IntervalFor(uri.Host, context.Config?.RequestDelayMs), cancellationToken);
                 response = await _httpClient.SendAsync(request, cancellationToken);
-            }
-            catch (TimeoutException ex) when (!cancellationToken.IsCancellationRequested)
-            {
-                throw new CrawlException(ex.Message, ex);
             }
             // Mọi lỗi mạng/hết giờ, kể cả TimeoutRejectedException của lớp resilience (Polly).
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
@@ -285,10 +283,12 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
                     // Bị chặn/giới hạn: dừng gọi host này một lúc thay vì để các luồng khác tiếp tục dồn request.
                     var cooldown = response.Headers.RetryAfter?.Delta
                                    ?? TimeSpan.FromSeconds(_options.BlockedCooldownSeconds);
-                    CrawlRequestThrottle.Block(uri.Host, TimeSpan.FromSeconds(Math.Clamp(cooldown.TotalSeconds, 30, 3600)));
-                    throw new CrawlException(
+                    var pause = TimeSpan.FromSeconds(Math.Clamp(cooldown.TotalSeconds, 30, 3600));
+                    CrawlRequestThrottle.Block(uri.Host, pause);
+                    throw new CrawlBlockedException(
                         $"Trang nguồn chặn/giới hạn request ({(int)response.StatusCode}) tới {uri} — hệ thống tạm nghỉ không gọi {uri.Host}. " +
-                        "Tăng requestDelayMs của nguồn web (hoặc CrawlStory:HostIntervalsMs), kiểm tra cookie, đổi IP nếu đã bị cấm.");
+                        "Tăng requestDelayMs của nguồn web (hoặc CrawlStory:HostIntervalsMs), kiểm tra cookie, đổi IP nếu đã bị cấm.",
+                        DateTimeOffset.UtcNow + pause);
                 }
 
                 if (!response.IsSuccessStatusCode)
