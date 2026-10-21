@@ -21,6 +21,7 @@ public static class DependencyInjection
 
         builder.Services.Configure<Local.Movies.Commands.StoreEpisodeVideos.EpisodeVideoStoreOptions>(
             builder.Configuration.GetSection(Local.Movies.Commands.StoreEpisodeVideos.EpisodeVideoStoreOptions.SectionName));
+        builder.Services.AddSingleton<Local.Movies.Commands.StoreEpisodeVideos.DramaFileCache>();
         builder.Services.AddScoped<Local.Movies.Commands.StoreEpisodeVideos.EpisodeVideoStorer>();
 
         builder.Services.AddMediatR(cfg => {

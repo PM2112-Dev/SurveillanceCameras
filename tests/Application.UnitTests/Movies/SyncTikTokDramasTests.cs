@@ -7,6 +7,7 @@ using SurveillanceCameras.Application.Common.Exceptions;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Models.TikTok;
 using SurveillanceCameras.Application.Local.Movies.Commands.ResyncAllMovies;
+using SurveillanceCameras.Application.Local.Movies.Commands.SyncMovieFromTikTok;
 using SurveillanceCameras.Application.Local.Movies.Commands.SyncTikTokDramas;
 using SurveillanceCameras.Application.Repository.Media;
 using SurveillanceCameras.Application.Repository.TikTok;
@@ -87,24 +88,37 @@ public class SyncTikTokDramasTests
         => new(_db, _tikTok.Object, _media.Object, TimeProvider.System, NullLogger<TikTokDramaSyncer>.Instance);
 
     [Test]
-    public async Task DailyResync_UpdatesExistingMovies_WithoutUser_AndSkipsBrokenChannel()
+    public async Task DailyResync_QueuesOneKafkaEventPerMovie_WithoutCallingTikTok()
     {
         SetupPages(new DramaEpisodeListDto { Cursor = "1", ItemList = [Ep(1, 2)] });
         await SyncAsync();
         await FillOwnerAsync();
-        // Phim của kênh đã bị xoá khỏi danh sách: lỗi riêng, không dừng cả lượt.
         _db.Works.Add(new Work { Title = "Mồ côi", Type = WorkType.Movie, UserProfileId = 999, ExternalId = "1", CreatedBy = Owner });
+        _db.Works.Add(new Work { Title = "Truyện", Type = WorkType.Story, CreatedBy = Owner });
         await _db.SaveChangesAsync();
+        _tikTok.Invocations.Clear();
+
+        var result = await new ResyncAllMoviesCommandHandler(_db, NullLogger<ResyncAllMoviesCommandHandler>.Instance)
+            .Handle(new ResyncAllMoviesCommand(), CancellationToken.None);
+
+        result.ShouldBe(new ResyncAllMoviesResult(Movies: 2, Queued: 2));
+        _db.OutboxEventTypes().Where(x => x == "MovieSyncRequestedIntegrationEvent").Count().ShouldBe(2);
+        _tikTok.VerifyNoOtherCalls();
+    }
+
+    [Test]
+    public async Task SyncMovieFromTikTok_UpdatesTheMovie_WithoutUser()
+    {
+        SetupPages(new DramaEpisodeListDto { Cursor = "1", ItemList = [Ep(1, 2)] });
+        await SyncAsync();
+        await FillOwnerAsync();
 
         SetupPages(new DramaEpisodeListDto { Cursor = "2", ItemList = [Ep(1, 2), Ep(2, 2)] });
-        var result = await new ResyncAllMoviesCommandHandler(_db, Syncer(), TimeProvider.System,
-                NullLogger<ResyncAllMoviesCommandHandler>.Instance)
-            .Handle(new ResyncAllMoviesCommand(TimeSpan.Zero), CancellationToken.None);
+        var result = await new SyncMovieFromTikTokCommandHandler(Syncer())
+            .Handle(new SyncMovieFromTikTokCommand(Owner, _channel.Id, DramaId), CancellationToken.None);
 
-        result.Movies.ShouldBe(2);
         result.Updated.ShouldBe(1);
         result.EpisodesAdded.ShouldBe(1);
-        result.Failed.ShouldBe(1);
         var movie = await _db.Works.Include(x => x.Episodes).SingleAsync(x => x.ExternalId == DramaId);
         movie.Episodes!.Count.ShouldBe(2);
         movie.IsFull.ShouldBeTrue();

@@ -82,7 +82,7 @@ public class TrimStorageAccountTests
         protector.Setup(x => x.Unprotect(It.IsAny<string>())).Returns<string>(x => x);
         var options = MsOptions.Create(new EpisodeVideoStoreOptions { MaxAttempts = 3 });
         var storer = new EpisodeVideoStorer(_db, Mock.Of<ITikTokRepository>(), _storage.Object, protector.Object, options,
-            NullLogger<EpisodeVideoStorer>.Instance);
+            new DramaFileCache(TimeProvider.System), NullLogger<EpisodeVideoStorer>.Instance);
 
         return new TrimStorageAccountCommandHandler(_db, currentUser.Object, protector.Object, _storage.Object, storer,
                 TimeProvider.System, options)

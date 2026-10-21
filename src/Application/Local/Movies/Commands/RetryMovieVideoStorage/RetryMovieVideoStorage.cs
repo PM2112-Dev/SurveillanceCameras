@@ -32,6 +32,7 @@ public class RetryMovieVideoStorageCommandHandler : IRequestHandler<RetryMovieVi
         {
             episode.StorageAttempts = 0;
             episode.StorageError = null;
+            episode.QueuedAt = null;
         }
 
         await _context.SaveChangesAsync(cancellationToken);

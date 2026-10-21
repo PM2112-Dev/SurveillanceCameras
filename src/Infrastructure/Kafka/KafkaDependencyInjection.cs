@@ -62,6 +62,8 @@ public static class KafkaDependencyInjection
             builder.Services.AddHostedService<ChapterEditRequestedConsumer>();
             builder.Services.AddHostedService<TytStoryCreateRequestedConsumer>();
             builder.Services.AddHostedService<ChapterTytUploadRequestedConsumer>();
+            builder.Services.AddHostedService<MovieSyncRequestedConsumer>();
+            builder.Services.AddHostedService<EpisodeVideoStoreRequestedConsumer>();
             // builder.Services.AddHostedService<FetchStoryWebSourceConsumer>();
             // builder.Services.AddHostedService<WikiDichCrawlConsumer>();
         }

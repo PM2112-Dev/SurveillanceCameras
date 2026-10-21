@@ -7,3 +7,9 @@ public class VideoStorageException : Exception
 
     public VideoStorageException(string message, Exception innerException) : base(message, innerException) { }
 }
+
+/// <summary>Không tài khoản lưu trữ nào còn đủ chỗ cho file — không phải lỗi của tập, đợi có thêm dung lượng rồi tải lại.</summary>
+public class StorageFullException : VideoStorageException
+{
+    public StorageFullException(string message) : base(message) { }
+}

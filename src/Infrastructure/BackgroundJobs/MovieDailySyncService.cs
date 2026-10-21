@@ -49,8 +49,7 @@ public sealed class MovieDailySyncService : BackgroundService
 
                 await using var scope = _scopeFactory.CreateAsyncScope();
                 var sender = scope.ServiceProvider.GetRequiredService<ISender>();
-                await sender.Send(new ResyncAllMoviesCommand(TimeSpan.FromSeconds(Math.Max(0, _options.DelayBetweenDramasSeconds))),
-                    stoppingToken);
+                await sender.Send(new ResyncAllMoviesCommand(), stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
