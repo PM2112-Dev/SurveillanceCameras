@@ -40,8 +40,8 @@ public class EpisodeVideoStorerTests
             .ReturnsAsync(() => _videoSize);
         _storage = new Mock<IVideoStorageRepository>();
         _storer = new EpisodeVideoStorer(_db, _tikTok.Object, _storage.Object, _protector,
-            Options.Create(new EpisodeVideoStoreOptions { DelayBetweenVideosSeconds = 0, MaxAttempts = 3 }),
-            NullLogger<EpisodeVideoStorer>.Instance);
+            Options.Create(new EpisodeVideoStoreOptions { DelayBetweenVideosSeconds = 0, MaxAttempts = 3, MinFreeBytes = 1, BatchSize = 10 }),
+            new DramaFileCache(TimeProvider.System), NullLogger<EpisodeVideoStorer>.Instance);
 
         _movie = new Work { Title = "Phim", Type = WorkType.Movie, CreatedBy = Owner, Episodes = [] };
         _db.Works.Add(_movie);
@@ -50,6 +50,19 @@ public class EpisodeVideoStorerTests
 
     [TearDown]
     public void TearDown() => _db.Dispose();
+
+    private DateTimeOffset _now = new(2026, 10, 21, 0, 0, 0, TimeSpan.Zero);
+
+    /// <summary>Một lượt như khi chạy thật: lượt quét xếp hàng các tập, rồi consumer xử lý lần lượt từng tập (mỗi lượt cách 2 giờ).</summary>
+    private async Task<int> RunBatchAsync(CancellationToken cancellationToken)
+    {
+        _now = _now.AddHours(2);
+        var queued = await _storer.QueuePendingAsync(_now, cancellationToken);
+        var ids = _db.Episodes.Where(x => x.QueuedAt == _now).OrderBy(x => x.StorageAttempts).ThenBy(x => x.WorkId).ThenBy(x => x.EpisodeNumber)
+            .Select(x => x.Id).ToList();
+        foreach (var id in ids) await _storer.StoreQueuedAsync(id, cancellationToken);
+        return queued;
+    }
 
     private async Task<StorageAccount> AddAccount(string title, int priority, long quota, long used = 0, bool enabled = true,
         string owner = Owner)
@@ -84,7 +97,7 @@ public class EpisodeVideoStorerTests
         var first = await AddAccount("a", priority: 1, quota: 100 * Mb, used: 10 * Mb);
         var episode = await AddEpisode(1);
 
-        (await _storer.StoreNextBatchAsync(CancellationToken.None)).ShouldBe(1);
+        (await RunBatchAsync(CancellationToken.None)).ShouldBe(1);
 
         episode.StorageAccountId.ShouldBe(first.Id);
         episode.StorageSizeBytes.ShouldBe(30 * Mb);
@@ -116,7 +129,7 @@ public class EpisodeVideoStorerTests
         latest.LastModified = DateTimeOffset.UtcNow.AddMinutes(5);
         await _db.SaveChangesAsync();
 
-        await _storer.StoreNextBatchAsync(CancellationToken.None);
+        await RunBatchAsync(CancellationToken.None);
 
         _tikTok.Verify(x => x.DownloadVideoAsync("sessionid=moi", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -167,7 +180,7 @@ public class EpisodeVideoStorerTests
         _tikTok.Setup(x => x.DownloadVideoFileAsync(It.IsAny<string?>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => _videoSize);
 
-        (await _storer.StoreNextBatchAsync(CancellationToken.None)).ShouldBe(2);
+        (await RunBatchAsync(CancellationToken.None)).ShouldBe(2);
 
         first.StreamUrl.ShouldNotBeNull();
         second.StreamUrl.ShouldNotBeNull();
@@ -186,7 +199,7 @@ public class EpisodeVideoStorerTests
         await MakeDrama(cookie: null);
         var episode = await AddEpisode(1);
 
-        await Should.ThrowAsync<TikTokBlockedException>(() => _storer.StoreNextBatchAsync(CancellationToken.None));
+        await Should.ThrowAsync<TikTokBlockedException>(() => RunBatchAsync(CancellationToken.None));
 
         episode.StorageAttempts.ShouldBe(0);
         episode.StorageError.ShouldNotBeNull().ShouldContain("đăng nhập");
@@ -202,7 +215,7 @@ public class EpisodeVideoStorerTests
         // Cookie hết hạn: TikTok vẫn trả danh sách tập nhưng không tập nào có link file.
         SetupEpisodeList("sessionid=het-han", Item(episode.ExternalId!), Item("khac"));
 
-        await Should.ThrowAsync<TikTokBlockedException>(() => _storer.StoreNextBatchAsync(CancellationToken.None));
+        await Should.ThrowAsync<TikTokBlockedException>(() => RunBatchAsync(CancellationToken.None));
 
         episode.StorageAttempts.ShouldBe(0);
         episode.StorageError.ShouldNotBeNull().ShouldContain("hết hạn");
@@ -216,7 +229,7 @@ public class EpisodeVideoStorerTests
         var episode = await AddEpisode(1);
         SetupEpisodeList("sessionid=abc", Item(episode.ExternalId!), Item("khac", "https://v16.tiktok.com/khac.mp4"));
 
-        await _storer.StoreNextBatchAsync(CancellationToken.None);
+        await RunBatchAsync(CancellationToken.None);
 
         episode.StorageAttempts.ShouldBe(3);
         episode.StreamUrl.ShouldBeNull();
@@ -229,7 +242,7 @@ public class EpisodeVideoStorerTests
         var second = await AddAccount("b", priority: 2, quota: 100 * Mb);
         var episode = await AddEpisode(1);
 
-        await _storer.StoreNextBatchAsync(CancellationToken.None);
+        await RunBatchAsync(CancellationToken.None);
 
         episode.StorageAccountId.ShouldBe(second.Id);
         first.UsedBytes.ShouldBe(80 * Mb);
@@ -246,7 +259,7 @@ public class EpisodeVideoStorerTests
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new VideoStorageException("sai khoá"));
 
-        await _storer.StoreNextBatchAsync(CancellationToken.None);
+        await RunBatchAsync(CancellationToken.None);
 
         episode.StorageAccountId.ShouldBe(second.Id);
         episode.StorageError.ShouldBeNull();
@@ -255,24 +268,118 @@ public class EpisodeVideoStorerTests
     }
 
     [Test]
-    public async Task Store_RecordsError_WhenNoAccountFits_AndStopsAfterMaxAttempts()
+    public async Task Queue_SkipsEpisodes_WhenTheStoreCannotHoldAnotherVideo()
     {
+        // Còn 10 MB, một video trung bình ước tính 30 MB: không xếp hàng, cũng không tải từ TikTok.
         await AddAccount("a", priority: 1, quota: 100 * Mb, used: 90 * Mb);
         var episode = await AddEpisode(1);
 
-        await _storer.StoreNextBatchAsync(CancellationToken.None);
+        (await RunBatchAsync(CancellationToken.None)).ShouldBe(0);
+
+        episode.QueuedAt.ShouldBeNull();
+        _db.OutboxEventTypes().ShouldBeEmpty();
+        _tikTok.Verify(x => x.DownloadVideoAsync(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task Queue_LimitsTheBatchToWhatTheStoreCanHold_CountingEpisodesAlreadyWaiting()
+    {
+        await AddAccount("a", priority: 1, quota: 100 * Mb);   // chứa được 3 video 30 MB
+        for (var i = 1; i <= 5; i++) await AddEpisode(i);
+
+        _storer.QueuePendingAsync(_now, CancellationToken.None).Result.ShouldBe(3);
+        _db.OutboxEventTypes().Count.ShouldBe(3);
+
+        // Hàng đợi chưa xử lý xong: không xếp thêm tập nào nữa dù còn tập chờ.
+        (await _storer.QueuePendingAsync(_now.AddMinutes(5), CancellationToken.None)).ShouldBe(0);
+    }
+
+    [Test]
+    public async Task Queue_UsesTheAverageSizeOfVideosAlreadyStored()
+    {
+        // Video đã lưu trung bình 10 MB, kho còn 40 MB → chứa được 4 video.
+        await AddAccount("a", priority: 1, quota: 100 * Mb, used: 60 * Mb);
+        var stored = await AddEpisode(1);
+        stored.StreamUrl = "https://cdn.example.com/1.mp4";
+        stored.StorageSizeBytes = 10 * Mb;
+        await _db.SaveChangesAsync();
+        for (var i = 2; i <= 8; i++) await AddEpisode(i);
+
+        (await _storer.QueuePendingAsync(_now, CancellationToken.None)).ShouldBe(4);
+    }
+
+    [Test]
+    public async Task Store_WhenTheStoreFillsUpAfterQueueing_DoesNotCountAnAttempt_AndIsQueuedAgainLater()
+    {
+        var account = await AddAccount("a", priority: 1, quota: 100 * Mb);
+        var episode = await AddEpisode(1);
+        await _storer.QueuePendingAsync(_now, CancellationToken.None);
+        account.UsedBytes = 90 * Mb;   // trong lúc chờ, kho bị chiếm chỗ
+        await _db.SaveChangesAsync();
+
+        await _storer.StoreQueuedAsync(episode.Id, CancellationToken.None);
 
         episode.StreamUrl.ShouldBeNull();
-        episode.StorageAttempts.ShouldBe(1);
+        episode.StorageAttempts.ShouldBe(0);
+        episode.QueuedAt.ShouldBeNull();
         episode.StorageError.ShouldNotBeNull().ShouldContain("30 MB");
-        _storage.Verify(x => x.UploadFileAsync(It.IsAny<VideoStorageTarget>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _storage.Verify(x => x.UploadFileAsync(It.IsAny<VideoStorageTarget>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
 
-        (await _storer.StoreNextBatchAsync(CancellationToken.None)).ShouldBe(1);
-        (await _storer.StoreNextBatchAsync(CancellationToken.None)).ShouldBe(1);
-        episode.StorageAttempts.ShouldBe(3);
-        // Đủ số lần lỗi: không thử nữa.
-        (await _storer.StoreNextBatchAsync(CancellationToken.None)).ShouldBe(0);
+        // Có thêm chỗ thì lượt quét sau xếp hàng lại và lưu được.
+        account.UsedBytes = 0;
+        await _db.SaveChangesAsync();
+        (await RunBatchAsync(CancellationToken.None)).ShouldBe(1);
+        episode.StreamUrl.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task StoreQueued_SkipsWithoutDownloading_WhenTheStoreHasNoRoomAtAll()
+    {
+        var account = await AddAccount("a", priority: 1, quota: 100 * Mb);
+        var options = new EpisodeVideoStoreOptions { MinFreeBytes = 50 * Mb, DelayBetweenVideosSeconds = 0 };
+        var storer = new EpisodeVideoStorer(_db, _tikTok.Object, _storage.Object, _protector, Options.Create(options),
+            new DramaFileCache(TimeProvider.System), NullLogger<EpisodeVideoStorer>.Instance);
+        var episode = await AddEpisode(1);
+        account.UsedBytes = 80 * Mb;
+        await _db.SaveChangesAsync();
+
+        await storer.StoreQueuedAsync(episode.Id, CancellationToken.None);
+
+        episode.StorageError.ShouldNotBeNull().ShouldContain("không còn đủ chỗ");
+        episode.StorageAttempts.ShouldBe(0);
+        _tikTok.Verify(x => x.DownloadVideoAsync(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task Queue_ReopensEpisodesThatRanOutOfAttempts_OnceAfterTheRetryInterval()
+    {
+        await AddAccount("a", priority: 1, quota: 100 * Mb);
+        var episode = await AddEpisode(1);
+        episode.StorageAttempts = 3;
+        episode.StorageError = "lỗi cũ";
+        await _db.SaveChangesAsync();
+
+        // Chưa từng xếp hàng: mở lại ngay một lần thử.
+        (await _storer.QueuePendingAsync(_now, CancellationToken.None)).ShouldBe(1);
+        episode.StorageAttempts.ShouldBe(2);
+
+        // Lại hết lượt thử: chưa tới 12 giờ thì chưa mở lại.
+        episode.StorageAttempts = 3;
+        await _db.SaveChangesAsync();
+        (await _storer.QueuePendingAsync(_now.AddHours(3), CancellationToken.None)).ShouldBe(0);
+        (await _storer.QueuePendingAsync(_now.AddHours(13), CancellationToken.None)).ShouldBe(1);
+    }
+
+    [Test]
+    public async Task Queue_EmitsOneKafkaEventPerEpisode()
+    {
+        await AddAccount("a", priority: 1, quota: 100 * Mb);
+        await AddEpisode(1);
+        await AddEpisode(2);
+
+        await _storer.QueuePendingAsync(_now, CancellationToken.None);
+
+        _db.OutboxEventTypes().ShouldBe(["EpisodeVideoStoreRequestedIntegrationEvent", "EpisodeVideoStoreRequestedIntegrationEvent"]);
     }
 
     [Test]
@@ -283,7 +390,7 @@ public class EpisodeVideoStorerTests
         _tikTok.Setup(x => x.DownloadVideoAsync(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TikTokApiException("tập bị khoá"));
 
-        await _storer.StoreNextBatchAsync(CancellationToken.None);
+        await RunBatchAsync(CancellationToken.None);
 
         episode.StorageError.ShouldBe("tập bị khoá");
         episode.StorageAttempts.ShouldBe(1);
@@ -299,10 +406,10 @@ public class EpisodeVideoStorerTests
         _tikTok.Setup(x => x.DownloadVideoAsync(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TikTokVideoUnavailableException("không cấp link tải"));
 
-        await _storer.StoreNextBatchAsync(CancellationToken.None);
+        await RunBatchAsync(CancellationToken.None);
 
         episode.StorageAttempts.ShouldBe(3);
-        (await _storer.StoreNextBatchAsync(CancellationToken.None)).ShouldBe(0);
+        (await RunBatchAsync(CancellationToken.None)).ShouldBe(0);
     }
 
     [Test]
@@ -314,7 +421,7 @@ public class EpisodeVideoStorerTests
         _tikTok.Setup(x => x.DownloadVideoAsync(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TikTokBlockedException("trang thử thách"));
 
-        await Should.ThrowAsync<TikTokBlockedException>(() => _storer.StoreNextBatchAsync(CancellationToken.None));
+        await Should.ThrowAsync<TikTokBlockedException>(() => RunBatchAsync(CancellationToken.None));
 
         first.StorageAttempts.ShouldBe(0);
         first.StorageError.ShouldBe("trang thử thách");
@@ -331,7 +438,7 @@ public class EpisodeVideoStorerTests
         await AddAccount("người-khác", priority: 1, quota: 100 * Mb, owner: "user-2");
         await AddEpisode(1);
 
-        (await _storer.StoreNextBatchAsync(CancellationToken.None)).ShouldBe(0);
+        (await RunBatchAsync(CancellationToken.None)).ShouldBe(0);
 
         _tikTok.Verify(x => x.DownloadVideoAsync(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -346,7 +453,7 @@ public class EpisodeVideoStorerTests
         await _db.SaveChangesAsync();
         var pending = await AddEpisode(2);
 
-        (await _storer.StoreNextBatchAsync(CancellationToken.None)).ShouldBe(1);
+        (await RunBatchAsync(CancellationToken.None)).ShouldBe(1);
 
         manual.StreamUrl.ShouldBe("https://cdn.example.com/1.mp4");
         pending.StreamUrl.ShouldNotBeNull();
@@ -357,7 +464,7 @@ public class EpisodeVideoStorerTests
     {
         var account = await AddAccount("a", priority: 1, quota: 100 * Mb);
         var episode = await AddEpisode(1);
-        await _storer.StoreNextBatchAsync(CancellationToken.None);
+        await RunBatchAsync(CancellationToken.None);
         var key = episode.StorageKey!;
 
         await _storer.ReleaseAsync([episode], CancellationToken.None);
@@ -375,7 +482,7 @@ public class EpisodeVideoStorerTests
     {
         var account = await AddAccount("a", priority: 1, quota: 100 * Mb);
         var episode = await AddEpisode(1);
-        await _storer.StoreNextBatchAsync(CancellationToken.None);
+        await RunBatchAsync(CancellationToken.None);
         _storage.Setup(x => x.DeleteAsync(It.IsAny<VideoStorageTarget>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new VideoStorageException("mất mạng"));
 

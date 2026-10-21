@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using SurveillanceCameras.Application.Common.Exceptions;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Models.TikTok;
+using SurveillanceCameras.Application.Local.Movies.IntegrationEvents;
 using SurveillanceCameras.Application.Repository.TikTok;
 using SurveillanceCameras.Application.Repository.VideoStorage;
 using SurveillanceCameras.Domain.Entities;
@@ -33,12 +34,15 @@ public class EpisodeVideoStorer
     // Cookie TikTok theo chủ phim, đọc một lần cho mỗi lượt (đối tượng sống theo scope).
     private readonly Dictionary<string, string?> _cookies = [];
 
-    // Link file các tập theo (chủ phim, drama), đọc một lần cho mỗi lượt — link sống khoảng 48 giờ.
-    private readonly Dictionary<(string? Owner, string DramaId), Dictionary<string, List<string>>> _dramaFiles = [];
+    // Link file các tập theo (chủ phim, drama), dùng chung giữa các tập của cùng một drama — mỗi tập một lượt xử lý riêng
+    // nên không đọc lại danh sách tập của TikTok cho từng tập.
+    private readonly DramaFileCache _dramaFiles;
 
     public EpisodeVideoStorer(IApplicationDbContext context, ITikTokRepository tikTok, IVideoStorageRepository storage,
-        ISecretProtector protector, IOptions<EpisodeVideoStoreOptions> options, ILogger<EpisodeVideoStorer> logger)
+        ISecretProtector protector, IOptions<EpisodeVideoStoreOptions> options, DramaFileCache dramaFiles,
+        ILogger<EpisodeVideoStorer> logger)
     {
+        _dramaFiles = dramaFiles;
         _context = context;
         _tikTok = tikTok;
         _storage = storage;
@@ -47,36 +51,104 @@ public class EpisodeVideoStorer
         _logger = logger;
     }
 
-    /// <summary>Lưu video cho một lô tập đang chờ (chưa có link phát, chưa lỗi quá số lần) của những người dùng còn chỗ lưu.</summary>
-    /// <returns>Số tập đã thử lưu trong lượt này (0 nghĩa là không còn gì để làm).</returns>
-    /// <exception cref="TikTokBlockedException">TikTok đang chặn máy chủ: dừng lô, bên gọi nên nghỉ lâu rồi mới thử tiếp.</exception>
-    public async Task<int> StoreNextBatchAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// Đưa các tập chưa có video trên kho vào hàng đợi Kafka (sự kiện <see cref="EpisodeVideoStoreRequestedIntegrationEvent"/>).
+    /// Mỗi người dùng chỉ được đưa vào khi tài khoản lưu trữ của họ còn ít nhất <see cref="EpisodeVideoStoreOptions.MinFreeBytes"/>,
+    /// và số tập không vượt quá số video kho còn chứa được (theo dung lượng trung bình một video), tính cả các tập đang chờ
+    /// trong hàng đợi — tải xong mà không có chỗ để thì phí cả lượt tải từ TikTok.
+    /// </summary>
+    /// <returns>Số tập được đưa vào hàng đợi.</returns>
+    public async Task<int> QueuePendingAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
-        // Người dùng không còn tài khoản nào trống thì không tải video của họ về (tải xong cũng không có chỗ để).
-        var owners = await _context.StorageAccounts
-            .Where(x => x.IsEnabled && x.UsedBytes < x.QuotaBytes)
-            .Select(x => x.CreatedBy)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-        if (owners.Count == 0) return 0;
+        var requeueBefore = now - TimeSpan.FromMinutes(Math.Max(1, _options.RequeueAfterMinutes));
+        var exhaustedBefore = _options.ExhaustedRetryHours > 0 ? now - TimeSpan.FromHours(_options.ExhaustedRetryHours) : (DateTimeOffset?)null;
+        var max = Math.Max(1, _options.MaxAttempts);
 
-        var episodes = await _context.Episodes
-            .Where(x => x.Work!.Type == WorkType.Movie && owners.Contains(x.Work.CreatedBy)
-                        && x.StreamUrl == null && x.VideoUrl != null && x.StorageAttempts < _options.MaxAttempts)
-            // Tập chưa thử lần nào đi trước để một tập lỗi không chặn cả hàng.
-            .OrderBy(x => x.StorageAttempts).ThenBy(x => x.WorkId).ThenBy(x => x.EpisodeNumber)
-            .Take(Math.Max(1, _options.BatchSize))
-            .Include(x => x.Work)
+        var accounts = await _context.StorageAccounts
+            .AsNoTracking()
+            .Where(x => x.IsEnabled)
+            .Select(x => new { x.CreatedBy, x.QuotaBytes, x.UsedBytes })
             .ToListAsync(cancellationToken);
 
-        var delay = TimeSpan.FromSeconds(Math.Max(0, _options.DelayBetweenVideosSeconds));
-        for (var i = 0; i < episodes.Count; i++)
+        var queued = 0;
+        foreach (var owner in accounts.GroupBy(x => x.CreatedBy))
         {
-            if (i > 0 && delay > TimeSpan.Zero) await Task.Delay(delay, cancellationToken);
-            await StoreAsync(episodes[i], cancellationToken);
+            var free = owner.Sum(x => Math.Max(0, x.QuotaBytes - x.UsedBytes));
+            if (free < _options.MinFreeBytes) continue;
+
+            var estimate = await EstimatedVideoBytesAsync(owner.Key, cancellationToken);
+            var inFlight = await _context.Episodes.CountAsync(x => x.Work!.Type == WorkType.Movie && x.Work.CreatedBy == owner.Key
+                && x.StreamUrl == null && x.QueuedAt != null && x.QueuedAt > requeueBefore && x.StorageAttempts < max, cancellationToken);
+            // Số video kho còn chứa được, trừ các tập đang chờ trong hàng đợi.
+            var room = (int)Math.Min(int.MaxValue, free / estimate) - inFlight;
+            var take = Math.Min(Math.Max(1, _options.BatchSize), room);
+            if (take <= 0) continue;
+
+            var episodes = await _context.Episodes
+                .Where(x => x.Work!.Type == WorkType.Movie && x.Work.CreatedBy == owner.Key
+                            && x.StreamUrl == null && x.VideoUrl != null
+                            && (x.QueuedAt == null || x.QueuedAt <= requeueBefore)
+                            && (x.StorageAttempts < max
+                                || (exhaustedBefore != null && (x.QueuedAt == null || x.QueuedAt <= exhaustedBefore))))
+                // Tập chưa thử lần nào đi trước để một tập lỗi không chặn cả hàng.
+                .OrderBy(x => x.StorageAttempts).ThenBy(x => x.WorkId).ThenBy(x => x.EpisodeNumber)
+                .Take(take)
+                .ToListAsync(cancellationToken);
+
+            foreach (var episode in episodes)
+            {
+                // Tập đã lỗi hết số lần: cho thử thêm đúng một lần.
+                if (episode.StorageAttempts >= max) episode.StorageAttempts = max - 1;
+                episode.QueuedAt = now;
+                episode.AddIntegrationEvent(new EpisodeVideoStoreRequestedIntegrationEvent { EpisodeId = episode.Id }, cancellationToken);
+            }
+
+            queued += episodes.Count;
         }
 
-        return episodes.Count;
+        if (queued > 0) await _context.SaveChangesAsync(cancellationToken);
+        return queued;
+    }
+
+    /// <summary>Dung lượng trung bình một video đã lưu của người dùng; chưa có thì dùng ước tính trong cấu hình.</summary>
+    private async Task<long> EstimatedVideoBytesAsync(string? owner, CancellationToken cancellationToken)
+    {
+        var average = await _context.Episodes
+            .Where(x => x.Work!.Type == WorkType.Movie && x.Work.CreatedBy == owner && x.StorageSizeBytes != null)
+            .Select(x => (double?)x.StorageSizeBytes)
+            .AverageAsync(cancellationToken);
+
+        return Math.Max(1, (long)(average ?? _options.EstimatedVideoBytes));
+    }
+
+    /// <summary>
+    /// Xử lý một tập lấy từ hàng đợi: bỏ qua nếu đã có link phát, hết lượt thử hoặc kho không còn chỗ; còn lại tải và lưu.
+    /// </summary>
+    /// <exception cref="TikTokBlockedException">TikTok đang chặn máy chủ / chưa đăng nhập: bên gọi nên nghỉ.</exception>
+    public async Task StoreQueuedAsync(int episodeId, CancellationToken cancellationToken)
+    {
+        var episode = await _context.Episodes
+            .Include(x => x.Work)
+            .FirstOrDefaultAsync(x => x.Id == episodeId, cancellationToken);
+
+        if (episode?.Work is not { Type: WorkType.Movie } work) return;
+        if (episode.StreamUrl is not null || string.IsNullOrWhiteSpace(episode.VideoUrl)) return;
+        if (episode.StorageAttempts >= _options.MaxAttempts) return;
+
+        // Hàng đợi có thể đã chờ lâu: kho có thể đã đầy từ lúc xếp hàng. Không tải khi không có chỗ để.
+        var free = await _context.StorageAccounts
+            .Where(x => x.CreatedBy == work.CreatedBy && x.IsEnabled)
+            .Select(x => x.QuotaBytes - x.UsedBytes)
+            .ToListAsync(cancellationToken);
+        if (free.Sum(x => Math.Max(0, x)) < _options.MinFreeBytes)
+        {
+            episode.StorageError = "Kho lưu trữ không còn đủ chỗ trống — thêm tài khoản mới hoặc nâng hạn mức, hệ thống sẽ tự tải lại.";
+            episode.QueuedAt = null;
+            await _context.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        await StoreAsync(episode, cancellationToken);
     }
 
     /// <summary>Tải và lưu video của một tập; lỗi được ghi vào tập (<see cref="Episode.StorageError"/>) chứ không ném ra.</summary>
@@ -104,6 +176,14 @@ public class EpisodeVideoStorer
             episode.StorageError = ex.Message;
             await _context.SaveChangesAsync(cancellationToken);
             throw;
+        }
+        catch (StorageFullException ex)
+        {
+            // Hết chỗ không phải lỗi của tập: không tính lần thử, cho xếp hàng lại khi kho có thêm dung lượng.
+            _logger.LogWarning("Tập {EpisodeId}: kho đầy: {Error}", episode.Id, ex.Message);
+            episode.StorageKey = null;
+            episode.StorageError = ex.Message.Length <= MaxErrorLength ? ex.Message : ex.Message[..MaxErrorLength];
+            episode.QueuedAt = null;
         }
         catch (Exception ex) when (ex is TikTokApiException or VideoStorageException or IOException)
         {
@@ -150,6 +230,15 @@ public class EpisodeVideoStorer
 
         var files = await DramaFilesAsync(owner, cookie, dramaId, cancellationToken);
         if (!files.TryGetValue(episode.ExternalId, out var urls) || urls.Count == 0)
+        {
+            // Danh sách đã lưu có thể cũ (tập mới thêm sau): đọc lại một lần trước khi kết luận tập không có file.
+            _dramaFiles.Remove(owner, dramaId);
+            files = await DramaFilesAsync(owner, cookie, dramaId, cancellationToken);
+            if (files.TryGetValue(episode.ExternalId, out urls) && urls.Count > 0)
+                return await _tikTok.DownloadVideoFileAsync(cookie, urls, filePath, _options.MaxVideoBytes, cancellationToken);
+        }
+
+        if (urls is null || urls.Count == 0)
             throw new TikTokVideoUnavailableException("TikTok không cấp link tải cho tập này (tập đã bị gỡ hoặc tài khoản không xem được).");
 
         return await _tikTok.DownloadVideoFileAsync(cookie, urls, filePath, _options.MaxVideoBytes, cancellationToken);
@@ -160,7 +249,7 @@ public class EpisodeVideoStorer
     private async Task<Dictionary<string, List<string>>> DramaFilesAsync(string? owner, string cookie, string dramaId,
         CancellationToken cancellationToken)
     {
-        if (_dramaFiles.TryGetValue((owner, dramaId), out var cached)) return cached;
+        if (_dramaFiles.TryGet(owner, dramaId) is { } cached) return cached;
 
         var files = new Dictionary<string, List<string>>();
         var cursor = "0";
@@ -183,7 +272,8 @@ public class EpisodeVideoStorer
                 "TikTok không cấp link file cho tài khoản đang lưu (cookie đã hết hạn hoặc bị đăng xuất). Vào mục Tài khoản, bấm “Mở Chrome” và đăng nhập TikTok lại.");
         }
 
-        return _dramaFiles[(owner, dramaId)] = files;
+        _dramaFiles.Set(owner, dramaId, files);
+        return files;
     }
 
     /// <summary>
@@ -216,7 +306,7 @@ public class EpisodeVideoStorer
         var candidates = Candidates(accounts, size);
         if (candidates.Count == 0)
         {
-            throw new VideoStorageException(
+            throw new StorageFullException(
                 $"Không tài khoản lưu trữ nào còn đủ {size / (double)StorageAccount.BytesPerMb:0.#} MB trống. Thêm tài khoản mới hoặc nâng hạn mức rồi bấm thử lại.");
         }
 
