@@ -138,6 +138,29 @@ public sealed class TytRepository : ITytRepository
             ?.Id;
     }
 
+    public async Task CheckSessionAsync(TytContext context, CancellationToken cancellationToken = default)
+        // SendAsync ném TytException khi chưa đăng nhập / hết phiên / TYT lỗi 5xx.
+        => await SendAsync(context, "mystory", null, false, cancellationToken);
+
+    public Task<string?> CreateChapterAsync(TytContext context, string storyId, TytChapterRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        RequireStoryId(storyId);
+        throw ChapterFormNotSurveyed();
+    }
+
+    public Task UpdateChapterAsync(TytContext context, string storyId, string chapterId, TytChapterRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        RequireStoryId(storyId);
+        throw ChapterFormNotSurveyed();
+    }
+
+    // Form thêm/sửa chương của TYT chưa được khảo sát (cần trình duyệt đã đăng nhập TYT để xem endpoint và các trường).
+    // Báo lỗi rõ ràng thay vì đoán endpoint và có thể đăng sai.
+    private static TytException ChapterFormNotSurveyed()
+        => new("Chưa hỗ trợ đăng chương lên TYT: chưa khảo sát form thêm chương của TYT (endpoint và các trường).");
+
     private async Task<BrowserFetchResponse> SendAsync(TytContext context, string path,
         IReadOnlyList<KeyValuePair<string, string>>? form, bool ajax, CancellationToken cancellationToken)
     {

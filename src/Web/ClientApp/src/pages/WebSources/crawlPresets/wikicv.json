@@ -1,5 +1,6 @@
 {
   "requestDelayMs": 3000,
+  "maxRequestsPerMinute": 5,
   "loginRequiredText": "Đăng nhập để xem nội dung",
   "storyList": {
     "item": ".book-item",

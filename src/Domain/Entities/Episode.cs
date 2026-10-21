@@ -70,7 +70,20 @@ public class Episode : BaseAuditableEntity
 
     public Language? Language { get; set; }
 
+    /// <summary>Chương đã có trên TYT (đăng thành công, hoặc người dùng tự đánh dấu).</summary>
     public bool IsUploaded { get; set; }
+
+    /// <summary>Lần gần nhất đăng (hoặc cập nhật) chương lên TYT thành công.</summary>
+    public DateTimeOffset? TytUploadedAt { get; set; }
+
+    /// <summary>Lỗi của lần đăng chương lên TYT gần nhất; <c>null</c> khi chưa thử hoặc đã đăng xong.</summary>
+    public string? TytUploadError { get; set; }
+
+    /// <summary>
+    /// Lần gần nhất chương được đưa vào hàng đợi xử lý tự động (đăng theo lịch hoặc thử lại sau lỗi). Có mốc này thì lượt
+    /// quét sau không đưa chương vào hàng đợi lần nữa khi hàng đợi còn chưa kịp xử lý.
+    /// </summary>
+    public DateTimeOffset? QueuedAt { get; set; }
 
     public bool IsPublished { get; set; }
 

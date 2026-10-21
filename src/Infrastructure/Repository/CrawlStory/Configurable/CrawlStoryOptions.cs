@@ -11,6 +11,12 @@ public class CrawlStoryOptions
     /// </summary>
     public Dictionary<string, int> HostIntervalsMs { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Giới hạn số request mỗi phút theo host (vd. <c>wikicv.org: 5</c>): trong bất kỳ phút nào cũng không gọi quá số này.
+    /// Nguồn khai báo <c>maxRequestsPerMinute</c> thì lấy giá trị nhỏ hơn. Host không khai báo thì không giới hạn.
+    /// </summary>
+    public Dictionary<string, int> HostRequestsPerMinute { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>Khoảng cách tối thiểu cho host không có trong <see cref="HostIntervalsMs"/>; 0 là không giãn cách.</summary>
     public int DefaultIntervalMs { get; set; }
 
@@ -22,5 +28,13 @@ public class CrawlStoryOptions
     {
         var fromHost = HostIntervalsMs.TryGetValue(host, out var ms) ? ms : DefaultIntervalMs;
         return TimeSpan.FromMilliseconds(Math.Max(0, Math.Max(fromHost, sourceMs ?? 0)));
+    }
+
+    /// <summary>Số request tối đa mỗi phút áp cho <paramref name="host"/>; 0 là không giới hạn.</summary>
+    public int PerMinuteFor(string host, int? sourceLimit)
+    {
+        var fromHost = HostRequestsPerMinute.TryGetValue(host, out var n) && n > 0 ? n : 0;
+        var fromSource = sourceLimit is > 0 ? sourceLimit.Value : 0;
+        return fromHost == 0 ? fromSource : fromSource == 0 ? fromHost : Math.Min(fromHost, fromSource);
     }
 }

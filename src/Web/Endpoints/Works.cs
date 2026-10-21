@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using SurveillanceCameras.Application.Local.Episodes.Commands.RequestWorkEpisodeSync;
+using SurveillanceCameras.Application.Local.Episodes.Commands.RequestTytChapterUploads;
 using SurveillanceCameras.Application.Local.Episodes.Commands.RetryWorkEpisodes;
 using SurveillanceCameras.Application.Local.Works.Commands.RequestTytStoryCreation;
 using SurveillanceCameras.Application.Local.Episodes.Queries.GetWorkEpisodeStats;
@@ -28,6 +29,7 @@ public class Works : IEndpointGroup
         groupBuilder.MapPost(RequestWorkEpisodeSync, "{id}/sync-episodes");
         groupBuilder.MapPost(RetryWorkEpisodes, "{id}/retry-episodes");
         groupBuilder.MapPost(RequestTytStoryCreation, "{id}/tyt");
+        groupBuilder.MapPost(RequestTytChapterUploads, "{id}/tyt-chapters");
     }
 
     [EndpointSummary("Get work episode stats")]
@@ -55,6 +57,15 @@ public class Works : IEndpointGroup
         await sender.Send(new RequestTytStoryCreationCommand(id));
 
         return TypedResults.Accepted((string?)null);
+    }
+
+    [EndpointSummary("Request TYT chapter uploads")]
+    [EndpointDescription("Đăng các chương đã xử lý xong lên TYT theo thứ tự (chạy nền, cách nhau một khoảng). Có count thì chỉ đăng ngần ấy chương kế tiếp, không thì đăng hết. Trả số chương được đưa vào hàng đợi")]
+    public static async Task<Ok<int>> RequestTytChapterUploads(ISender sender, int id, int? count = null)
+    {
+        var queued = await sender.Send(new RequestTytChapterUploadsCommand(id, count));
+
+        return TypedResults.Ok(queued);
     }
 
     [EndpointSummary("Retry work episodes")]

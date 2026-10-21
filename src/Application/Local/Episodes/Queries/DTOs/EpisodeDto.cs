@@ -57,6 +57,11 @@ public class EpisodeBriefDto : BaseDto
 
     public bool IsUploaded { get; init; }
 
+    public DateTimeOffset? TytUploadedAt { get; init; }
+
+    /// <summary>Lỗi của lần đăng lên TYT gần nhất.</summary>
+    public string? TytUploadError { get; init; }
+
     public bool IsPublished { get; init; }
 
     private class Mapping : Profile

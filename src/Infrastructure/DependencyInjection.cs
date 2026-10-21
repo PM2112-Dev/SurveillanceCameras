@@ -125,6 +125,12 @@ public static class DependencyInjection
         builder.Services.AddSingleton<IVideoStorageRepository, R2VideoStorageRepository>();
         builder.Services.AddHostedService<EpisodeVideoStoreService>();
 
+        builder.Services.Configure<TytUploadOptions>(builder.Configuration.GetSection(TytUploadOptions.SectionName));
+        builder.Services.AddHostedService<TytUploadSchedulerService>();
+
+        builder.Services.Configure<FailureRecoveryOptions>(builder.Configuration.GetSection(FailureRecoveryOptions.SectionName));
+        builder.Services.AddHostedService<FailureRecoveryService>();
+
         var jwtSection = builder.Configuration.GetSection("Jwt");
         var issuer = jwtSection["Issuer"];
         var audience = jwtSection["Audience"];

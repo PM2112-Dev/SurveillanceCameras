@@ -1,5 +1,6 @@
 using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Local.Episodes;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.Works.Commands.UpdateWork;
@@ -38,12 +39,29 @@ public record UpdateWorkCommand : IRequest
     public int AdCount { get; init; }
     
     public int Paid { get; init; }
+
+    // Lịch đăng chương lên TYT — không gửi (null) thì giữ nguyên giá trị đang có.
+    public TytUploadMode? TytUploadMode { get; init; }
+
+    public int? TytUploadBatchSize { get; init; }
+
+    public int? TytUploadEveryHours { get; init; }
+
+    /// <summary>Giờ đăng mỗi ngày "HH:mm"; chuỗi rỗng là xoá (dùng giờ mặc định).</summary>
+    public string? TytUploadDailyTime { get; init; }
 }
 
 public class UpdateWorkCommandValidator : AbstractValidator<UpdateWorkCommand>
 {
     public UpdateWorkCommandValidator()
     {
+        RuleFor(x => x.TytUploadBatchSize).InclusiveBetween(1, 100).When(x => x.TytUploadBatchSize.HasValue)
+            .WithMessage("Số chương mỗi lượt đăng từ 1 đến 100.");
+        RuleFor(x => x.TytUploadEveryHours).InclusiveBetween(1, 168).When(x => x.TytUploadEveryHours.HasValue)
+            .WithMessage("Khoảng cách giữa hai lượt đăng từ 1 đến 168 giờ.");
+        RuleFor(x => x.TytUploadDailyTime).Must(TytUploadSchedule.IsValidDailyTime)
+            .When(x => !string.IsNullOrEmpty(x.TytUploadDailyTime))
+            .WithMessage("Giờ đăng mỗi ngày phải có dạng HH:mm (vd. 08:30).");
     }
 }
 
@@ -96,6 +114,11 @@ public class UpdateWorkCommandHandler : IRequestHandler<UpdateWorkCommand>
         entity.EarnNow = request.EarnNow;
         entity.AdCount = request.AdCount;
         entity.Paid = request.Paid;
+
+        if (request.TytUploadMode is { } mode) entity.TytUploadMode = mode;
+        if (request.TytUploadBatchSize is { } batch) entity.TytUploadBatchSize = batch;
+        if (request.TytUploadEveryHours is { } hours) entity.TytUploadEveryHours = hours;
+        if (request.TytUploadDailyTime is { } dailyTime) entity.TytUploadDailyTime = dailyTime.Length == 0 ? null : dailyTime;
         
         await _context.SaveChangesAsync(cancellationToken);
     }

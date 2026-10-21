@@ -88,3 +88,16 @@ public record TytUpdateStoryRequest
 
     public TytStoryType? Type { get; init; }
 }
+
+/// <summary>Nội dung một chương gửi lên TYT.</summary>
+public record TytChapterRequest
+{
+    /// <summary>Tên chương (vd. "Chương 12: Tên chương").</summary>
+    public required string Title { get; init; }
+
+    /// <summary>Nội dung chương, mỗi đoạn một dòng.</summary>
+    public required string Content { get; init; }
+
+    /// <summary>Số thứ tự chương trong truyện.</summary>
+    public int Number { get; init; }
+}

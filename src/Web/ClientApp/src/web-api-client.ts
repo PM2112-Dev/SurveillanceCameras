@@ -8711,6 +8711,65 @@ export class WorksClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    /**
+     * Request TYT chapter uploads
+     * @param count (optional) 
+     * @return OK
+     */
+    requestTytChapterUploads(id: number, count: number | undefined): Promise<number> {
+        let url_ = this.baseUrl + "/api/Works/{id}/tyt-chapters?";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (count === null)
+            throw new globalThis.Error("The parameter 'count' cannot be null.");
+        else if (count !== undefined)
+            url_ += "count=" + encodeURIComponent("" + count) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRequestTytChapterUploads(_response);
+        });
+    }
+
+    protected processRequestTytChapterUploads(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
 }
 
 export class AccessTokenResponse implements IAccessTokenResponse {
@@ -12761,6 +12820,8 @@ export class EpisodeBriefDto implements IEpisodeBriefDto {
     fetchedAt?: Date | undefined;
     editedAt?: Date | undefined;
     isUploaded?: boolean;
+    tytUploadedAt?: Date | undefined;
+    tytUploadError?: string | undefined;
     isPublished?: boolean;
     id?: number;
     title?: string | undefined;
@@ -12797,6 +12858,8 @@ export class EpisodeBriefDto implements IEpisodeBriefDto {
             this.fetchedAt = _data["fetchedAt"] ? new Date(_data["fetchedAt"].toString()) : undefined as any;
             this.editedAt = _data["editedAt"] ? new Date(_data["editedAt"].toString()) : undefined as any;
             this.isUploaded = _data["isUploaded"];
+            this.tytUploadedAt = _data["tytUploadedAt"] ? new Date(_data["tytUploadedAt"].toString()) : undefined as any;
+            this.tytUploadError = _data["tytUploadError"];
             this.isPublished = _data["isPublished"];
             this.id = _data["id"];
             this.title = _data["title"];
@@ -12831,6 +12894,8 @@ export class EpisodeBriefDto implements IEpisodeBriefDto {
         data["fetchedAt"] = this.fetchedAt ? this.fetchedAt.toISOString() : undefined as any;
         data["editedAt"] = this.editedAt ? this.editedAt.toISOString() : undefined as any;
         data["isUploaded"] = this.isUploaded;
+        data["tytUploadedAt"] = this.tytUploadedAt ? this.tytUploadedAt.toISOString() : undefined as any;
+        data["tytUploadError"] = this.tytUploadError;
         data["isPublished"] = this.isPublished;
         data["id"] = this.id;
         data["title"] = this.title;
@@ -12854,6 +12919,8 @@ export interface IEpisodeBriefDto {
     fetchedAt?: Date | undefined;
     editedAt?: Date | undefined;
     isUploaded?: boolean;
+    tytUploadedAt?: Date | undefined;
+    tytUploadError?: string | undefined;
     isPublished?: boolean;
     id?: number;
     title?: string | undefined;
@@ -12881,6 +12948,8 @@ export class EpisodeDto implements IEpisodeDto {
     fetchedAt?: Date | undefined;
     editedAt?: Date | undefined;
     isUploaded?: boolean;
+    tytUploadedAt?: Date | undefined;
+    tytUploadError?: string | undefined;
     isPublished?: boolean;
     id?: number;
     title?: string | undefined;
@@ -12921,6 +12990,8 @@ export class EpisodeDto implements IEpisodeDto {
             this.fetchedAt = _data["fetchedAt"] ? new Date(_data["fetchedAt"].toString()) : undefined as any;
             this.editedAt = _data["editedAt"] ? new Date(_data["editedAt"].toString()) : undefined as any;
             this.isUploaded = _data["isUploaded"];
+            this.tytUploadedAt = _data["tytUploadedAt"] ? new Date(_data["tytUploadedAt"].toString()) : undefined as any;
+            this.tytUploadError = _data["tytUploadError"];
             this.isPublished = _data["isPublished"];
             this.id = _data["id"];
             this.title = _data["title"];
@@ -12959,6 +13030,8 @@ export class EpisodeDto implements IEpisodeDto {
         data["fetchedAt"] = this.fetchedAt ? this.fetchedAt.toISOString() : undefined as any;
         data["editedAt"] = this.editedAt ? this.editedAt.toISOString() : undefined as any;
         data["isUploaded"] = this.isUploaded;
+        data["tytUploadedAt"] = this.tytUploadedAt ? this.tytUploadedAt.toISOString() : undefined as any;
+        data["tytUploadError"] = this.tytUploadError;
         data["isPublished"] = this.isPublished;
         data["id"] = this.id;
         data["title"] = this.title;
@@ -12986,6 +13059,8 @@ export interface IEpisodeDto {
     fetchedAt?: Date | undefined;
     editedAt?: Date | undefined;
     isUploaded?: boolean;
+    tytUploadedAt?: Date | undefined;
+    tytUploadError?: string | undefined;
     isPublished?: boolean;
     id?: number;
     title?: string | undefined;
@@ -18424,6 +18499,10 @@ export class UpdateWorkCommand implements IUpdateWorkCommand {
     earnNow?: number;
     adCount?: number;
     paid?: number;
+    tytUploadMode?: number | undefined;
+    tytUploadBatchSize?: number | undefined;
+    tytUploadEveryHours?: number | undefined;
+    tytUploadDailyTime?: string | undefined;
 
     [key: string]: any;
 
@@ -18458,6 +18537,10 @@ export class UpdateWorkCommand implements IUpdateWorkCommand {
             this.earnNow = _data["earnNow"];
             this.adCount = _data["adCount"];
             this.paid = _data["paid"];
+            this.tytUploadMode = _data["tytUploadMode"];
+            this.tytUploadBatchSize = _data["tytUploadBatchSize"];
+            this.tytUploadEveryHours = _data["tytUploadEveryHours"];
+            this.tytUploadDailyTime = _data["tytUploadDailyTime"];
         }
     }
 
@@ -18490,6 +18573,10 @@ export class UpdateWorkCommand implements IUpdateWorkCommand {
         data["earnNow"] = this.earnNow;
         data["adCount"] = this.adCount;
         data["paid"] = this.paid;
+        data["tytUploadMode"] = this.tytUploadMode;
+        data["tytUploadBatchSize"] = this.tytUploadBatchSize;
+        data["tytUploadEveryHours"] = this.tytUploadEveryHours;
+        data["tytUploadDailyTime"] = this.tytUploadDailyTime;
         return data;
     }
 }
@@ -18511,6 +18598,10 @@ export interface IUpdateWorkCommand {
     earnNow?: number;
     adCount?: number;
     paid?: number;
+    tytUploadMode?: number | undefined;
+    tytUploadBatchSize?: number | undefined;
+    tytUploadEveryHours?: number | undefined;
+    tytUploadDailyTime?: string | undefined;
 
     [key: string]: any;
 }
@@ -18803,6 +18894,10 @@ export class WorkDto implements IWorkDto {
     tytStoryId?: string | undefined;
     tytError?: string | undefined;
     tytUpdatedAt?: Date | undefined;
+    tytUploadMode?: number;
+    tytUploadBatchSize?: number;
+    tytUploadEveryHours?: number;
+    tytUploadDailyTime?: string | undefined;
     description?: string | undefined;
     author?: string | undefined;
     isFull?: boolean;
@@ -18844,6 +18939,10 @@ export class WorkDto implements IWorkDto {
             this.tytStoryId = _data["tytStoryId"];
             this.tytError = _data["tytError"];
             this.tytUpdatedAt = _data["tytUpdatedAt"] ? new Date(_data["tytUpdatedAt"].toString()) : undefined as any;
+            this.tytUploadMode = _data["tytUploadMode"];
+            this.tytUploadBatchSize = _data["tytUploadBatchSize"];
+            this.tytUploadEveryHours = _data["tytUploadEveryHours"];
+            this.tytUploadDailyTime = _data["tytUploadDailyTime"];
             this.description = _data["description"];
             this.author = _data["author"];
             this.isFull = _data["isFull"];
@@ -18883,6 +18982,10 @@ export class WorkDto implements IWorkDto {
         data["tytStoryId"] = this.tytStoryId;
         data["tytError"] = this.tytError;
         data["tytUpdatedAt"] = this.tytUpdatedAt ? this.tytUpdatedAt.toISOString() : undefined as any;
+        data["tytUploadMode"] = this.tytUploadMode;
+        data["tytUploadBatchSize"] = this.tytUploadBatchSize;
+        data["tytUploadEveryHours"] = this.tytUploadEveryHours;
+        data["tytUploadDailyTime"] = this.tytUploadDailyTime;
         data["description"] = this.description;
         data["author"] = this.author;
         data["isFull"] = this.isFull;
@@ -18911,6 +19014,10 @@ export interface IWorkDto {
     tytStoryId?: string | undefined;
     tytError?: string | undefined;
     tytUpdatedAt?: Date | undefined;
+    tytUploadMode?: number;
+    tytUploadBatchSize?: number;
+    tytUploadEveryHours?: number;
+    tytUploadDailyTime?: string | undefined;
     description?: string | undefined;
     author?: string | undefined;
     isFull?: boolean;

@@ -82,7 +82,10 @@ public class FetchEpisodeContentCommandHandler : IRequestHandler<FetchEpisodeCon
         if (await WebSourceEditPolicy.IsNeedEditAsync(_context, chapter.Work?.StorySource?.WebSourceId, cancellationToken))
             chapter.AddIntegrationEvent(new ChapterEditRequestedIntegrationEvent { ChapterId = chapter.Id }, cancellationToken);
         else
+        {
             EpisodeContentStatus.KeepOriginal(chapter, chapter.FetchedAt.Value);
+            await TytUploadQueue.QueueIfImmediateAsync(_context, chapter, chapter.Work, _timeProvider.GetUtcNow(), cancellationToken);
+        }
 
         await _context.SaveChangesAsync(cancellationToken);
     }

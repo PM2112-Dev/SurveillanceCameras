@@ -256,7 +256,8 @@ public sealed class ConfigurableCrawlStoryRepository : ICrawlStoryRepository
 
             // Xếp hàng theo host trước mỗi request (kể cả bước chuyển hướng): nguồn chặn IP khi bị gọi dồn dập. Nằm ngoài khối
             // try bên dưới để CrawlBlockedException (đang tạm nghỉ) đi nguyên tới nơi chờ-thử-lại, không bị bọc thành lỗi mạng.
-            await CrawlRequestThrottle.WaitAsync(uri.Host, _options.IntervalFor(uri.Host, context.Config?.RequestDelayMs), cancellationToken);
+            await CrawlRequestThrottle.WaitAsync(uri.Host, _options.IntervalFor(uri.Host, context.Config?.RequestDelayMs), cancellationToken,
+                maxRequests: _options.PerMinuteFor(uri.Host, context.Config?.MaxRequestsPerMinute), window: TimeSpan.FromMinutes(1));
 
             HttpResponseMessage response;
             try

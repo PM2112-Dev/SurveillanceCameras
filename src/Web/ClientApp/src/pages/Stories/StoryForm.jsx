@@ -19,6 +19,14 @@ const FLAG_FIELDS = [
   ['isComment', 'Cho phép bình luận']
 ];
 
+// Trùng enum TytUploadMode ở backend (Domain/Enums/TytUploadMode.cs).
+const UPLOAD_MODES = [
+  [0, 'Đăng tay (bấm nút đăng chương)'],
+  [1, 'Đăng ngay khi chương xử lý xong'],
+  [2, 'Đăng theo giờ (mỗi N giờ một lô)'],
+  [3, 'Đăng theo ngày (một lô vào giờ cố định)']
+];
+
 const initial = {
   title: '',
   storySourceId: '',
@@ -35,7 +43,11 @@ const initial = {
   earnCount: 0,
   earnNow: 0,
   adCount: 0,
-  paid: 0
+  paid: 0,
+  tytUploadMode: 0,
+  tytUploadBatchSize: 1,
+  tytUploadEveryHours: 1,
+  tytUploadDailyTime: ''
 };
 
 export function StoryForm() {
@@ -151,6 +163,42 @@ export function StoryForm() {
           </label>
         ))}
       </div>
+
+      {isEdit && (
+        <fieldset className="form-grid">
+          <legend>Đăng chương lên TYT</legend>
+          <label>
+            Khi nào đăng
+            <select value={form.tytUploadMode} onChange={event => update({ tytUploadMode: Number(event.target.value) })}>
+              {UPLOAD_MODES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+          </label>
+          {form.tytUploadMode >= 2 && (
+            <label>
+              Số chương mỗi lượt
+              <input type="number" min={1} max={100} value={form.tytUploadBatchSize}
+                onChange={event => update({ tytUploadBatchSize: Number(event.target.value) })} />
+            </label>
+          )}
+          {form.tytUploadMode === 2 && (
+            <label>
+              Cách nhau (giờ)
+              <input type="number" min={1} max={168} value={form.tytUploadEveryHours}
+                onChange={event => update({ tytUploadEveryHours: Number(event.target.value) })} />
+            </label>
+          )}
+          {form.tytUploadMode === 3 && (
+            <label>
+              Giờ đăng mỗi ngày
+              <input type="time" value={form.tytUploadDailyTime || '08:00'}
+                onChange={event => update({ tytUploadDailyTime: event.target.value })} />
+            </label>
+          )}
+          <small className="hint">
+            Chỉ áp dụng khi truyện đã có trên TYT. Chương được đăng theo đúng thứ tự, chương nào chưa biên tập xong hoặc đang lỗi thì các chương sau chờ.
+          </small>
+        </fieldset>
+      )}
 
       <div className="form-grid">
         {NUMBER_FIELDS.map(([name, label]) => (

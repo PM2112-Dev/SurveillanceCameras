@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, RefreshCw, RotateCcw } from 'lucide-react';
+import { Plus, RefreshCw, RotateCcw, Upload } from 'lucide-react';
 import { episodesClient, getErrorMessage, worksClient } from '../../api/clients';
 import { Pagination } from '../../components/common/Pagination';
 import { EmptyState, ErrorAlert, LoadingBlock } from '../../components/common/StateBlocks';
@@ -83,6 +83,17 @@ export function StoryChapters({ storyId }) {
           >
             {actionBusy !== 'retry' && <RotateCcw size={16} aria-hidden="true" />} Xử lý lại chương dở
           </button>
+          <button
+            type="button"
+            className="secondary"
+            disabled={Boolean(actionBusy) || !s || s.edited === 0}
+            aria-busy={actionBusy === 'upload'}
+            title="Đăng các chương đã biên tập xong lên TYT theo thứ tự (cách nhau một khoảng)"
+            onClick={() => runAction('upload', () => worksClient.requestTytChapterUploads(storyId, undefined),
+              count => (count > 0 ? `Đã đưa ${count} chương vào hàng đợi đăng lên TYT.` : 'Không có chương nào cần đăng (đã đăng hết hoặc chưa biên tập xong).'))}
+          >
+            {actionBusy !== 'upload' && <Upload size={16} aria-hidden="true" />} Đăng chương lên TYT
+          </button>
           <Link to={`/stories/${storyId}/chapters/new`} role="button" className="secondary">
             <Plus size={16} aria-hidden="true" /> Thêm chương
           </Link>
@@ -139,6 +150,7 @@ export function StoryChapters({ storyId }) {
                 <th>Tên chương</th>
                 <th>Trạng thái</th>
                 <th>Độ dài</th>
+                <th>TYT</th>
               </tr>
             </thead>
             <tbody>
@@ -155,6 +167,13 @@ export function StoryChapters({ storyId }) {
                   <td className="nowrap">
                     {chapter.rawLength ? numberFormat.format(chapter.rawLength) : '—'}
                     {chapter.editLength ? ` → ${numberFormat.format(chapter.editLength)}` : ''}
+                  </td>
+                  <td>
+                    {chapter.isUploaded
+                      ? <span className="status-badge ok" title={chapter.tytUploadedAt?.toLocaleString('vi-VN')}>Đã đăng</span>
+                      : chapter.tytUploadError
+                        ? <span className="status-badge danger" title={chapter.tytUploadError}>Lỗi đăng</span>
+                        : '—'}
                   </td>
                 </tr>
               ))}

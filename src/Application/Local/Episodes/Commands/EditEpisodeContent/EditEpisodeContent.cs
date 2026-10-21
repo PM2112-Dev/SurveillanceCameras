@@ -53,6 +53,7 @@ public class EditEpisodeContentCommandHandler : IRequestHandler<EditEpisodeConte
             && !await WebSourceEditPolicy.IsNeedEditAsync(_context, chapter.Work?.StorySource?.WebSourceId, cancellationToken))
         {
             EpisodeContentStatus.KeepOriginal(chapter, _timeProvider.GetUtcNow());
+            await TytUploadQueue.QueueIfImmediateAsync(_context, chapter, chapter.Work, _timeProvider.GetUtcNow(), cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
             return;
         }
@@ -97,6 +98,7 @@ public class EditEpisodeContentCommandHandler : IRequestHandler<EditEpisodeConte
         chapter.Status = EpisodeStatus.Edited;
         chapter.EditedAt = _timeProvider.GetUtcNow();
         chapter.Error = null;
+        await TytUploadQueue.QueueIfImmediateAsync(_context, chapter, chapter.Work, _timeProvider.GetUtcNow(), cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
