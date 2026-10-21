@@ -47,8 +47,9 @@ try {
     $appcmd = "$env:windir\System32\inetsrv\appcmd.exe"
     & $appcmd set apppool $SiteName /processModel.loadUserProfile:true /processModel.setProfileEnvironment:true | Out-Host
     # App có background service (Kafka consumer, đồng bộ hằng ngày) nên không để IIS tắt khi rảnh.
-    Set-ItemProperty $poolPath -Name processModel.idleTimeout -Value ([TimeSpan]::Zero)
-    Set-ItemProperty $poolPath -Name startMode -Value AlwaysRunning
+    # Dùng appcmd: Set-ItemProperty với tên lồng "processModel.idleTimeout" ném NullReferenceException trên một số bản IIS.
+    & $appcmd set apppool $SiteName /processModel.idleTimeout:00:00:00 /startMode:AlwaysRunning | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "appcmd set apppool (idleTimeout/startMode) lỗi (exit $LASTEXITCODE)" }
 
     if ((Get-WebAppPoolState -Name $SiteName).Value -ne 'Stopped') {
         Stop-WebAppPool -Name $SiteName
