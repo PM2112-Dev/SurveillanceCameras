@@ -16,7 +16,8 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                 name: "ExcludedEpisodeIds",
                 table: "Works",
                 type: "text[]",
-                nullable: false);
+                nullable: false,
+                defaultValueSql: "ARRAY[]::text[]");
 
             migrationBuilder.AddColumn<bool>(
                 name: "AutoSyncMovies",
@@ -29,7 +30,8 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                 name: "ExcludedDramaIds",
                 table: "UserProfiles",
                 type: "text[]",
-                nullable: false);
+                nullable: false,
+                defaultValueSql: "ARRAY[]::text[]");
 
             migrationBuilder.AddColumn<string>(
                 name: "MoviesSyncError",
