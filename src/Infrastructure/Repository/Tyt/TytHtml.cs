@@ -75,6 +75,18 @@ public static partial class TytHtml
         return (success, message, null);
     }
 
+    /// <summary>
+    /// Giá trị của lựa chọn "Công Khai" trong ô chế độ hiển thị của trang Xuất bản (giá trị do TYT cấp, không cố định 0/1).
+    /// <c>null</c> nếu trang không có ô này (giao diện đổi).
+    /// </summary>
+    public static string? PublicVisibilityValue(string html)
+    {
+        var select = Parse(html).QuerySelector("select#published, select[name=published]");
+        var option = select?.QuerySelectorAll("option")
+            .FirstOrDefault(o => NormalizeTitle(o.TextContent).Contains("công khai"));
+        return option?.GetAttribute("value");
+    }
+
     /// <summary>Trang có nút đăng xuất nghĩa là đang đăng nhập.</summary>
     public static bool IsLoggedIn(string html) => html.Contains("/user/logout", StringComparison.OrdinalIgnoreCase);
 

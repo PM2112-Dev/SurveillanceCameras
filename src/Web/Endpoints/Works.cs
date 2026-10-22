@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using SurveillanceCameras.Application.Local.Episodes.Commands.RequestWorkEpisodeSync;
 using SurveillanceCameras.Application.Local.Episodes.Commands.RequestTytChapterUploads;
 using SurveillanceCameras.Application.Local.Episodes.Commands.RetryWorkEpisodes;
+using SurveillanceCameras.Application.Local.Tyt.Commands.RequestTytPublish;
 using SurveillanceCameras.Application.Local.Works.Commands.RequestTytStoryCreation;
 using SurveillanceCameras.Application.Local.Episodes.Queries.GetWorkEpisodeStats;
 using SurveillanceCameras.Application.Common.Models;
@@ -30,6 +31,7 @@ public class Works : IEndpointGroup
         groupBuilder.MapPost(RetryWorkEpisodes, "{id}/retry-episodes");
         groupBuilder.MapPost(RequestTytStoryCreation, "{id}/tyt");
         groupBuilder.MapPost(RequestTytChapterUploads, "{id}/tyt-chapters");
+        groupBuilder.MapPost(RequestTytPublish, "{id}/tyt-publish");
     }
 
     [EndpointSummary("Get work episode stats")]
@@ -55,6 +57,15 @@ public class Works : IEndpointGroup
     public static async Task<Accepted> RequestTytStoryCreation(ISender sender, int id)
     {
         await sender.Send(new RequestTytStoryCreationCommand(id));
+
+        return TypedResults.Accepted((string?)null);
+    }
+
+    [EndpointSummary("Request TYT publish")]
+    [EndpointDescription("Xuất bản truyện lên TYT: đăng vài chương đầu, gửi yêu cầu công khai rồi chờ TYT duyệt; được duyệt mới đăng các chương còn lại theo lịch (chạy nền)")]
+    public static async Task<Accepted> RequestTytPublish(ISender sender, int id)
+    {
+        await sender.Send(new RequestTytPublishCommand(id));
 
         return TypedResults.Accepted((string?)null);
     }

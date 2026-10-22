@@ -71,7 +71,9 @@ internal static class TytUploadQueue
     public static async Task QueueIfImmediateAsync(IApplicationDbContext db, Episode chapter, Work? work, DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        if (work is not { TytUploadMode: TytUploadMode.Immediate } || !CanUpload(work) || chapter.IsUploaded) return;
+        // Đăng ngay chỉ khi truyện đã được TYT duyệt và không đặt hạn mức chương mỗi ngày (có hạn mức thì lượt quét định kỳ tính và đăng).
+        if (work is not { TytUploadMode: TytUploadMode.Immediate, TytStage: TytStage.Approved, TytUploadDailyLimit: 0 }
+            || !CanUpload(work) || chapter.IsUploaded) return;
 
         var blocked = await db.Episodes.AnyAsync(
             x => x.WorkId == chapter.WorkId && !x.IsUploaded && x.Id != chapter.Id && x.EpisodeNumber < chapter.EpisodeNumber,
@@ -81,4 +83,10 @@ internal static class TytUploadQueue
         chapter.QueuedAt = now;
         chapter.AddIntegrationEvent(new ChapterTytUploadRequestedIntegrationEvent { ChapterId = chapter.Id }, cancellationToken);
     }
+
+    /// <summary>Số chương của truyện đã đăng hoặc đã xếp hàng đăng từ đầu ngày <paramref name="dayStart"/> (giờ địa phương), để tính hạn mức mỗi ngày.</summary>
+    public static Task<int> CountSinceAsync(IApplicationDbContext db, int workId, DateTimeOffset dayStart, CancellationToken cancellationToken)
+        => db.Episodes.CountAsync(x => x.WorkId == workId
+                                       && ((x.QueuedAt != null && x.QueuedAt >= dayStart) || (x.TytUploadedAt != null && x.TytUploadedAt >= dayStart)),
+            cancellationToken);
 }

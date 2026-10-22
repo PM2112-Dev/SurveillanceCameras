@@ -1,7 +1,10 @@
 using Microsoft.Extensions.Logging;
 using SurveillanceCameras.Application.Common.Exceptions;
 using SurveillanceCameras.Application.Common.Interfaces;
+using Microsoft.Extensions.Options;
+using SurveillanceCameras.Application.Local.Tyt;
 using SurveillanceCameras.Application.Local.WebSources;
+using SurveillanceCameras.Domain.Enums;
 using SurveillanceCameras.Application.Repository.Tyt;
 using SurveillanceCameras.Domain.Entities;
 
@@ -23,14 +26,16 @@ public class CreateTytStoryCommandHandler : IRequestHandler<CreateTytStoryComman
     private readonly IApplicationDbContext _context;
     private readonly ITytRepository _tyt;
     private readonly TimeProvider _timeProvider;
+    private readonly TytPolicyOptions _policy;
     private readonly ILogger<CreateTytStoryCommandHandler> _logger;
 
     public CreateTytStoryCommandHandler(IApplicationDbContext context, ITytRepository tyt, TimeProvider timeProvider,
-        ILogger<CreateTytStoryCommandHandler> logger)
+        IOptions<TytPolicyOptions> policy, ILogger<CreateTytStoryCommandHandler> logger)
     {
         _context = context;
         _tyt = tyt;
         _timeProvider = timeProvider;
+        _policy = policy.Value;
         _logger = logger;
     }
 
@@ -45,6 +50,19 @@ public class CreateTytStoryCommandHandler : IRequestHandler<CreateTytStoryComman
 
             if (string.IsNullOrWhiteSpace(story.TytStoryId))
             {
+                // Mỗi tài khoản chỉ đăng cùng lúc tối đa N truyện chưa hoàn thành: đủ rồi thì chờ có chỗ trống (không tính là lỗi).
+                var active = await TytSlots.ActiveCountAsync(_context, context.AccountId, story.Id, cancellationToken);
+                if (active >= _policy.MaxActiveStoriesPerAccount)
+                {
+                    story.TytStage = TytStage.WaitingSlot;
+                    story.TytStageNote = $"Tài khoản TYT đã có {active}/{_policy.MaxActiveStoriesPerAccount} truyện đang đăng — truyện sẽ được tạo khi có chỗ trống (một truyện hoàn thành).";
+                    story.TytError = null;
+                    await _context.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation("Story {StoryId}: tài khoản TYT {AccountId} đủ {Active} truyện, chờ chỗ trống", story.Id, context.AccountId, active);
+                    return;
+                }
+
+
                 story.TytStoryId = await FindOrCreateAsync(context, story, cancellationToken);
                 // Lưu Id ngay: bước cập nhật thông tin có lỗi thì lần chạy lại không tạo trùng truyện trên TYT.
                 await _context.SaveChangesAsync(cancellationToken);

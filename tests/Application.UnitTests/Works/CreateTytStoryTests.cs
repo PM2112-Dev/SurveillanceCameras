@@ -38,7 +38,7 @@ public class CreateTytStoryTests
     [TearDown]
     public void TearDown() => _db.Dispose();
 
-    private CreateTytStoryCommandHandler Handler() => new(_db, _tyt.Object, TimeProvider.System, NullLogger<CreateTytStoryCommandHandler>.Instance);
+    private CreateTytStoryCommandHandler Handler() => new(_db, _tyt.Object, TimeProvider.System, Microsoft.Extensions.Options.Options.Create(new SurveillanceCameras.Application.Local.Tyt.TytPolicyOptions()), NullLogger<CreateTytStoryCommandHandler>.Instance);
 
     private async Task<Work> SeedStoryAsync(int? accountId = -1, string title = "Kiều Loan Truyện", string? tytId = null)
     {

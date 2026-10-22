@@ -46,4 +46,11 @@ public interface ITytRepository
     /// <summary>Sửa nội dung chương đã đăng.</summary>
     Task UpdateChapterAsync(TytContext context, string storyId, string chapterId, TytChapterRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gửi yêu cầu công khai truyện (trang Xuất bản): TYT cần xét duyệt nên truyện chưa hiện công khai ngay — dùng
+    /// <see cref="GetStoriesAsync"/> với <see cref="TytStoryVisibility.Public"/> để biết đã được duyệt chưa.
+    /// </summary>
+    /// <returns>Thông điệp TYT trả về (vd. đã gửi yêu cầu, đang chờ duyệt).</returns>
+    Task<string?> RequestPublishAsync(TytContext context, string storyId, CancellationToken cancellationToken = default);
 }

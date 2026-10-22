@@ -9102,6 +9102,55 @@ export class WorksClient {
         }
         return Promise.resolve<number>(null as any);
     }
+
+    /**
+     * Request TYT publish
+     * @return Accepted
+     */
+    requestTytPublish(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Works/{id}/tyt-publish";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRequestTytPublish(_response);
+        });
+    }
+
+    protected processRequestTytPublish(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 202) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
 }
 
 export class AccessTokenResponse implements IAccessTokenResponse {
@@ -19224,6 +19273,7 @@ export class UpdateWorkCommand implements IUpdateWorkCommand {
     tytUploadBatchSize?: number | undefined;
     tytUploadEveryHours?: number | undefined;
     tytUploadDailyTime?: string | undefined;
+    tytUploadDailyLimit?: number | undefined;
 
     [key: string]: any;
 
@@ -19262,6 +19312,7 @@ export class UpdateWorkCommand implements IUpdateWorkCommand {
             this.tytUploadBatchSize = _data["tytUploadBatchSize"];
             this.tytUploadEveryHours = _data["tytUploadEveryHours"];
             this.tytUploadDailyTime = _data["tytUploadDailyTime"];
+            this.tytUploadDailyLimit = _data["tytUploadDailyLimit"];
         }
     }
 
@@ -19298,6 +19349,7 @@ export class UpdateWorkCommand implements IUpdateWorkCommand {
         data["tytUploadBatchSize"] = this.tytUploadBatchSize;
         data["tytUploadEveryHours"] = this.tytUploadEveryHours;
         data["tytUploadDailyTime"] = this.tytUploadDailyTime;
+        data["tytUploadDailyLimit"] = this.tytUploadDailyLimit;
         return data;
     }
 }
@@ -19323,6 +19375,7 @@ export interface IUpdateWorkCommand {
     tytUploadBatchSize?: number | undefined;
     tytUploadEveryHours?: number | undefined;
     tytUploadDailyTime?: string | undefined;
+    tytUploadDailyLimit?: number | undefined;
 
     [key: string]: any;
 }
@@ -19631,6 +19684,11 @@ export class WorkDto implements IWorkDto {
     tytUploadBatchSize?: number;
     tytUploadEveryHours?: number;
     tytUploadDailyTime?: string | undefined;
+    tytUploadDailyLimit?: number;
+    tytStage?: number;
+    tytStageNote?: string | undefined;
+    tytPublishRequestedAt?: Date | undefined;
+    tytApprovedAt?: Date | undefined;
     description?: string | undefined;
     author?: string | undefined;
     isFull?: boolean;
@@ -19676,6 +19734,11 @@ export class WorkDto implements IWorkDto {
             this.tytUploadBatchSize = _data["tytUploadBatchSize"];
             this.tytUploadEveryHours = _data["tytUploadEveryHours"];
             this.tytUploadDailyTime = _data["tytUploadDailyTime"];
+            this.tytUploadDailyLimit = _data["tytUploadDailyLimit"];
+            this.tytStage = _data["tytStage"];
+            this.tytStageNote = _data["tytStageNote"];
+            this.tytPublishRequestedAt = _data["tytPublishRequestedAt"] ? new Date(_data["tytPublishRequestedAt"].toString()) : undefined as any;
+            this.tytApprovedAt = _data["tytApprovedAt"] ? new Date(_data["tytApprovedAt"].toString()) : undefined as any;
             this.description = _data["description"];
             this.author = _data["author"];
             this.isFull = _data["isFull"];
@@ -19719,6 +19782,11 @@ export class WorkDto implements IWorkDto {
         data["tytUploadBatchSize"] = this.tytUploadBatchSize;
         data["tytUploadEveryHours"] = this.tytUploadEveryHours;
         data["tytUploadDailyTime"] = this.tytUploadDailyTime;
+        data["tytUploadDailyLimit"] = this.tytUploadDailyLimit;
+        data["tytStage"] = this.tytStage;
+        data["tytStageNote"] = this.tytStageNote;
+        data["tytPublishRequestedAt"] = this.tytPublishRequestedAt ? this.tytPublishRequestedAt.toISOString() : undefined as any;
+        data["tytApprovedAt"] = this.tytApprovedAt ? this.tytApprovedAt.toISOString() : undefined as any;
         data["description"] = this.description;
         data["author"] = this.author;
         data["isFull"] = this.isFull;
@@ -19751,6 +19819,11 @@ export interface IWorkDto {
     tytUploadBatchSize?: number;
     tytUploadEveryHours?: number;
     tytUploadDailyTime?: string | undefined;
+    tytUploadDailyLimit?: number;
+    tytStage?: number;
+    tytStageNote?: string | undefined;
+    tytPublishRequestedAt?: Date | undefined;
+    tytApprovedAt?: Date | undefined;
     description?: string | undefined;
     author?: string | undefined;
     isFull?: boolean;

@@ -43,4 +43,18 @@ public class TytChapterAndGenreHtmlTests
         Assert.That(TytHtml.ChapterIdFromUrl("https://tytnovel.info/mystory/" + StoryId + "/chapters", StoryId), Is.Null);
         Assert.That(TytHtml.ParseChapterResult("<html>lỗi</html>").Success, Is.False);
     }
+
+    [Test]
+    public void PublicVisibilityValue_IsReadFromThePublishPage_NotHardCoded()
+    {
+        const string html = """
+            <select id="published" name="published">
+              <option value="11" selected>Chỉ Mình Tôi</option>
+              <option value="25">Công Khai - Mọi Người</option>
+            </select>
+            """;
+
+        Assert.That(TytHtml.PublicVisibilityValue(html), Is.EqualTo("25"));
+        Assert.That(TytHtml.PublicVisibilityValue("<p>không có ô chọn</p>"), Is.Null);
+    }
 }

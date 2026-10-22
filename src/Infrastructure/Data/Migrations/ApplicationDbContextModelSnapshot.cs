@@ -1839,11 +1839,23 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(1);
 
+                    b.Property<DateTimeOffset?>("TytApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("TytError")
                         .HasColumnType("text");
 
+                    b.Property<DateTimeOffset?>("TytPublishRequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset?>("TytRetryQueuedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("TytStage")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TytStageNote")
+                        .HasColumnType("text");
 
                     b.Property<string>("TytStoryId")
                         .HasColumnType("text");
@@ -1852,6 +1864,9 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("TytUploadBatchSize")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TytUploadDailyLimit")
                         .HasColumnType("integer");
 
                     b.Property<string>("TytUploadDailyTime")

@@ -182,6 +182,24 @@ public sealed class TytRepository : ITytRepository
         return TytHtml.ChapterIdFromUrl(redirectUrl, id);
     }
 
+    public async Task<string?> RequestPublishAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)
+    {
+        var id = RequireStoryId(storyId);
+
+        // Giá trị của lựa chọn "Công Khai" do TYT cấp cho từng truyện nên đọc từ trang Xuất bản thay vì đoán.
+        var page = await SendAsync(context, $"mystory/{id}/publish", null, false, cancellationToken);
+        var value = TytHtml.PublicVisibilityValue(page.Body)
+                    ?? throw new TytException("Không tìm thấy lựa chọn “Công Khai” ở trang Xuất bản của TYT (giao diện có thể đã đổi).");
+
+        var response = await SendAsync(context, $"mystory/{id}/published", [new("published", value)], ajax: true, cancellationToken);
+
+        var (success, message) = TytHtml.ParseAjaxResult(response.Body);
+        if (!success)
+            throw new TytException($"TYT không nhận yêu cầu công khai truyện {id}: {message ?? $"phản hồi không hợp lệ (HTTP {response.StatusCode})"}");
+
+        return message;
+    }
+
     public Task UpdateChapterAsync(TytContext context, string storyId, string chapterId, TytChapterRequest request,
         CancellationToken cancellationToken = default)
     {

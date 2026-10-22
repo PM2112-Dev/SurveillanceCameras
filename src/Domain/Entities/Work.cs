@@ -61,8 +61,23 @@ public class Work : BaseAuditableEntity
     /// <summary>Chế độ theo giờ: cách nhau bao nhiêu giờ giữa hai lượt đăng.</summary>
     public int TytUploadEveryHours { get; set; } = 1;
 
-    /// <summary>Chế độ theo ngày: giờ đăng mỗi ngày, dạng "HH:mm" (giờ máy chủ).</summary>
+    /// <summary>Chế độ theo ngày: các giờ đăng mỗi ngày, dạng "HH:mm" hoặc nhiều giờ cách nhau dấu phẩy ("08:00,12:00,20:00"); mỗi giờ đăng một lô.</summary>
     public string? TytUploadDailyTime { get; set; }
+
+    /// <summary>Số chương tối đa đăng mỗi ngày (theo giờ địa phương của máy chủ); 0 là không giới hạn.</summary>
+    public int TytUploadDailyLimit { get; set; }
+
+    /// <summary>Bước hiện tại của quy trình xuất bản lên TYT (chờ chỗ, đăng chương đầu, chờ duyệt, đã duyệt).</summary>
+    public TytStage TytStage { get; set; }
+
+    /// <summary>Ghi chú của quy trình xuất bản (đang chờ gì, TYT trả lời gì).</summary>
+    public string? TytStageNote { get; set; }
+
+    /// <summary>Lúc gửi yêu cầu công khai lên TYT.</summary>
+    public DateTimeOffset? TytPublishRequestedAt { get; set; }
+
+    /// <summary>Lúc phát hiện TYT đã duyệt truyện.</summary>
+    public DateTimeOffset? TytApprovedAt { get; set; }
 
     /// <summary>Lần gần nhất tác vụ khôi phục lỗi đưa truyện lên TYT chạy lại — để không thử dồn dập.</summary>
     public DateTimeOffset? TytRetryQueuedAt { get; set; }
