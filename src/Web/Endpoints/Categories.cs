@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.Categories.Commands.CreateCategory;
 using SurveillanceCameras.Application.Local.Categories.Commands.DeleteCategory;
+using SurveillanceCameras.Application.Local.Categories.Commands.ImportTytCategories;
 using SurveillanceCameras.Application.Local.Categories.Commands.UpdateCategory;
 using SurveillanceCameras.Application.Local.Categories.Queries.DTOs;
 using SurveillanceCameras.Application.Local.Categories.Queries.GetCategories;
@@ -18,9 +19,15 @@ public class Categories : IEndpointGroup
         groupBuilder.MapGet(GetCategories);
         groupBuilder.MapGet(GetCategoryById, "{id}");
         groupBuilder.MapPost(CreateCategory);
+        groupBuilder.MapPost(ImportTytCategories, "import-tyt");
         groupBuilder.MapPut(UpdateCategory, "{id}");
         groupBuilder.MapDelete(DeleteCategory, "{id}");
     }
+
+    [EndpointSummary("Import TYT categories")]
+    [EndpointDescription("Lấy danh sách thể loại của TYT (bằng tài khoản TYT đã đăng nhập) và thêm các thể loại chưa có vào dữ liệu")]
+    public static async Task<Ok<ImportTytCategoriesResult>> ImportTytCategories(ISender sender, int accountId)
+        => TypedResults.Ok(await sender.Send(new ImportTytCategoriesCommand(accountId)));
 
     [EndpointSummary("Get Categories")]
     [EndpointDescription("Lấy danh sách Category (lọc theo tên, có phân trang)")]

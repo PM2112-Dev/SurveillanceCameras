@@ -14,6 +14,9 @@ public static partial class TytHtml
     [GeneratedRegex("/mystory/([0-9a-f]{24})(?:/|$|\\?)", RegexOptions.IgnoreCase)]
     private static partial Regex StoryIdInUrl();
 
+    [GeneratedRegex("/the-loai/([a-z0-9-]+)(?:/|$|\\?|#)", RegexOptions.IgnoreCase)]
+    private static partial Regex GenreInUrl();
+
     // Link trang sửa truyện: đúng "/mystory/{id}/", không phải "/mystory/{id}/chapters/"...
     [GeneratedRegex("/mystory/([0-9a-f]{24})/?$", RegexOptions.IgnoreCase)]
     private static partial Regex EditLink();
@@ -24,6 +27,52 @@ public static partial class TytHtml
         if (string.IsNullOrEmpty(url)) return null;
         var match = StoryIdInUrl().Match(url);
         return match.Success ? match.Groups[1].Value.ToLowerInvariant() : null;
+    }
+
+    /// <summary>Thể loại trên trang /the-loai: các liên kết <c>/the-loai/{slug}/…</c> (bỏ liên kết trang gốc), không trùng slug.</summary>
+    public static IReadOnlyList<TytGenreDto> ParseGenres(string html)
+    {
+        var genres = new List<TytGenreDto>();
+        var seen = new HashSet<string>();
+
+        foreach (var link in Parse(html).QuerySelectorAll("a[href]"))
+        {
+            var match = GenreInUrl().Match(link.GetAttribute("href") ?? "");
+            var title = Clean(link.TextContent);
+            if (match.Success && title.Length > 0 && seen.Add(match.Groups[1].Value.ToLowerInvariant()))
+                genres.Add(new TytGenreDto(match.Groups[1].Value.ToLowerInvariant(), title));
+        }
+
+        return genres;
+    }
+
+    /// <summary>Id chương (24 ký tự hex) trong đường dẫn chuyển hướng sau khi thêm chương; <c>null</c> nếu không có.</summary>
+    public static string? ChapterIdFromUrl(string? url, string storyId)
+    {
+        if (string.IsNullOrEmpty(url)) return null;
+        var match = Regex.Match(url, $"/{storyId}/chapters/([0-9a-fA-F]{{24}})", RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups[1].Value.ToLowerInvariant() : null;
+    }
+
+    /// <summary>Phản hồi JSON của form thêm chương: <c>status</c>, <c>message</c> và đường dẫn chuyển hướng (TYT viết sai chính tả <c>rediret_url</c>).</summary>
+    public static (bool Success, string? Message, string? RedirectUrl) ParseChapterResult(string body)
+    {
+        var (success, message) = ParseAjaxResult(body);
+        try
+        {
+            using var json = JsonDocument.Parse(body);
+            foreach (var name in new[] { "rediret_url", "redirect_url" })
+            {
+                if (json.RootElement.TryGetProperty(name, out var url) && url.ValueKind == JsonValueKind.String)
+                    return (success, message, url.GetString());
+            }
+        }
+        catch (JsonException)
+        {
+            // Không phải JSON: ParseAjaxResult đã báo không thành công.
+        }
+
+        return (success, message, null);
     }
 
     /// <summary>Trang có nút đăng xuất nghĩa là đang đăng nhập.</summary>
