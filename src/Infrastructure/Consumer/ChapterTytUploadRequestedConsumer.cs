@@ -41,6 +41,6 @@ public sealed class ChapterTytUploadRequestedConsumer : KafkaConsumerBase<Chapte
         await using var scope = _scopeFactory.CreateAsyncScope();
         var sender = scope.ServiceProvider.GetRequiredService<ISender>();
 
-        await sender.Send(new UploadTytChapterCommand(integrationEvent.ChapterId), cancellationToken);
+        await sender.Send(new UploadTytChapterCommand(integrationEvent.ChapterId, integrationEvent.Force), cancellationToken);
     }
 }

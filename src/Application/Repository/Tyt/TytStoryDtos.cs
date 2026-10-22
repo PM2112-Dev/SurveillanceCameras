@@ -112,11 +112,14 @@ public record TytGenreDto(string Slug, string Title);
 public record TytChapterItemDto(string Id, int? Number, string? Title);
 
 /// <summary>Thu nhập của truyện (trang Nhận Thưởng), đơn vị đ.</summary>
-/// <param name="Eligible">Truyện đủ điều kiện nhận thưởng (trang không còn báo "Không đủ điều kiện").</param>
-/// <param name="Total">Tổng thu nhập.</param>
-/// <param name="Available">Đang có, rút được.</param>
-/// <param name="Withdrawing">Đang rút.</param>
-/// <param name="Paid">Đã thanh toán.</param>
-/// <param name="FromAds">Thu nhập từ quảng cáo.</param>
+/// <param name="Eligible">Truyện đủ điều kiện nhận thưởng (trang không còn báo "Không đủ điều kiện" và có ô bật/tắt thưởng).</param>
+/// <param name="EarningEnabled">Ô "Theo Lượt Hiển Thị Quảng Cáo" đang chọn "Bật".</param>
+/// <param name="Total">Nguồn thu — Tổng.</param>
+/// <param name="Available">Số dư — Đang Có.</param>
+/// <param name="Withdrawing">Số dư — Đang Rút.</param>
+/// <param name="Paid">Số dư — Đã Thanh Toán.</param>
+/// <param name="Transferred">Số dư — Đã Chuyển (về phần thưởng tài khoản).</param>
+/// <param name="FromAds">Nguồn thu — Bởi Quảng Cáo.</param>
 /// <param name="AdViews">Số lượt quảng cáo.</param>
-public record TytEarningDto(bool Eligible, long? Total, long? Available, long? Withdrawing, long? Paid, long? FromAds, long? AdViews);
+public record TytEarningDto(bool Eligible, bool EarningEnabled, long? Total, long? Available, long? Withdrawing, long? Paid,
+    long? Transferred, long? FromAds, long? AdViews);

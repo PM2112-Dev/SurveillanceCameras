@@ -176,7 +176,19 @@ export function StoryChapters({ storyId }) {
                   </td>
                   <td>
                     {chapter.isUploaded
-                      ? <span className="status-badge ok" title={chapter.tytUploadedAt?.toLocaleString('vi-VN')}>Đã đăng</span>
+                      ? (
+                        <>
+                          <span className="status-badge ok" title={chapter.tytUploadedAt?.toLocaleString('vi-VN')}>Đã đăng</span>
+                          {chapter.status === ChapterStatus.Edited && (
+                            <button type="button" className="icon-btn" disabled={Boolean(actionBusy)}
+                              title="Cập nhật nội dung chương này lên TYT"
+                              onClick={() => runAction(`tyt-update-${chapter.id}`, () => episodesClient.requestTytChapterUpdate(chapter.id),
+                                'Đã đưa chương vào hàng đợi cập nhật lên TYT — kết quả hiện ở cột TYT.')}>
+                              <Upload size={14} aria-hidden="true" />
+                            </button>
+                          )}
+                        </>
+                      )
                       : chapter.tytUploadError
                         ? <span className="status-badge danger" title={chapter.tytUploadError}>Lỗi đăng</span>
                         : '—'}

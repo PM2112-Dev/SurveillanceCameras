@@ -159,6 +159,16 @@ public sealed class TytRepository : ITytRepository
         return TytHtml.ParseEarning(response.Body);
     }
 
+    public async Task SetEarningAsync(TytContext context, string storyId, bool enabled, CancellationToken cancellationToken = default)
+    {
+        var id = RequireStoryId(storyId);
+        var response = await SendAsync(context, $"mystory/{id}/update_earning", [new("earning_ad", enabled ? "1" : "0")], ajax: true, cancellationToken);
+
+        var (success, message) = TytHtml.ParseAjaxResult(response.Body);
+        if (!success)
+            throw new TytException($"TYT không cập nhật nhận thưởng của truyện {id}: {message ?? $"phản hồi không hợp lệ (HTTP {response.StatusCode})"}");
+    }
+
     public async Task<bool> IsStoryPublicAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)
     {
         var id = RequireStoryId(storyId);
@@ -242,12 +252,31 @@ public sealed class TytRepository : ITytRepository
         return message;
     }
 
-    public Task UpdateChapterAsync(TytContext context, string storyId, string chapterId, TytChapterRequest request,
+    public async Task UpdateChapterAsync(TytContext context, string storyId, string chapterId, TytChapterRequest request,
         CancellationToken cancellationToken = default)
     {
-        RequireStoryId(storyId);
-        // Endpoint sửa chương chưa khảo sát được (tài khoản TYT chưa có chương nào để xem form sửa) — không đoán để tránh ghi sai.
-        throw new TytException("Chưa hỗ trợ sửa chương đã đăng trên TYT (chưa khảo sát form sửa chương).");
+        var id = RequireStoryId(storyId);
+        var chapter = chapterId.Trim().ToLowerInvariant();
+        if (chapter.Length == 0 || !chapter.All(char.IsLetterOrDigit)) throw new TytException($"Id chương TYT không hợp lệ: {chapterId}");
+
+        var title = request.Title.Trim();
+        if (title.Length is < 1 or > 200) title = title.Length == 0 ? $"Chương {request.Number}" : title[..200];
+        if (request.Number is < 1 or > 9999) throw new TytException($"Số chương {request.Number} ngoài khoảng 1–9999 của TYT.");
+        var content = TytHtml.ChapterContentToHtml(request.Content);
+        if (content.Length == 0) throw new TytException("Chương không có nội dung để cập nhật.");
+
+        // Form "Cập Nhật Chương" (khảo sát 2026-10-22): mystory/{id}/chapters/{chapterId}/update, cùng trường với thêm chương.
+        var response = await SendAsync(context, $"mystory/{id}/chapters/{chapter}/update",
+        [
+            new("title", title),
+            new("number", request.Number.ToString()),
+            new("content", content),
+            new("published", request.Published ? "1" : "0")
+        ], ajax: true, cancellationToken);
+
+        var (success, message) = TytHtml.ParseAjaxResult(response.Body);
+        if (!success)
+            throw new TytException($"TYT không cập nhật chương {request.Number}: {message ?? $"phản hồi không hợp lệ (HTTP {response.StatusCode})"}");
     }
 
     private async Task<BrowserFetchResponse> SendAsync(TytContext context, string path,

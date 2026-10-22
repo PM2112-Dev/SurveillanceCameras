@@ -97,26 +97,55 @@ public class TytChapterAndGenreHtmlTests
     }
 
     [Test]
-    public void Earning_LockedPageHasNoFigures_EligiblePageIsParsedLikeStoriesAuto()
+    public void Earning_LockedPageHasNoFigures_EligiblePageIsParsedFromTheRealLayout()
     {
         var locked = TytHtml.ParseEarning("<main><h5>Nhận Thưởng</h5><div>Không đủ điều kiện mở nhận thưởng. Vui lòng quay lại sau</div></main>");
         Assert.That(locked.Eligible, Is.False);
         Assert.That(locked.Total, Is.Null);
 
+        // Cấu trúc trang Nhận Thưởng thật (khảo sát 2026-10-22).
         const string html = """
-            <main><div class="form-group row"><div class="alert">
-              <div class="form-group"><span>Tổng:</span> <b class="text-primary">1.250 đ</b></div>
-              <div class="form-group"><span>Đang Có:</span> <b class="text-primary">300 đ</b></div>
-              <div class="form-group"><span>Đang Rút:</span> <b class="text-primary">50 đ</b></div>
-              <div class="form-group"><span>Đã Thanh Toán:</span> <b class="text-primary">900 đ</b></div>
-              <div class="form-group"><span>Bởi Quảng Cáo:</span> <b class="text-primary">1.000 đ</b></div>
-              <div class="form-group"><span>Số Lượt QC:</span> <b class="text-primary">412</b></div>
-            </div></div></main>
+            <select id="earning_ad" name="earning_ad"><option value=""></option><option value="1" selected="">Bật</option><option value="0">Tắt</option></select>
+            <div class="row g-3 mb-2">
+              <div class="col"><div class="text-uppercase">Số Dư</div><div class="row">
+                <div class="card-body p-3"><div class="d-flex"><i class="bi bi-wallet2"></i> Đang Có</div><div class="fs-5 fw-bold text-primary">3,066 đ</div></div>
+                <div class="card-body p-3"><div class="d-flex"><i></i> Đang Rút</div><div class="fs-6">0 đ</div></div>
+                <div class="card-body p-3"><div class="d-flex"><i></i> Đã Thanh Toán</div><div class="fs-6">0 đ</div></div>
+                <div class="card-body p-3"><div class="d-flex"><i></i> Đã Chuyển</div><div class="fs-6">9,990 đ</div></div>
+              </div></div>
+              <div class="col"><div class="text-uppercase">Nguồn Thu</div><div class="row">
+                <div class="card-body p-3"><div class="d-flex"><i></i> Tổng</div><div class="fs-5">13,056 đ</div></div>
+                <div class="card-body p-3"><div class="d-flex"><i></i> Bởi Quảng Cáo</div><div class="fs-6">13,056 đ</div><div class="text-secondary small"><i></i> 2,007 lượt</div></div>
+                <div class="card-body p-3"><div class="d-flex"><i></i> Bởi Đề Cử</div><div class="fs-6">0 đ</div><div class="text-secondary small"><i></i> 0 lượt</div></div>
+              </div></div>
+            </div>
             """;
         var earning = TytHtml.ParseEarning(html);
 
         Assert.That(earning.Eligible, Is.True);
-        Assert.That((earning.Total, earning.Available, earning.Withdrawing, earning.Paid, earning.FromAds, earning.AdViews),
-            Is.EqualTo(((long?)1250, (long?)300, (long?)50, (long?)900, (long?)1000, (long?)412)));
+        Assert.That(earning.EarningEnabled, Is.True);
+        Assert.That((earning.Total, earning.Available, earning.Withdrawing, earning.Paid, earning.Transferred, earning.FromAds, earning.AdViews),
+            Is.EqualTo(((long?)13056, (long?)3066, (long?)0, (long?)0, (long?)9990, (long?)13056, (long?)2007)));
+
+        Assert.That(TytHtml.ParseEarning(html.Replace(" selected=\"\"", "")).EarningEnabled, Is.False);
+    }
+
+    [Test]
+    public void ChapterList_RealLayout_NumberInTheRowHeader_TitleInTheEditLink()
+    {
+        const string html = """
+            <table><tbody>
+              <tr><th scope="row" class="fw-normal"> 146 </th><th><a href="/mystory/6937c842dac07c1fa72c5482/chapters/6937d000dac07c1fa72c5499/edit" class="text-decoration-none fw-normal">Chương 146: Kết</a></th>
+                  <th><div class="d-flex gap-2"><a title="Cập Nhật Chương" href="/mystory/6937c842dac07c1fa72c5482/chapters/6937d000dac07c1fa72c5499/edit"><i></i></a><a title="Xem Trước" href="/truyen/x/chuong/y"><i></i></a></div></th></tr>
+              <tr><th scope="row"> 145 </th><th><a href="/mystory/6937c842dac07c1fa72c5482/chapters/6937d000dac07c1fa72c54aa/edit">Chương 145: Vô Đề</a></th></tr>
+            </tbody></table>
+            """;
+
+        var chapters = TytHtml.ParseChapterList(html);
+
+        Assert.That(chapters.Select(x => (x.Id, x.Number, x.Title)), Is.EqualTo(new[]
+        {
+            ("6937d000dac07c1fa72c5499", (int?)146, "Chương 146: Kết"), ("6937d000dac07c1fa72c54aa", (int?)145, "Chương 145: Vô Đề")
+        }));
     }
 }

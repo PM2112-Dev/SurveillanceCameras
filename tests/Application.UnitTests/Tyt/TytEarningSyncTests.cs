@@ -52,7 +52,7 @@ public class TytEarningSyncTests
     public async Task NotYetEligible_NeitherEnablesEarningNorTouchesTheFigures_AndPendingStoriesAreNotChecked()
     {
         _tyt.Setup(x => x.GetEarningAsync(It.IsAny<TytContext>(), StoryId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TytEarningDto(false, null, null, null, null, null, null));
+            .ReturnsAsync(new TytEarningDto(false, false, null, null, null, null, null, null, null));
 
         (await RunAsync()).ShouldBe(0);
 
@@ -67,7 +67,7 @@ public class TytEarningSyncTests
     public async Task OnceEligible_TurnsEarningOn_AndCopiesTheFigures_ThenKeepsRefreshingThem()
     {
         _tyt.Setup(x => x.GetEarningAsync(It.IsAny<TytContext>(), StoryId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TytEarningDto(true, 1250, 300, 50, 900, 1000, 412));
+            .ReturnsAsync(new TytEarningDto(true, true, 1250, 300, 50, 900, null, 1000, 412));
 
         (await RunAsync()).ShouldBe(1);
 
@@ -77,7 +77,7 @@ public class TytEarningSyncTests
         work.TytEarningSyncedAt.ShouldBe(Now);
 
         _tyt.Setup(x => x.GetEarningAsync(It.IsAny<TytContext>(), StoryId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TytEarningDto(true, 1500, 550, 0, 900, 1200, 500));
+            .ReturnsAsync(new TytEarningDto(true, true, 1500, 550, 0, 900, null, 1200, 500));
         await RunAsync();
         (await _db.Works.FirstAsync(x => x.TytStoryId == StoryId)).EarnNow.ShouldBe(550);
     }
@@ -89,7 +89,7 @@ public class TytEarningSyncTests
         work.EarnNow = 77;
         await _db.SaveChangesAsync();
         _tyt.Setup(x => x.GetEarningAsync(It.IsAny<TytContext>(), StoryId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TytEarningDto(true, null, null, null, null, null, null));
+            .ReturnsAsync(new TytEarningDto(true, true, null, null, null, null, null, null, null));
 
         await RunAsync();
 
@@ -110,5 +110,35 @@ public class TytEarningSyncTests
         var work = await _db.Works.FirstAsync(x => x.TytStoryId == StoryId);
         work.IsEarning.ShouldBeFalse();
         work.TytEarningNote!.ShouldContain("phiên hết hạn");
+    }
+
+    [Test]
+    public async Task EligibleButEarningOff_TurnsItOnAtTyt_AndPaidCountsMoneyAlreadyTransferred()
+    {
+        // Số thật khảo sát: dư 3,066 + đã chuyển 9,990 = tổng 13,056.
+        _tyt.Setup(x => x.GetEarningAsync(It.IsAny<TytContext>(), StoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TytEarningDto(true, false, 13056, 3066, 0, 0, 9990, 13056, 2007));
+
+        (await RunAsync()).ShouldBe(1);
+
+        _tyt.Verify(x => x.SetEarningAsync(It.IsAny<TytContext>(), StoryId, true, It.IsAny<CancellationToken>()), Times.Once);
+        var work = await _db.Works.FirstAsync(x => x.TytStoryId == StoryId);
+        (work.IsEarning, work.EarnCount, work.EarnNow, work.Paid, work.AdCount).ShouldBe((true, 13056, 3066, 9990, 2007));
+        work.TytEarningNote!.ShouldContain("Đã bật nhận thưởng");
+    }
+
+    [Test]
+    public async Task WhenTurningEarningOnFails_ItStaysOffAndSaysWhy()
+    {
+        _tyt.Setup(x => x.GetEarningAsync(It.IsAny<TytContext>(), StoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TytEarningDto(true, false, 10, 5, 0, 0, 0, 10, 3));
+        _tyt.Setup(x => x.SetEarningAsync(It.IsAny<TytContext>(), StoryId, true, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TytException("TYT từ chối"));
+
+        (await RunAsync()).ShouldBe(0);
+
+        var work = await _db.Works.FirstAsync(x => x.TytStoryId == StoryId);
+        work.IsEarning.ShouldBeFalse();
+        work.TytEarningNote!.ShouldContain("TYT từ chối");
     }
 }
