@@ -13,6 +13,9 @@ public record GetMovieEpisodesQuery : IRequest<PaginatedList<MovieEpisodeDto>>
     public int Page { get; init; } = 1;
 
     public int PageSize { get; init; } = 50;
+
+    /// <summary>Chỉ lấy tập có vấn đề: trùng số tập, lưu video lỗi hoặc không còn nguồn phát.</summary>
+    public bool OnlyIssues { get; init; }
 }
 
 public class GetMovieEpisodesQueryValidator : AbstractValidator<GetMovieEpisodesQuery>
@@ -43,11 +46,32 @@ public class GetMovieEpisodesQueryHandler : IRequestHandler<GetMovieEpisodesQuer
             x => x.Id == request.MovieId && x.CreatedBy == _user.Id && x.Type == WorkType.Movie, cancellationToken);
         if (!exists) throw new NotFoundException(request.MovieId.ToString(), "Movie");
 
-        return await PaginatedList<MovieEpisodeDto>.CreateAsync(
-            _context.Episodes
-                .Where(x => x.WorkId == request.MovieId)
-                .OrderBy(x => x.EpisodeNumber)
-                .ProjectTo<MovieEpisodeDto>(_mapper.ConfigurationProvider),
+        // Tập trùng số tập: tính trên cả phim (các bản sao có thể nằm ở trang khác).
+        var duplicateNumbers = await _context.Episodes
+            .Where(x => x.WorkId == request.MovieId)
+            .GroupBy(x => x.EpisodeNumber)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToListAsync(cancellationToken);
+
+        var query = _context.Episodes.Where(x => x.WorkId == request.MovieId);
+        if (request.OnlyIssues)
+        {
+            query = query.Where(x => duplicateNumbers.Contains(x.EpisodeNumber)
+                                     || (x.StorageError != null && x.StreamUrl == null)
+                                     || ((x.VideoUrl == null || x.VideoUrl == "") && (x.StreamUrl == null || x.StreamUrl == "")));
+        }
+
+        var page = await PaginatedList<MovieEpisodeDto>.CreateAsync(
+            query.OrderBy(x => x.EpisodeNumber).ThenBy(x => x.Id).ProjectTo<MovieEpisodeDto>(_mapper.ConfigurationProvider),
             request.Page, request.PageSize, cancellationToken);
+
+        foreach (var item in page.Items)
+        {
+            item.IsDuplicate = duplicateNumbers.Contains(item.EpisodeNumber);
+            item.IsMissingSource = string.IsNullOrWhiteSpace(item.VideoUrl) && string.IsNullOrWhiteSpace(item.StreamUrl);
+        }
+
+        return page;
     }
 }

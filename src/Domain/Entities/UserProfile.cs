@@ -34,5 +34,17 @@ public class UserProfile : BaseAuditableEntity
     /// <summary>Lần cuối lấy dữ liệu từ nền tảng.</summary>
     public DateTimeOffset? LastFetchedAt { get; set; }
 
+    /// <summary>Tự kiểm tra định kỳ: drama (phim) mới và tập mới của kênh được đồng bộ về, không cần bấm tay.</summary>
+    public bool AutoSyncMovies { get; set; } = true;
+
+    /// <summary>Lần gần nhất tác vụ định kỳ (hoặc nút kiểm tra) đồng bộ xong kênh này.</summary>
+    public DateTimeOffset? MoviesSyncedAt { get; set; }
+
+    /// <summary>Lỗi của lần kiểm tra phim mới gần nhất; <c>null</c> khi lần gần nhất thành công.</summary>
+    public string? MoviesSyncError { get; set; }
+
+    /// <summary>ID drama của các phim người dùng đã xoá — kiểm tra định kỳ bỏ qua để phim đã xoá không tự quay lại.</summary>
+    public List<string> ExcludedDramaIds { get; set; } = [];
+
     public UserProfileType? UserProfileType { get; set; }
 }

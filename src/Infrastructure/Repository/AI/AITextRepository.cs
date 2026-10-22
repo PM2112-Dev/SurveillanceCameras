@@ -68,17 +68,17 @@ public sealed class AITextRepository : IAITextRepository
                 Messages = [new() { Role = Role.User, Content = request.Input }]
             }, cancellationToken);
         }
-        catch (AnthropicUnauthorizedException ex)
+        catch (AnthropicUnauthorizedException)
         {
-            throw new AIProviderException("Claude từ chối API key (401).", ex);
+            throw new AIKeyUnavailableException("Claude từ chối API key (401).", TimeSpan.FromHours(1));
         }
         catch (AnthropicNotFoundException ex)
         {
             throw new AIProviderException($"Claude không có model '{request.Model}' (404).", ex);
         }
-        catch (AnthropicRateLimitException ex)
+        catch (AnthropicRateLimitException)
         {
-            throw new AIProviderException("Claude báo vượt giới hạn/quota (429).", ex);
+            throw new AIKeyUnavailableException("Claude báo vượt giới hạn/quota (429).", TimeSpan.FromMinutes(5));
         }
         catch (AnthropicApiException ex)
         {
@@ -188,8 +188,17 @@ public sealed class AITextRepository : IAITextRepository
                     HttpStatusCode.TooManyRequests => "báo vượt giới hạn/quota",
                     _ => "trả lỗi"
                 };
-                throw new AIProviderException(
-                    $"{request.Provider} ({request.Model}) {reason} ({(int)response.StatusCode}): {AIErrorMessage.From(body)}");
+                var text = $"{request.Provider} ({request.Model}) {reason} ({(int)response.StatusCode}): {AIErrorMessage.From(body)}";
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                {
+                    var wait = response.Headers.RetryAfter?.Delta ?? AIErrorMessage.RetryDelay(body) ?? TimeSpan.FromMinutes(5);
+                    throw new AIKeyUnavailableException(text, wait);
+                }
+
+                if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                    throw new AIKeyUnavailableException(text, TimeSpan.FromHours(1));
+
+                throw new AIProviderException(text);
             }
 
             try

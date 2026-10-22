@@ -17,6 +17,12 @@ public class Work : BaseAuditableEntity
     /// <summary>ID của phim trên nền tảng nguồn (vd. dramaID của TikTok) — khoá để đồng bộ lại không tạo trùng.</summary>
     public string? ExternalId { get; set; }
 
+    /// <summary>
+    /// ID video (<see cref="Episode.ExternalId"/>) của các tập người dùng đã xoá — đồng bộ lại từ TikTok bỏ qua các ID này
+    /// để tập đã xoá không tự quay lại.
+    /// </summary>
+    public List<string> ExcludedEpisodeIds { get; set; } = [];
+
     public string? CoverUrl { get; set; }
 
     /// <summary>Ngôn ngữ của tác phẩm. Với phim đồng bộ từ TikTok: ngôn ngữ có nhiều tập nhất.</summary>

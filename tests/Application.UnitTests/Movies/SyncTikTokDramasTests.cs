@@ -6,7 +6,11 @@ using Shouldly;
 using SurveillanceCameras.Application.Common.Exceptions;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Models.TikTok;
+using SurveillanceCameras.Application.Local.Movies.Commands.DeleteMovie;
 using SurveillanceCameras.Application.Local.Movies.Commands.ResyncAllMovies;
+using SurveillanceCameras.Application.Local.Movies.Commands.StoreEpisodeVideos;
+using SurveillanceCameras.Application.Local.Movies.Commands.SyncChannelMovies;
+using SurveillanceCameras.Application.Repository.VideoStorage;
 using SurveillanceCameras.Application.Local.Movies.Commands.SyncMovieFromTikTok;
 using SurveillanceCameras.Application.Local.Movies.Commands.SyncTikTokDramas;
 using SurveillanceCameras.Application.Repository.Media;
@@ -80,7 +84,7 @@ public class SyncTikTokDramasTests
     {
         var user = new Mock<IUser>();
         user.Setup(x => x.Id).Returns(Owner);
-        return new SyncTikTokDramasCommandHandler(user.Object, Syncer())
+        return new SyncTikTokDramasCommandHandler(_db, user.Object, Syncer())
             .Handle(new SyncTikTokDramasCommand { UserProfileId = _channel.Id, DramaIds = [DramaId] }, CancellationToken.None);
     }
 
@@ -88,22 +92,84 @@ public class SyncTikTokDramasTests
         => new(_db, _tikTok.Object, _media.Object, TimeProvider.System, NullLogger<TikTokDramaSyncer>.Instance);
 
     [Test]
-    public async Task DailyResync_QueuesOneKafkaEventPerMovie_WithoutCallingTikTok()
+    public async Task DailyResync_QueuesOneEventPerAutoSyncedTikTokChannel_WithoutCallingTikTok()
     {
-        SetupPages(new DramaEpisodeListDto { Cursor = "1", ItemList = [Ep(1, 2)] });
-        await SyncAsync();
-        await FillOwnerAsync();
-        _db.Works.Add(new Work { Title = "Mồ côi", Type = WorkType.Movie, UserProfileId = 999, ExternalId = "1", CreatedBy = Owner });
-        _db.Works.Add(new Work { Title = "Truyện", Type = WorkType.Story, CreatedBy = Owner });
+        await FillChannelOwnerAsync();
+        var off = new UserProfile { UserProfileTypeId = _channel.UserProfileTypeId, UniqueId = "tat", SecUid = "sec2", AutoSyncMovies = false, CreatedBy = Owner };
+        var noSecUid = new UserProfile { UserProfileTypeId = _channel.UserProfileTypeId, UniqueId = "thieu", AutoSyncMovies = true, CreatedBy = Owner };
+        _db.UserProfiles.AddRange(off, noSecUid);
         await _db.SaveChangesAsync();
         _tikTok.Invocations.Clear();
 
         var result = await new ResyncAllMoviesCommandHandler(_db, NullLogger<ResyncAllMoviesCommandHandler>.Instance)
             .Handle(new ResyncAllMoviesCommand(), CancellationToken.None);
 
-        result.ShouldBe(new ResyncAllMoviesResult(Movies: 2, Queued: 2));
-        _db.OutboxEventTypes().Where(x => x == "MovieSyncRequestedIntegrationEvent").Count().ShouldBe(2);
+        result.ShouldBe(new ResyncAllMoviesResult(Channels: 1, Queued: 1));
+        _db.OutboxEventTypes().ShouldBe(["ChannelSyncRequestedIntegrationEvent"]);
         _tikTok.VerifyNoOtherCalls();
+    }
+
+    private async Task FillChannelOwnerAsync()
+    {
+        foreach (var profile in _db.UserProfiles.Where(x => x.CreatedBy == null)) profile.CreatedBy = Owner;
+        await _db.SaveChangesAsync();
+    }
+
+    [Test]
+    public async Task ChannelSync_QueuesNewAndExistingDramas_SkippingTheOnesTheUserDeleted()
+    {
+        SetupPages(new DramaEpisodeListDto { Cursor = "1", ItemList = [Ep(1, 2)] });
+        await SyncAsync();
+        await FillOwnerAsync();
+        await FillChannelOwnerAsync();
+        var channel = await _db.UserProfiles.FirstAsync(x => x.Id == _channel.Id);
+        channel.ExcludedDramaIds = ["333"];
+        await _db.SaveChangesAsync();
+        _tikTok.Setup(x => x.FetchDramaList(null, It.IsAny<string>(), It.IsAny<int>(), "0", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DramaListDto { HasMore = false, DramaList = [new DramaDto { DramaId = DramaId }, new DramaDto { DramaId = "222" }, new DramaDto { DramaId = "333" }] });
+
+        var result = await new SyncChannelMoviesCommandHandler(_db, _tikTok.Object, TimeProvider.System,
+                NullLogger<SyncChannelMoviesCommandHandler>.Instance)
+            .Handle(new SyncChannelMoviesCommand(Owner, channel.Id, TimeSpan.Zero), CancellationToken.None);
+
+        result.ShouldBe(new SyncChannelMoviesResult(Dramas: 3, Queued: 2, New: 1));
+        _db.OutboxEventTypes().Count(x => x == "MovieSyncRequestedIntegrationEvent").ShouldBe(2);
+        (await _db.UserProfiles.FirstAsync(x => x.Id == channel.Id)).MoviesSyncedAt.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ChannelSync_WhenTikTokFails_RecordsTheErrorOnTheChannelAndQueuesNothing()
+    {
+        await FillChannelOwnerAsync();
+        _tikTok.Setup(x => x.FetchDramaList(null, It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TikTokBlockedException("trang thử thách"));
+
+        var result = await new SyncChannelMoviesCommandHandler(_db, _tikTok.Object, TimeProvider.System,
+                NullLogger<SyncChannelMoviesCommandHandler>.Instance)
+            .Handle(new SyncChannelMoviesCommand(Owner, _channel.Id, TimeSpan.Zero), CancellationToken.None);
+
+        result.Queued.ShouldBe(0);
+        _db.OutboxEventTypes().ShouldBeEmpty();
+        (await _db.UserProfiles.FirstAsync(x => x.Id == _channel.Id)).MoviesSyncError.ShouldBe("trang thử thách");
+    }
+
+    [Test]
+    public async Task DeletingAMovie_RemembersTheDramaOnTheChannel()
+    {
+        SetupPages(new DramaEpisodeListDto { Cursor = "1", ItemList = [Ep(1, 2)] });
+        await SyncAsync();
+        await FillOwnerAsync();
+        await FillChannelOwnerAsync();
+        var movie = await _db.Works.SingleAsync(x => x.ExternalId == DramaId);
+        var user = new Mock<IUser>();
+        user.Setup(x => x.Id).Returns(Owner);
+
+        await new DeleteMovieCommandHandler(_db, user.Object, new EpisodeVideoStorer(_db, _tikTok.Object, Mock.Of<IVideoStorageRepository>(),
+                Mock.Of<ISecretProtector>(), Microsoft.Extensions.Options.Options.Create(new EpisodeVideoStoreOptions()),
+                new DramaFileCache(TimeProvider.System), NullLogger<EpisodeVideoStorer>.Instance))
+            .Handle(new DeleteMovieCommand(movie.Id), CancellationToken.None);
+
+        (await _db.UserProfiles.FirstAsync(x => x.Id == _channel.Id)).ExcludedDramaIds.ShouldBe([DramaId]);
     }
 
     [Test]

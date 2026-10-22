@@ -62,6 +62,9 @@ public class Episode : BaseAuditableEntity
 
     public string? ThumbnailUrl { get; set; }
 
+    /// <summary>Người dùng đã sửa tên/số tập: đồng bộ lại từ TikTok không ghi đè hai trường này.</summary>
+    public bool IsEdited { get; set; }
+
     /// <summary>Thời lượng tập phim (giây).</summary>
     public int? DurationSeconds { get; set; }
 

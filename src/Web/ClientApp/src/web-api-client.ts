@@ -4847,9 +4847,10 @@ export class MoviesClient {
      * Get Movie episodes
      * @param page (optional) 
      * @param pageSize (optional) 
+     * @param onlyIssues (optional) 
      * @return OK
      */
-    getMovieEpisodes(id: number, page: number | undefined, pageSize: number | undefined): Promise<PaginatedListOfMovieEpisodeDto> {
+    getMovieEpisodes(id: number, page: number | undefined, pageSize: number | undefined, onlyIssues: boolean | undefined): Promise<PaginatedListOfMovieEpisodeDto> {
         let url_ = this.baseUrl + "/api/Movies/{id}/episodes?";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -4862,6 +4863,10 @@ export class MoviesClient {
             throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
         else if (pageSize !== undefined)
             url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (onlyIssues === null)
+            throw new globalThis.Error("The parameter 'onlyIssues' cannot be null.");
+        else if (onlyIssues !== undefined)
+            url_ += "onlyIssues=" + encodeURIComponent("" + onlyIssues) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -5176,6 +5181,177 @@ export class MoviesClient {
             });
         }
         return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Update Movie episode
+     * @return No Content
+     */
+    updateMovieEpisode(id: number, episodeId: number, body: UpdateMovieEpisodeRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/Movies/{id}/episodes/{episodeId}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (episodeId === undefined || episodeId === null)
+            throw new globalThis.Error("The parameter 'episodeId' must be defined.");
+        url_ = url_.replace("{episodeId}", encodeURIComponent("" + episodeId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateMovieEpisode(_response);
+        });
+    }
+
+    protected processUpdateMovieEpisode(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Delete Movie episodes
+     * @return OK
+     */
+    deleteMovieEpisodes(id: number, body: DeleteMovieEpisodesRequest): Promise<number> {
+        let url_ = this.baseUrl + "/api/Movies/{id}/episodes/delete";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteMovieEpisodes(_response);
+        });
+    }
+
+    protected processDeleteMovieEpisodes(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Cleanup Movie episodes
+     * @return OK
+     */
+    cleanupMovieEpisodes(id: number, body: CleanupMovieEpisodesRequest): Promise<CleanupMovieEpisodesResult> {
+        let url_ = this.baseUrl + "/api/Movies/{id}/episodes/cleanup";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCleanupMovieEpisodes(_response);
+        });
+    }
+
+    protected processCleanupMovieEpisodes(response: Response): Promise<CleanupMovieEpisodesResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CleanupMovieEpisodesResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CleanupMovieEpisodesResult>(null as any);
     }
 
     /**
@@ -7113,6 +7289,108 @@ export class UserProfilesClient {
             });
         }
         return Promise.resolve<ChannelDramasDto>(null as any);
+    }
+
+    /**
+     * Set channel auto sync
+     * @return No Content
+     */
+    setChannelAutoSync(id: number, body: SetChannelAutoSyncRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/UserProfiles/{id}/auto-sync";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetChannelAutoSync(_response);
+        });
+    }
+
+    protected processSetChannelAutoSync(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * Request channel sync
+     * @return Accepted
+     */
+    requestChannelSync(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/UserProfiles/{id}/sync-movies";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRequestChannelSync(_response);
+        });
+    }
+
+    protected processRequestChannelSync(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 202) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
     }
 }
 
@@ -11418,6 +11696,149 @@ export interface ICheckStorageAccountResult {
     [key: string]: any;
 }
 
+export class CleanupMovieEpisodesRequest implements ICleanupMovieEpisodesRequest {
+    apply!: boolean;
+    removeBroken?: boolean;
+    renumber?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: ICleanupMovieEpisodesRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.removeBroken = true;
+            this.renumber = false;
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.apply = _data["apply"];
+            this.removeBroken = _data["removeBroken"] !== undefined ? _data["removeBroken"] : true;
+            this.renumber = _data["renumber"] !== undefined ? _data["renumber"] : false;
+        }
+    }
+
+    static fromJS(data: any): CleanupMovieEpisodesRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new CleanupMovieEpisodesRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["apply"] = this.apply;
+        data["removeBroken"] = this.removeBroken;
+        data["renumber"] = this.renumber;
+        return data;
+    }
+}
+
+export interface ICleanupMovieEpisodesRequest {
+    apply: boolean;
+    removeBroken?: boolean;
+    renumber?: boolean;
+
+    [key: string]: any;
+}
+
+export class CleanupMovieEpisodesResult implements ICleanupMovieEpisodesResult {
+    applied!: boolean;
+    duplicates!: number;
+    broken!: number;
+    conflicts!: number;
+    storageRetried!: number;
+    renumbered!: number;
+    details!: string[];
+
+    [key: string]: any;
+
+    constructor(data?: ICleanupMovieEpisodesResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.details = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.applied = _data["applied"];
+            this.duplicates = _data["duplicates"];
+            this.broken = _data["broken"];
+            this.conflicts = _data["conflicts"];
+            this.storageRetried = _data["storageRetried"];
+            this.renumbered = _data["renumbered"];
+            if (Array.isArray(_data["details"])) {
+                this.details = [] as any;
+                for (let item of _data["details"])
+                    this.details!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CleanupMovieEpisodesResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new CleanupMovieEpisodesResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["applied"] = this.applied;
+        data["duplicates"] = this.duplicates;
+        data["broken"] = this.broken;
+        data["conflicts"] = this.conflicts;
+        data["storageRetried"] = this.storageRetried;
+        data["renumbered"] = this.renumbered;
+        if (Array.isArray(this.details)) {
+            data["details"] = [];
+            for (let item of this.details)
+                data["details"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ICleanupMovieEpisodesResult {
+    applied: boolean;
+    duplicates: number;
+    broken: number;
+    conflicts: number;
+    storageRetried: number;
+    renumbered: number;
+    details: string[];
+
+    [key: string]: any;
+}
+
 export class CrawlPageDtoOfChapterDataDto implements ICrawlPageDtoOfChapterDataDto {
     items?: ChapterDataDto[];
     page?: number;
@@ -12514,6 +12935,65 @@ export interface ICreateWorkCommand {
     earnNow?: number;
     adCount?: number;
     paid?: number;
+
+    [key: string]: any;
+}
+
+export class DeleteMovieEpisodesRequest implements IDeleteMovieEpisodesRequest {
+    episodeIds!: number[];
+
+    [key: string]: any;
+
+    constructor(data?: IDeleteMovieEpisodesRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.episodeIds = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["episodeIds"])) {
+                this.episodeIds = [] as any;
+                for (let item of _data["episodeIds"])
+                    this.episodeIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): DeleteMovieEpisodesRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteMovieEpisodesRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.episodeIds)) {
+            data["episodeIds"] = [];
+            for (let item of this.episodeIds)
+                data["episodeIds"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IDeleteMovieEpisodesRequest {
+    episodeIds: number[];
 
     [key: string]: any;
 }
@@ -13790,8 +14270,12 @@ export interface IMovieDto {
 
 export class MovieEpisodeDto implements IMovieEpisodeDto {
     episodeNumber?: number;
+    nameRaw?: string | undefined;
     externalId?: string | undefined;
     videoUrl?: string | undefined;
+    isEdited?: boolean;
+    isDuplicate?: boolean;
+    isMissingSource?: boolean;
     languageCode?: string | undefined;
     streamUrl?: string | undefined;
     thumbnailUrl?: string | undefined;
@@ -13822,8 +14306,12 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
                     this[property] = _data[property];
             }
             this.episodeNumber = _data["episodeNumber"];
+            this.nameRaw = _data["nameRaw"];
             this.externalId = _data["externalId"];
             this.videoUrl = _data["videoUrl"];
+            this.isEdited = _data["isEdited"];
+            this.isDuplicate = _data["isDuplicate"];
+            this.isMissingSource = _data["isMissingSource"];
             this.languageCode = _data["languageCode"];
             this.streamUrl = _data["streamUrl"];
             this.thumbnailUrl = _data["thumbnailUrl"];
@@ -13852,8 +14340,12 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
                 data[property] = this[property];
         }
         data["episodeNumber"] = this.episodeNumber;
+        data["nameRaw"] = this.nameRaw;
         data["externalId"] = this.externalId;
         data["videoUrl"] = this.videoUrl;
+        data["isEdited"] = this.isEdited;
+        data["isDuplicate"] = this.isDuplicate;
+        data["isMissingSource"] = this.isMissingSource;
         data["languageCode"] = this.languageCode;
         data["streamUrl"] = this.streamUrl;
         data["thumbnailUrl"] = this.thumbnailUrl;
@@ -13871,8 +14363,12 @@ export class MovieEpisodeDto implements IMovieEpisodeDto {
 
 export interface IMovieEpisodeDto {
     episodeNumber?: number;
+    nameRaw?: string | undefined;
     externalId?: string | undefined;
     videoUrl?: string | undefined;
+    isEdited?: boolean;
+    isDuplicate?: boolean;
+    isMissingSource?: boolean;
     languageCode?: string | undefined;
     streamUrl?: string | undefined;
     thumbnailUrl?: string | undefined;
@@ -16048,6 +16544,54 @@ export interface ISetAppViewerVipRequest {
     [key: string]: any;
 }
 
+export class SetChannelAutoSyncRequest implements ISetChannelAutoSyncRequest {
+    enabled!: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: ISetChannelAutoSyncRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.enabled = _data["enabled"];
+        }
+    }
+
+    static fromJS(data: any): SetChannelAutoSyncRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetChannelAutoSyncRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["enabled"] = this.enabled;
+        return data;
+    }
+}
+
+export interface ISetChannelAutoSyncRequest {
+    enabled: boolean;
+
+    [key: string]: any;
+}
+
 export class SetMovieAccessRequest implements ISetMovieAccessRequest {
     useDefault!: boolean;
     adFromEpisode!: number | undefined;
@@ -17982,6 +18526,58 @@ export interface IUpdateMonetizationSettingsCommand {
     [key: string]: any;
 }
 
+export class UpdateMovieEpisodeRequest implements IUpdateMovieEpisodeRequest {
+    episodeNumber!: number;
+    name!: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateMovieEpisodeRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.episodeNumber = _data["episodeNumber"];
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): UpdateMovieEpisodeRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateMovieEpisodeRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["episodeNumber"] = this.episodeNumber;
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface IUpdateMovieEpisodeRequest {
+    episodeNumber: number;
+    name: string | undefined;
+
+    [key: string]: any;
+}
+
 export class UpdatePromptCommand implements IUpdatePromptCommand {
     id?: number;
     promptTypeId?: number;
@@ -18619,6 +19215,9 @@ export class UserProfileDto implements IUserProfileDto {
     heartCount?: number;
     videoCount?: number;
     lastFetchedAt?: Date | undefined;
+    autoSyncMovies?: boolean;
+    moviesSyncedAt?: Date | undefined;
+    moviesSyncError?: string | undefined;
     userProfileType?: UserProfileTypeDto | undefined;
     id?: number;
     title?: string | undefined;
@@ -18654,6 +19253,9 @@ export class UserProfileDto implements IUserProfileDto {
             this.heartCount = _data["heartCount"];
             this.videoCount = _data["videoCount"];
             this.lastFetchedAt = _data["lastFetchedAt"] ? new Date(_data["lastFetchedAt"].toString()) : undefined as any;
+            this.autoSyncMovies = _data["autoSyncMovies"];
+            this.moviesSyncedAt = _data["moviesSyncedAt"] ? new Date(_data["moviesSyncedAt"].toString()) : undefined as any;
+            this.moviesSyncError = _data["moviesSyncError"];
             this.userProfileType = _data["userProfileType"] ? UserProfileTypeDto.fromJS(_data["userProfileType"]) : undefined as any;
             this.id = _data["id"];
             this.title = _data["title"];
@@ -18687,6 +19289,9 @@ export class UserProfileDto implements IUserProfileDto {
         data["heartCount"] = this.heartCount;
         data["videoCount"] = this.videoCount;
         data["lastFetchedAt"] = this.lastFetchedAt ? this.lastFetchedAt.toISOString() : undefined as any;
+        data["autoSyncMovies"] = this.autoSyncMovies;
+        data["moviesSyncedAt"] = this.moviesSyncedAt ? this.moviesSyncedAt.toISOString() : undefined as any;
+        data["moviesSyncError"] = this.moviesSyncError;
         data["userProfileType"] = this.userProfileType ? this.userProfileType.toJSON() : undefined as any;
         data["id"] = this.id;
         data["title"] = this.title;
@@ -18709,6 +19314,9 @@ export interface IUserProfileDto {
     heartCount?: number;
     videoCount?: number;
     lastFetchedAt?: Date | undefined;
+    autoSyncMovies?: boolean;
+    moviesSyncedAt?: Date | undefined;
+    moviesSyncError?: string | undefined;
     userProfileType?: UserProfileTypeDto | undefined;
     id?: number;
     title?: string | undefined;

@@ -339,6 +339,22 @@ public class EpisodeVideoStorer
             .OrderBy(x => x.Priority).ThenBy(x => x.Id)
             .ToList();
 
+    /// <summary>Cho các tập lưu video lỗi thử lại: xoá lỗi, đặt lại số lần thử và mốc xếp hàng (lượt quét sau sẽ nhận).</summary>
+    public async Task ReleaseAndRetryAsync(IApplicationDbContext context, IReadOnlyCollection<int> episodeIds, CancellationToken cancellationToken)
+    {
+        if (episodeIds.Count == 0) return;
+
+        var episodes = await context.Episodes.Where(x => episodeIds.Contains(x.Id) && x.StreamUrl == null).ToListAsync(cancellationToken);
+        foreach (var episode in episodes)
+        {
+            episode.StorageAttempts = 0;
+            episode.StorageError = null;
+            episode.QueuedAt = null;
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     /// <summary>
     /// Gỡ file video đã lưu của các tập (trước khi xoá tập hoặc thay link phát): xoá file trong bucket, trả lại dung lượng
     /// cho tài khoản và xoá thông tin lưu trữ trên tập. Chưa gọi SaveChanges. Xoá file lỗi thì chỉ ghi log — file mồ côi
