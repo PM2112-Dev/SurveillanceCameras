@@ -98,6 +98,12 @@ public record TytChapterRequest
     /// <summary>Nội dung chương, mỗi đoạn một dòng.</summary>
     public required string Content { get; init; }
 
-    /// <summary>Số thứ tự chương trong truyện.</summary>
+    /// <summary>Số thứ tự chương trong truyện (1–9999).</summary>
     public int Number { get; init; }
+
+    /// <summary>Công khai cho mọi người (mặc định); <c>false</c> là "Chỉ mình tôi".</summary>
+    public bool Published { get; init; } = true;
 }
+
+/// <summary>Thể loại của TYT (trang /the-loai).</summary>
+public record TytGenreDto(string Slug, string Title);

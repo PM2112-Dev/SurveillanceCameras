@@ -90,7 +90,13 @@ export function StoryChapters({ storyId }) {
             aria-busy={actionBusy === 'upload'}
             title="Đăng các chương đã biên tập xong lên TYT theo thứ tự (cách nhau một khoảng)"
             onClick={() => runAction('upload', () => worksClient.requestTytChapterUploads(storyId, undefined),
-              count => (count > 0 ? `Đã đưa ${count} chương vào hàng đợi đăng lên TYT.` : 'Không có chương nào cần đăng (đã đăng hết hoặc chưa biên tập xong).'))}
+              count => {
+                // Kết quả đăng nằm ở nền: tải lại sau ít giây để thấy "Đã đăng" hoặc lỗi của từng chương.
+                [6000, 20000, 60000].forEach(ms => setTimeout(() => setReloadKey(key => key + 1), ms));
+                return count > 0
+                  ? `Đã đưa ${count} chương vào hàng đợi đăng lên TYT — kết quả hiện ở cột TYT (tự làm mới).`
+                  : 'Không có chương nào để đăng: chương phải ở trạng thái “Đã biên tập”, đứng liền sau các chương đã đăng, và chưa có lỗi đăng.';
+              })}
           >
             {actionBusy !== 'upload' && <Upload size={16} aria-hidden="true" />} Đăng chương lên TYT
           </button>
@@ -174,6 +180,9 @@ export function StoryChapters({ storyId }) {
                       : chapter.tytUploadError
                         ? <span className="status-badge danger" title={chapter.tytUploadError}>Lỗi đăng</span>
                         : '—'}
+                    {chapter.tytUploadError && !chapter.isUploaded && (
+                      <span className="cell-sub clamp-2 error">{chapter.tytUploadError}</span>
+                    )}
                   </td>
                 </tr>
               ))}

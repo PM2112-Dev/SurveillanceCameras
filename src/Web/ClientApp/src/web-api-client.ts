@@ -3061,6 +3061,60 @@ export class CategoriesClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    /**
+     * Import TYT categories
+     * @return OK
+     */
+    importTytCategories(accountId: number): Promise<ImportTytCategoriesResult> {
+        let url_ = this.baseUrl + "/api/Categories/import-tyt?";
+        if (accountId === undefined || accountId === null)
+            throw new globalThis.Error("The parameter 'accountId' must be defined and cannot be null.");
+        else
+            url_ += "accountId=" + encodeURIComponent("" + accountId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processImportTytCategories(_response);
+        });
+    }
+
+    protected processImportTytCategories(response: Response): Promise<ImportTytCategoriesResult> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ImportTytCategoriesResult.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ImportTytCategoriesResult>(null as any);
+    }
 }
 
 export class EpisodesClient {
@@ -13258,6 +13312,77 @@ export interface IHttpValidationProblemDetails {
     detail?: string | undefined;
     instance?: string | undefined;
     errors?: { [key: string]: string[]; };
+
+    [key: string]: any;
+}
+
+export class ImportTytCategoriesResult implements IImportTytCategoriesResult {
+    total!: number;
+    added!: number;
+    existing!: number;
+    addedTitles!: string[];
+
+    [key: string]: any;
+
+    constructor(data?: IImportTytCategoriesResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.addedTitles = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.total = _data["total"];
+            this.added = _data["added"];
+            this.existing = _data["existing"];
+            if (Array.isArray(_data["addedTitles"])) {
+                this.addedTitles = [] as any;
+                for (let item of _data["addedTitles"])
+                    this.addedTitles!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ImportTytCategoriesResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new ImportTytCategoriesResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["total"] = this.total;
+        data["added"] = this.added;
+        data["existing"] = this.existing;
+        if (Array.isArray(this.addedTitles)) {
+            data["addedTitles"] = [];
+            for (let item of this.addedTitles)
+                data["addedTitles"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IImportTytCategoriesResult {
+    total: number;
+    added: number;
+    existing: number;
+    addedTitles: string[];
 
     [key: string]: any;
 }

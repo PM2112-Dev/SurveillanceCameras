@@ -142,24 +142,53 @@ public sealed class TytRepository : ITytRepository
         // SendAsync ném TytException khi chưa đăng nhập / hết phiên / TYT lỗi 5xx.
         => await SendAsync(context, "mystory", null, false, cancellationToken);
 
-    public Task<string?> CreateChapterAsync(TytContext context, string storyId, TytChapterRequest request,
+    public async Task<IReadOnlyList<TytGenreDto>> GetGenresAsync(TytContext context, CancellationToken cancellationToken = default)
+    {
+        var response = await SendAsync(context, "the-loai", null, false, cancellationToken);
+        var genres = TytHtml.ParseGenres(response.Body);
+        if (genres.Count == 0)
+            throw new TytException("Không đọc được danh sách thể loại từ TYT (giao diện trang /the-loai có thể đã đổi).");
+
+        return genres;
+    }
+
+    public async Task<string?> CreateChapterAsync(TytContext context, string storyId, TytChapterRequest request,
         CancellationToken cancellationToken = default)
     {
-        RequireStoryId(storyId);
-        throw ChapterFormNotSurveyed();
+        var id = RequireStoryId(storyId);
+        var title = request.Title.Trim();
+        if (title.Length is < 1 or > 200) title = title.Length == 0 ? $"Chương {request.Number}" : title[..200];
+        if (request.Number is < 1 or > 9999) throw new TytException($"Số chương {request.Number} ngoài khoảng 1–9999 của TYT.");
+
+        var content = TytHtml.DescriptionToHtml(request.Content);
+        if (content.Length == 0) throw new TytException("Chương không có nội dung để đăng.");
+
+        // Form "Thêm chương" của TYT gửi ajax tới mystory/{id}/chapters/add (khảo sát 2026-10-22).
+        var response = await SendAsync(context, $"mystory/{id}/chapters/add",
+        [
+            new("title", title),
+            new("number", request.Number.ToString()),
+            new("content", content),
+            new("published", request.Published ? "1" : "0")
+        ], ajax: true, cancellationToken);
+
+        var (success, message, redirectUrl) = TytHtml.ParseChapterResult(response.Body);
+        if (!success)
+        {
+            throw new TytException($"TYT không đăng chương {request.Number}: " +
+                                   (message ?? $"phản hồi không hợp lệ (HTTP {response.StatusCode})"));
+        }
+
+        return TytHtml.ChapterIdFromUrl(redirectUrl, id);
     }
 
     public Task UpdateChapterAsync(TytContext context, string storyId, string chapterId, TytChapterRequest request,
         CancellationToken cancellationToken = default)
     {
         RequireStoryId(storyId);
-        throw ChapterFormNotSurveyed();
+        // Endpoint sửa chương chưa khảo sát được (tài khoản TYT chưa có chương nào để xem form sửa) — không đoán để tránh ghi sai.
+        throw new TytException("Chưa hỗ trợ sửa chương đã đăng trên TYT (chưa khảo sát form sửa chương).");
     }
-
-    // Form thêm/sửa chương của TYT chưa được khảo sát (cần trình duyệt đã đăng nhập TYT để xem endpoint và các trường).
-    // Báo lỗi rõ ràng thay vì đoán endpoint và có thể đăng sai.
-    private static TytException ChapterFormNotSurveyed()
-        => new("Chưa hỗ trợ đăng chương lên TYT: chưa khảo sát form thêm chương của TYT (endpoint và các trường).");
 
     private async Task<BrowserFetchResponse> SendAsync(TytContext context, string path,
         IReadOnlyList<KeyValuePair<string, string>>? form, bool ajax, CancellationToken cancellationToken)

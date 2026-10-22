@@ -35,6 +35,9 @@ public interface ITytRepository
     /// <exception cref="Common.Exceptions.TytException">Chưa đăng nhập, phiên hết hạn hoặc TYT từ chối/lỗi.</exception>
     Task CheckSessionAsync(TytContext context, CancellationToken cancellationToken = default);
 
+    /// <summary>Danh sách thể loại của TYT (đọc từ trang /the-loai).</summary>
+    Task<IReadOnlyList<TytGenreDto>> GetGenresAsync(TytContext context, CancellationToken cancellationToken = default);
+
     /// <summary>Đăng chương mới vào truyện.</summary>
     /// <returns>Id chương vừa tạo trên TYT; <c>null</c> nếu TYT không trả về (chương vẫn đã được đăng).</returns>
     Task<string?> CreateChapterAsync(TytContext context, string storyId, TytChapterRequest request,
