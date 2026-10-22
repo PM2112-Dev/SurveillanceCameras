@@ -1842,6 +1842,12 @@ namespace SurveillanceCameras.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("TytApprovedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("TytEarningNote")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("TytEarningSyncedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("TytError")
                         .HasColumnType("text");
 

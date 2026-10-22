@@ -115,6 +115,22 @@ export function StoryDetail() {
               )}
               {tytMessage && <small className="cell-sub">{tytMessage}</small>}
             </dd>
+            {info.tytStage === 4 && (
+              <>
+                <dt>Thu nhập TYT</dt>
+                <dd>
+                  {info.isEarning ? <span className="status-badge ok">Đang bật kiếm tiền</span> : 'Chưa đủ điều kiện nhận thưởng'}
+                  {info.isEarning && (
+                    <small className="cell-sub">
+                      Tổng {Number(info.earnCount ?? 0).toLocaleString('vi-VN')} đ · đang có {Number(info.earnNow ?? 0).toLocaleString('vi-VN')} đ ·
+                      {' '}đã thanh toán {Number(info.paid ?? 0).toLocaleString('vi-VN')} đ · {Number(info.adCount ?? 0).toLocaleString('vi-VN')} lượt quảng cáo
+                    </small>
+                  )}
+                  {info.tytEarningNote && <small className="cell-sub">{info.tytEarningNote}</small>}
+                  {info.tytEarningSyncedAt && <small className="cell-sub">Đồng bộ lúc {info.tytEarningSyncedAt.toLocaleString('vi-VN')}</small>}
+                </dd>
+              </>
+            )}
             <dt>Xuất bản TYT</dt>
             <dd>
               {TYT_STAGE_LABEL[info.tytStage] ?? '—'}

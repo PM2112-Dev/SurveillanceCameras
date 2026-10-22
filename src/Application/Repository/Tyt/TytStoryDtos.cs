@@ -110,3 +110,13 @@ public record TytGenreDto(string Slug, string Title);
 
 /// <summary>Một chương trong danh sách chương của truyện trên TYT.</summary>
 public record TytChapterItemDto(string Id, int? Number, string? Title);
+
+/// <summary>Thu nhập của truyện (trang Nhận Thưởng), đơn vị đ.</summary>
+/// <param name="Eligible">Truyện đủ điều kiện nhận thưởng (trang không còn báo "Không đủ điều kiện").</param>
+/// <param name="Total">Tổng thu nhập.</param>
+/// <param name="Available">Đang có, rút được.</param>
+/// <param name="Withdrawing">Đang rút.</param>
+/// <param name="Paid">Đã thanh toán.</param>
+/// <param name="FromAds">Thu nhập từ quảng cáo.</param>
+/// <param name="AdViews">Số lượt quảng cáo.</param>
+public record TytEarningDto(bool Eligible, long? Total, long? Available, long? Withdrawing, long? Paid, long? FromAds, long? AdViews);

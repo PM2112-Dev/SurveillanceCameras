@@ -19689,6 +19689,8 @@ export class WorkDto implements IWorkDto {
     tytStageNote?: string | undefined;
     tytPublishRequestedAt?: Date | undefined;
     tytApprovedAt?: Date | undefined;
+    tytEarningSyncedAt?: Date | undefined;
+    tytEarningNote?: string | undefined;
     description?: string | undefined;
     author?: string | undefined;
     isFull?: boolean;
@@ -19739,6 +19741,8 @@ export class WorkDto implements IWorkDto {
             this.tytStageNote = _data["tytStageNote"];
             this.tytPublishRequestedAt = _data["tytPublishRequestedAt"] ? new Date(_data["tytPublishRequestedAt"].toString()) : undefined as any;
             this.tytApprovedAt = _data["tytApprovedAt"] ? new Date(_data["tytApprovedAt"].toString()) : undefined as any;
+            this.tytEarningSyncedAt = _data["tytEarningSyncedAt"] ? new Date(_data["tytEarningSyncedAt"].toString()) : undefined as any;
+            this.tytEarningNote = _data["tytEarningNote"];
             this.description = _data["description"];
             this.author = _data["author"];
             this.isFull = _data["isFull"];
@@ -19787,6 +19791,8 @@ export class WorkDto implements IWorkDto {
         data["tytStageNote"] = this.tytStageNote;
         data["tytPublishRequestedAt"] = this.tytPublishRequestedAt ? this.tytPublishRequestedAt.toISOString() : undefined as any;
         data["tytApprovedAt"] = this.tytApprovedAt ? this.tytApprovedAt.toISOString() : undefined as any;
+        data["tytEarningSyncedAt"] = this.tytEarningSyncedAt ? this.tytEarningSyncedAt.toISOString() : undefined as any;
+        data["tytEarningNote"] = this.tytEarningNote;
         data["description"] = this.description;
         data["author"] = this.author;
         data["isFull"] = this.isFull;
@@ -19824,6 +19830,8 @@ export interface IWorkDto {
     tytStageNote?: string | undefined;
     tytPublishRequestedAt?: Date | undefined;
     tytApprovedAt?: Date | undefined;
+    tytEarningSyncedAt?: Date | undefined;
+    tytEarningNote?: string | undefined;
     description?: string | undefined;
     author?: string | undefined;
     isFull?: boolean;

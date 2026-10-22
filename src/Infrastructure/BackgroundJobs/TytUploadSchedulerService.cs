@@ -7,6 +7,7 @@ using SurveillanceCameras.Application.Local.Episodes.Commands.ScheduleTytUploads
 using SurveillanceCameras.Application.Local.Tyt.Commands.ActivateWaitingTytStories;
 using SurveillanceCameras.Application.Local.Tyt.Commands.AdvanceTytPublish;
 using SurveillanceCameras.Application.Local.Tyt.Commands.CheckTytApprovals;
+using SurveillanceCameras.Application.Local.Tyt.Commands.SyncTytEarnings;
 
 namespace SurveillanceCameras.Infrastructure.BackgroundJobs;
 
@@ -56,6 +57,8 @@ public sealed class TytUploadSchedulerService : BackgroundService
                 {
                     lastApprovalCheck = now;
                     await sender.Send(new CheckTytApprovalsCommand(), stoppingToken);
+                    // Truyện vừa được duyệt (kể cả ở lượt này) xem đủ điều kiện nhận thưởng chưa; đủ thì bật kiếm tiền và lấy thu nhập.
+                    await sender.Send(new SyncTytEarningsCommand(), stoppingToken);
                 }
 
                 await sender.Send(new ScheduleTytUploadsCommand(timeZone, Math.Max(1, _options.ImmediateBatchSize)), stoppingToken);

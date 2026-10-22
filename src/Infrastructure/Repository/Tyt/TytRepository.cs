@@ -152,6 +152,13 @@ public sealed class TytRepository : ITytRepository
         return genres;
     }
 
+    public async Task<TytEarningDto> GetEarningAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)
+    {
+        var id = RequireStoryId(storyId);
+        var response = await SendAsync(context, $"mystory/{id}/earning", null, false, cancellationToken);
+        return TytHtml.ParseEarning(response.Body);
+    }
+
     public async Task<bool> IsStoryPublicAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)
     {
         var id = RequireStoryId(storyId);
@@ -185,7 +192,7 @@ public sealed class TytRepository : ITytRepository
         if (title.Length is < 1 or > 200) title = title.Length == 0 ? $"Chương {request.Number}" : title[..200];
         if (request.Number is < 1 or > 9999) throw new TytException($"Số chương {request.Number} ngoài khoảng 1–9999 của TYT.");
 
-        var content = TytHtml.DescriptionToHtml(request.Content);
+        var content = TytHtml.ChapterContentToHtml(request.Content);
         if (content.Length == 0) throw new TytException("Chương không có nội dung để đăng.");
 
         // Form "Thêm chương" của TYT gửi ajax tới mystory/{id}/chapters/add (khảo sát 2026-10-22).

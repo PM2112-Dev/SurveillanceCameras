@@ -116,6 +116,29 @@ public static partial class TytHtml
         return chapters;
     }
 
+    /// <summary>
+    /// Trang Nhận Thưởng của truyện. Chưa đủ điều kiện thì trang chỉ báo "Không đủ điều kiện mở nhận thưởng" (chưa có số liệu);
+    /// đủ điều kiện thì đọc các ô thống kê (Tổng, Đang Có, Đang Rút, Đã Thanh Toán, Bởi Quảng Cáo, Số Lượt QC) — cách đọc theo
+    /// công cụ StoriesAuto.
+    /// </summary>
+    public static TytEarningDto ParseEarning(string html)
+    {
+        var document = Parse(html);
+        var text = Clean(document.Body?.TextContent);
+        var locked = text.Contains("không đủ điều kiện", StringComparison.OrdinalIgnoreCase);
+
+        var stats = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        foreach (var box in document.QuerySelectorAll(".form-group.row .alert .form-group"))
+        {
+            var label = Clean(box.QuerySelector("span")?.TextContent).TrimEnd(':').Trim();
+            var digits = new string(Clean(box.QuerySelector(".text-primary")?.TextContent).Where(char.IsDigit).ToArray());
+            if (label.Length > 0 && long.TryParse(digits, out var value)) stats[label] = value;
+        }
+
+        long? Get(string label) => stats.TryGetValue(label, out var v) ? v : null;
+        return new TytEarningDto(!locked, Get("Tổng"), Get("Đang Có"), Get("Đang Rút"), Get("Đã Thanh Toán"), Get("Bởi Quảng Cáo"), Get("Số Lượt QC"));
+    }
+
     /// <summary>Trang có nút đăng xuất nghĩa là đang đăng nhập.</summary>
     public static bool IsLoggedIn(string html) => html.Contains("/user/logout", StringComparison.OrdinalIgnoreCase);
 
@@ -221,6 +244,10 @@ public static partial class TytHtml
     }
 
     /// <summary>Giới thiệu dạng văn bản (mỗi dòng một đoạn) → HTML cho trình soạn thảo của TYT.</summary>
+    /// <summary>Nội dung chương gửi lên TYT: giữ thứ tự dòng, mỗi xuống dòng thành <c>&lt;br&gt;</c> (cách của công cụ đăng StoriesAuto đang chạy ổn với TYT).</summary>
+    public static string ChapterContentToHtml(string? text)
+        => string.IsNullOrWhiteSpace(text) ? string.Empty : EscapeHtml(text.Replace("\r\n", "\n").Trim()).Replace("\n", "<br>");
+
     public static string DescriptionToHtml(string? text)
     {
         if (string.IsNullOrWhiteSpace(text)) return string.Empty;

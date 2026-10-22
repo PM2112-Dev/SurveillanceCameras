@@ -87,4 +87,36 @@ public class TytChapterAndGenreHtmlTests
             ("6937d000dac07c1fa72c5499", (int?)1), ("6937d000dac07c1fa72c54aa", (int?)12)
         }));
     }
+
+    [Test]
+    public void ChapterContent_KeepsLinesWithBrTags_AndEscapesHtml()
+    {
+        Assert.That(TytHtml.ChapterContentToHtml("Đoạn một.\r\nĐoạn <hai> & ba.\n\nĐoạn bốn.\n"),
+            Is.EqualTo("Đoạn một.<br>Đoạn &lt;hai&gt; &amp; ba.<br><br>Đoạn bốn."));
+        Assert.That(TytHtml.ChapterContentToHtml("  \n "), Is.Empty);
+    }
+
+    [Test]
+    public void Earning_LockedPageHasNoFigures_EligiblePageIsParsedLikeStoriesAuto()
+    {
+        var locked = TytHtml.ParseEarning("<main><h5>Nhận Thưởng</h5><div>Không đủ điều kiện mở nhận thưởng. Vui lòng quay lại sau</div></main>");
+        Assert.That(locked.Eligible, Is.False);
+        Assert.That(locked.Total, Is.Null);
+
+        const string html = """
+            <main><div class="form-group row"><div class="alert">
+              <div class="form-group"><span>Tổng:</span> <b class="text-primary">1.250 đ</b></div>
+              <div class="form-group"><span>Đang Có:</span> <b class="text-primary">300 đ</b></div>
+              <div class="form-group"><span>Đang Rút:</span> <b class="text-primary">50 đ</b></div>
+              <div class="form-group"><span>Đã Thanh Toán:</span> <b class="text-primary">900 đ</b></div>
+              <div class="form-group"><span>Bởi Quảng Cáo:</span> <b class="text-primary">1.000 đ</b></div>
+              <div class="form-group"><span>Số Lượt QC:</span> <b class="text-primary">412</b></div>
+            </div></div></main>
+            """;
+        var earning = TytHtml.ParseEarning(html);
+
+        Assert.That(earning.Eligible, Is.True);
+        Assert.That((earning.Total, earning.Available, earning.Withdrawing, earning.Paid, earning.FromAds, earning.AdViews),
+            Is.EqualTo(((long?)1250, (long?)300, (long?)50, (long?)900, (long?)1000, (long?)412)));
+    }
 }

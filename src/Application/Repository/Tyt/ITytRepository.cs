@@ -62,4 +62,7 @@ public interface ITytRepository
 
     /// <summary>Các chương của truyện trên TYT (mọi trang), dùng để tìm Id chương và tránh đăng trùng số chương.</summary>
     Task<IReadOnlyList<TytChapterItemDto>> GetChaptersAsync(TytContext context, string storyId, CancellationToken cancellationToken = default);
+
+    /// <summary>Thu nhập và điều kiện nhận thưởng của truyện (trang Nhận Thưởng). Chưa đủ điều kiện thì <see cref="TytEarningDto.Eligible"/> là <c>false</c>.</summary>
+    Task<TytEarningDto> GetEarningAsync(TytContext context, string storyId, CancellationToken cancellationToken = default);
 }

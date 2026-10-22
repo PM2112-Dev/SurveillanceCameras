@@ -76,6 +76,12 @@ public class Work : BaseAuditableEntity
     /// <summary>Lúc gửi yêu cầu công khai lên TYT.</summary>
     public DateTimeOffset? TytPublishRequestedAt { get; set; }
 
+    /// <summary>Lần gần nhất đồng bộ thu nhập từ TYT.</summary>
+    public DateTimeOffset? TytEarningSyncedAt { get; set; }
+
+    /// <summary>Kết quả đồng bộ thu nhập gần nhất (chưa đủ điều kiện, đang rút, lỗi…).</summary>
+    public string? TytEarningNote { get; set; }
+
     /// <summary>Lúc phát hiện TYT đã duyệt truyện.</summary>
     public DateTimeOffset? TytApprovedAt { get; set; }
 

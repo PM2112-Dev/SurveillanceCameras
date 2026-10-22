@@ -41,6 +41,10 @@ public class WorkDto : BaseDto
     public DateTimeOffset? TytPublishRequestedAt { get; init; }
 
     public DateTimeOffset? TytApprovedAt { get; init; }
+
+    public DateTimeOffset? TytEarningSyncedAt { get; init; }
+
+    public string? TytEarningNote { get; init; }
     
     public string? Description { get; init; }
     
