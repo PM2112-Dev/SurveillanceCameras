@@ -107,3 +107,6 @@ public record TytChapterRequest
 
 /// <summary>Thể loại của TYT (trang /the-loai).</summary>
 public record TytGenreDto(string Slug, string Title);
+
+/// <summary>Một chương trong danh sách chương của truyện trên TYT.</summary>
+public record TytChapterItemDto(string Id, int? Number, string? Title);

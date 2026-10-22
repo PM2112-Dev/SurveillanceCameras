@@ -152,6 +152,31 @@ public sealed class TytRepository : ITytRepository
         return genres;
     }
 
+    public async Task<bool> IsStoryPublicAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)
+    {
+        var id = RequireStoryId(storyId);
+        var response = await SendAsync(context, $"mystory/{id}/publish", null, false, cancellationToken);
+        return TytHtml.IsPublishedPublic(response.Body);
+    }
+
+    public async Task<IReadOnlyList<TytChapterItemDto>> GetChaptersAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)
+    {
+        var id = RequireStoryId(storyId);
+        var chapters = new List<TytChapterItemDto>();
+        var seen = new HashSet<string>();
+
+        for (var page = 1; page <= MaxListPages; page++)
+        {
+            var response = await SendAsync(context, $"mystory/{id}/chapters" + (page > 1 ? $"?page={page}" : ""), null, false, cancellationToken);
+            var added = TytHtml.ParseChapterList(response.Body).Where(x => seen.Add(x.Id)).ToList();
+            if (added.Count == 0) break;   // hết trang (hoặc TYT trả lại trang cũ)
+
+            chapters.AddRange(added);
+        }
+
+        return chapters;
+    }
+
     public async Task<string?> CreateChapterAsync(TytContext context, string storyId, TytChapterRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -179,7 +204,17 @@ public sealed class TytRepository : ITytRepository
                                    (message ?? $"phản hồi không hợp lệ (HTTP {response.StatusCode})"));
         }
 
-        return TytHtml.ChapterIdFromUrl(redirectUrl, id);
+        if (TytHtml.ChapterIdFromUrl(redirectUrl, id) is { } chapterId) return chapterId;
+
+        // TYT không luôn trả đường dẫn chương: tìm trong danh sách chương theo số chương để vẫn lưu được Id.
+        try
+        {
+            return (await GetChaptersAsync(context, id, cancellationToken)).FirstOrDefault(x => x.Number == request.Number)?.Id;
+        }
+        catch (TytException)
+        {
+            return null;   // chương đã đăng; chỉ thiếu Id
+        }
     }
 
     public async Task<string?> RequestPublishAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)

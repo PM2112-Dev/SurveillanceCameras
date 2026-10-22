@@ -57,4 +57,34 @@ public class TytChapterAndGenreHtmlTests
         Assert.That(TytHtml.PublicVisibilityValue(html), Is.EqualTo("25"));
         Assert.That(TytHtml.PublicVisibilityValue("<p>không có ô chọn</p>"), Is.Null);
     }
+
+    [Test]
+    public void PublishPage_IsPublic_OnlyWhenTheSelectedOptionIsPublic()
+    {
+        const string priv = """<select id="published"><option value="11" selected>Chỉ Mình Tôi</option><option value="25">Công Khai - Mọi Người</option></select>""";
+        const string pub = """<select id="published"><option value="11">Chỉ Mình Tôi</option><option value="25" selected>Công Khai - Mọi Người</option></select>""";
+
+        Assert.That(TytHtml.IsPublishedPublic(priv), Is.False);
+        Assert.That(TytHtml.IsPublishedPublic(pub), Is.True);
+        Assert.That(TytHtml.IsPublishedPublic("<p>không có ô chọn</p>"), Is.False);
+    }
+
+    [Test]
+    public void ChapterList_ReadsIdsAndNumbersFromTheEditLinks()
+    {
+        const string html = """
+            <table><tbody>
+              <tr><td>1</td><td><a href="/mystory/6937c842dac07c1fa72c5482/chapters/6937d000dac07c1fa72c5499/edit">Chương mở đầu</a></td><td>Menu</td></tr>
+              <tr><td> 12 </td><td><a href="/mystory/6937c842dac07c1fa72c5482/chapters/6937d000dac07c1fa72c54aa/edit">Chương mười hai</a></td><td>Menu</td></tr>
+              <tr><td>12</td><td><a href="/mystory/6937c842dac07c1fa72c5482/chapters/6937d000dac07c1fa72c54aa/edit">Trùng</a></td></tr>
+            </tbody></table>
+            """;
+
+        var chapters = TytHtml.ParseChapterList(html);
+
+        Assert.That(chapters.Select(x => (x.Id, x.Number)), Is.EqualTo(new[]
+        {
+            ("6937d000dac07c1fa72c5499", (int?)1), ("6937d000dac07c1fa72c54aa", (int?)12)
+        }));
+    }
 }

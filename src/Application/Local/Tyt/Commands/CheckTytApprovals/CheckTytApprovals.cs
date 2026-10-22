@@ -7,8 +7,8 @@ using SurveillanceCameras.Domain.Enums;
 namespace SurveillanceCameras.Application.Local.Tyt.Commands.CheckTytApprovals;
 
 /// <summary>
-/// Chạy định kỳ: kiểm tra TYT đã duyệt (công khai) các truyện đang chờ chưa. Mỗi tài khoản chỉ tốn một request — đọc danh
-/// sách truyện công khai của tài khoản. Truyện có trong danh sách thì chuyển sang <see cref="TytStage.Approved"/> để bắt đầu
+/// Chạy định kỳ: kiểm tra TYT đã duyệt (công khai) các truyện đang chờ chưa. Mỗi truyện một request — đọc ô chế độ hiển thị ở trang Xuất bản
+/// của truyện. Đang là "Công Khai" thì chuyển sang <see cref="TytStage.Approved"/> để bắt đầu
 /// đăng các chương còn lại theo lịch. Phiên đăng nhập lỗi thì bỏ qua cả tài khoản tới lượt kiểm tra sau.
 /// </summary>
 /// <returns>Số truyện vừa được duyệt.</returns>
@@ -39,21 +39,32 @@ public class CheckTytApprovalsCommandHandler : IRequestHandler<CheckTytApprovals
         var approved = 0;
         foreach (var group in pending.GroupBy(x => (x.CreatedBy, AccountId: x.AccountId!.Value)))
         {
-            HashSet<string> publicIds;
+            TytContext context;
             try
             {
-                var context = await TytAccounts.ContextAsync(_context, group.Key.AccountId, group.Key.CreatedBy, cancellationToken);
-                publicIds = (await _tyt.GetStoriesAsync(context, TytStoryVisibility.Public, cancellationToken)).Select(x => x.Id).ToHashSet();
+                context = await TytAccounts.ContextAsync(_context, group.Key.AccountId, group.Key.CreatedBy, cancellationToken);
             }
             catch (TytException ex)
             {
-                _logger.LogWarning("Tài khoản {AccountId}: kiểm tra duyệt truyện lỗi: {Error}", group.Key.AccountId, ex.Message);
                 foreach (var work in group) work.TytStageNote = $"Chưa kiểm tra được TYT đã duyệt chưa: {ex.Message}";
                 continue;
             }
 
-            foreach (var work in group.Where(x => publicIds.Contains(x.TytStoryId!)))
+            foreach (var work in group)
             {
+                try
+                {
+                    // Trang Xuất bản của truyện: chế độ hiển thị chuyển sang "Công Khai" khi TYT đã duyệt.
+                    if (!await _tyt.IsStoryPublicAsync(context, work.TytStoryId!, cancellationToken)) continue;
+                }
+                catch (TytException ex)
+                {
+                    // Phiên hết hạn / TYT lỗi: bỏ qua cả tài khoản tới lượt kiểm tra sau, không gọi tiếp.
+                    _logger.LogWarning("Tài khoản {AccountId}: kiểm tra duyệt truyện lỗi: {Error}", group.Key.AccountId, ex.Message);
+                    foreach (var other in group) other.TytStageNote = $"Chưa kiểm tra được TYT đã duyệt chưa: {ex.Message}";
+                    break;
+                }
+
                 work.TytStage = TytStage.Approved;
                 work.TytApprovedAt = _timeProvider.GetUtcNow();
                 work.TytStageNote = "TYT đã duyệt — các chương còn lại được đăng theo lịch.";

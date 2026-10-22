@@ -177,14 +177,12 @@ public class TytPublishWorkflowTests
         // Chờ duyệt: lịch đăng không động tới truyện.
         (await Scheduler().Handle(new ScheduleTytUploadsCommand(Vn), CancellationToken.None)).ShouldBe(0);
 
-        _tyt.Setup(x => x.GetStoriesAsync(It.IsAny<TytContext>(), TytStoryVisibility.Public, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<TytStoryItemDto>());
+        _tyt.Setup(x => x.IsStoryPublicAsync(It.IsAny<TytContext>(), StoryId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         var check = new CheckTytApprovalsCommandHandler(_db, _tyt.Object, new FixedTime(Now), NullLogger<CheckTytApprovalsCommandHandler>.Instance);
         (await check.Handle(new CheckTytApprovalsCommand(), CancellationToken.None)).ShouldBe(0);
         (await _db.Works.FirstAsync()).TytStage.ShouldBe(TytStage.PendingApproval);
 
-        _tyt.Setup(x => x.GetStoriesAsync(It.IsAny<TytContext>(), TytStoryVisibility.Public, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<TytStoryItemDto> { new() { Id = StoryId, IsPublic = true } });
+        _tyt.Setup(x => x.IsStoryPublicAsync(It.IsAny<TytContext>(), StoryId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         (await check.Handle(new CheckTytApprovalsCommand(), CancellationToken.None)).ShouldBe(1);
 
         var approved = await _db.Works.FirstAsync(x => x.Id == work.Id);
@@ -198,7 +196,7 @@ public class TytPublishWorkflowTests
     public async Task Approval_WhenTytIsUnreachable_KeepsWaiting_AndNotesWhy()
     {
         await StoryAsync(TytStage.PendingApproval);
-        _tyt.Setup(x => x.GetStoriesAsync(It.IsAny<TytContext>(), It.IsAny<TytStoryVisibility>(), It.IsAny<CancellationToken>()))
+        _tyt.Setup(x => x.IsStoryPublicAsync(It.IsAny<TytContext>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TytException("phiên hết hạn"));
 
         await new CheckTytApprovalsCommandHandler(_db, _tyt.Object, new FixedTime(Now), NullLogger<CheckTytApprovalsCommandHandler>.Instance)
