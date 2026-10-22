@@ -29,6 +29,13 @@ public class UserProfileDto : BaseDto
 
     public DateTimeOffset? LastFetchedAt { get; init; }
 
+    /// <summary>Tự kiểm tra phim mới và tập mới theo định kỳ.</summary>
+    public bool AutoSyncMovies { get; init; }
+
+    public DateTimeOffset? MoviesSyncedAt { get; init; }
+
+    public string? MoviesSyncError { get; init; }
+
     public UserProfileTypeDto? UserProfileType { get; init; }
 
     private class Mapping : Profile

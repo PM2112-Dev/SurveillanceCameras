@@ -80,9 +80,21 @@ public class MovieEpisodeDto : BaseDto
 {
     public int EpisodeNumber { get; init; }
 
+    /// <summary>Tên (mô tả) của tập, thường là chú thích video trên TikTok.</summary>
+    public string? NameRaw { get; init; }
+
     public string? ExternalId { get; init; }
 
     public string? VideoUrl { get; init; }
+
+    /// <summary>Người dùng đã sửa tên/số tập — đồng bộ lại không ghi đè.</summary>
+    public bool IsEdited { get; init; }
+
+    /// <summary>Trùng số tập với tập khác của phim.</summary>
+    public bool IsDuplicate { get; set; }
+
+    /// <summary>Không còn link TikTok lẫn file phát.</summary>
+    public bool IsMissingSource { get; set; }
 
     /// <summary>Mã ngôn ngữ của tập (vd. <c>en</c>).</summary>
     public string? LanguageCode { get; init; }

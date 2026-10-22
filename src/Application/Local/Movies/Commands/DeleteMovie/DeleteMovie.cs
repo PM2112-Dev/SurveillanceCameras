@@ -32,6 +32,14 @@ public class DeleteMovieCommandHandler : IRequestHandler<DeleteMovieCommand>
             .ToListAsync(cancellationToken);
         await _videoStorer.ReleaseAsync(stored, cancellationToken);
 
+        // Ghi nhớ drama đã xoá ở kênh để kiểm tra định kỳ không đồng bộ phim này về lại.
+        if (movie.UserProfileId is { } channelId && movie.ExternalId is { } dramaId)
+        {
+            var channel = await _context.UserProfiles.FirstOrDefaultAsync(x => x.Id == channelId && x.CreatedBy == _user.Id, cancellationToken);
+            if (channel is not null && !channel.ExcludedDramaIds.Contains(dramaId))
+                channel.ExcludedDramaIds = [.. channel.ExcludedDramaIds, dramaId];
+        }
+
         _context.Works.Remove(movie);
         await _context.SaveChangesAsync(cancellationToken);
     }

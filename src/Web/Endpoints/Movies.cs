@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using SurveillanceCameras.Application.Common.Models;
+using SurveillanceCameras.Application.Local.Movies.Commands.CleanupMovieEpisodes;
 using SurveillanceCameras.Application.Local.Movies.Commands.DeleteMovie;
+using SurveillanceCameras.Application.Local.Movies.Commands.DeleteMovieEpisodes;
+using SurveillanceCameras.Application.Local.Movies.Commands.UpdateMovieEpisode;
 using SurveillanceCameras.Application.Local.Movies.Commands.RetryMovieVideoStorage;
 using SurveillanceCameras.Application.Local.Movies.Commands.SetMovieAccess;
 using SurveillanceCameras.Application.Local.Movies.Commands.SetMovieEpisodeStream;
@@ -30,12 +33,40 @@ public class Movies : IEndpointGroup
         groupBuilder.MapPut(SetMovieEpisodeStream, "{id}/episodes/{episodeId}/stream");
         groupBuilder.MapPut(SetMovieAccess, "{id}/access");
         groupBuilder.MapPost(RetryMovieVideoStorage, "{id}/video-storage/retry");
+        groupBuilder.MapPut(UpdateMovieEpisode, "{id}/episodes/{episodeId}");
+        groupBuilder.MapPost(DeleteMovieEpisodes, "{id}/episodes/delete");
+        groupBuilder.MapPost(CleanupMovieEpisodes, "{id}/episodes/cleanup");
         groupBuilder.MapPost(StoreMovieEpisodeVideo, "{id}/episodes/{episodeId}/video-storage/store");
     }
 
     public sealed record SetMoviesPublishedRequest(bool IsPublished, List<int>? Ids);
 
     public sealed record SetMovieEpisodeStreamRequest(string? StreamUrl);
+
+    public sealed record UpdateMovieEpisodeRequest(int EpisodeNumber, string? Name);
+
+    public sealed record DeleteMovieEpisodesRequest(List<int> EpisodeIds);
+
+    public sealed record CleanupMovieEpisodesRequest(bool Apply, bool RemoveBroken = true, bool Renumber = false);
+
+    [EndpointSummary("Update Movie episode")]
+    [EndpointDescription("Sửa số tập và tên của một tập phim; tập đã sửa không bị đồng bộ lại từ TikTok ghi đè")]
+    public static async Task<NoContent> UpdateMovieEpisode(ISender sender, int id, int episodeId, UpdateMovieEpisodeRequest request)
+    {
+        await sender.Send(new UpdateMovieEpisodeCommand(id, episodeId, request.EpisodeNumber, request.Name));
+        return TypedResults.NoContent();
+    }
+
+    [EndpointSummary("Delete Movie episodes")]
+    [EndpointDescription("Xoá các tập phim (kèm file video đã lưu); đồng bộ lại không thêm các tập này trở lại. Trả số tập đã xoá")]
+    public static async Task<Ok<int>> DeleteMovieEpisodes(ISender sender, int id, DeleteMovieEpisodesRequest request)
+        => TypedResults.Ok(await sender.Send(new DeleteMovieEpisodesCommand(id, request.EpisodeIds)));
+
+    [EndpointSummary("Cleanup Movie episodes")]
+    [EndpointDescription("Dọn tập lỗi/trùng của phim: xoá bản sao cùng số tập, tập không còn nguồn phát, cho tập lưu video lỗi thử lại, đánh số lại tuỳ chọn. apply=false chỉ chạy thử")]
+    public static async Task<Ok<CleanupMovieEpisodesResult>> CleanupMovieEpisodes(ISender sender, int id, CleanupMovieEpisodesRequest request)
+        => TypedResults.Ok(await sender.Send(new CleanupMovieEpisodesCommand
+            { MovieId = id, Apply = request.Apply, RemoveBroken = request.RemoveBroken, Renumber = request.Renumber }));
 
     [EndpointSummary("Set Movies published")]
     [EndpointDescription("Bật/tắt hiển thị phim trên app xem phim; không truyền ids thì áp dụng cho mọi phim. Trả về số phim đã đổi")]
@@ -92,8 +123,8 @@ public class Movies : IEndpointGroup
     [EndpointSummary("Get Movie episodes")]
     [EndpointDescription("Lấy các tập của phim theo thứ tự tập")]
     public static async Task<Ok<PaginatedList<MovieEpisodeDto>>> GetMovieEpisodes(ISender sender, int id,
-        int page = 1, int pageSize = 50)
-        => TypedResults.Ok(await sender.Send(new GetMovieEpisodesQuery { MovieId = id, Page = page, PageSize = pageSize }));
+        int page = 1, int pageSize = 50, bool onlyIssues = false)
+        => TypedResults.Ok(await sender.Send(new GetMovieEpisodesQuery { MovieId = id, Page = page, PageSize = pageSize, OnlyIssues = onlyIssues }));
 
     [EndpointSummary("Sync TikTok dramas")]
     [EndpointDescription("Đồng bộ các drama đã chọn của kênh TikTok thành phim cùng các tập (đã có thì cập nhật, thêm tập mới)")]

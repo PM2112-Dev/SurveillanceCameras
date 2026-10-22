@@ -41,17 +41,31 @@ public class SyncTikTokDramasCommandValidator : AbstractValidator<SyncTikTokDram
 
 public class SyncTikTokDramasCommandHandler : IRequestHandler<SyncTikTokDramasCommand, SyncTikTokDramasResult>
 {
+    private readonly IApplicationDbContext _context;
     private readonly IUser _user;
     private readonly TikTokDramaSyncer _syncer;
 
-    public SyncTikTokDramasCommandHandler(IUser user, TikTokDramaSyncer syncer)
+    public SyncTikTokDramasCommandHandler(IApplicationDbContext context, IUser user, TikTokDramaSyncer syncer)
     {
+        _context = context;
         _user = user;
         _syncer = syncer;
     }
 
-    public Task<SyncTikTokDramasResult> Handle(SyncTikTokDramasCommand request, CancellationToken cancellationToken)
-        => _syncer.SyncAsync(_user.Id, request.UserProfileId, request.DramaIds, cancellationToken);
+    public async Task<SyncTikTokDramasResult> Handle(SyncTikTokDramasCommand request, CancellationToken cancellationToken)
+    {
+        var result = await _syncer.SyncAsync(_user.Id, request.UserProfileId, request.DramaIds, cancellationToken);
+
+        // Người dùng chủ động đồng bộ lại drama từng xoá: cho phép kiểm tra định kỳ cập nhật drama này trở lại.
+        var channel = await _context.UserProfiles.FirstOrDefaultAsync(x => x.Id == request.UserProfileId && x.CreatedBy == _user.Id, cancellationToken);
+        if (channel is not null && channel.ExcludedDramaIds.Intersect(request.DramaIds).Any())
+        {
+            channel.ExcludedDramaIds = [.. channel.ExcludedDramaIds.Except(request.DramaIds)];
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        return result;
+    }
 }
 
 /// <summary>
@@ -189,25 +203,50 @@ public class TikTokDramaSyncer
     private static int MergeEpisodes(Work movie, List<DramaEpisodeDto> episodes, string? channelHandle,
         Dictionary<string, Language> languages)
     {
-        var byId = movie.Episodes!.Where(x => x.ExternalId is not null).ToDictionary(x => x.ExternalId!);
+        var byId = movie.Episodes!.Where(x => x.ExternalId is not null).GroupBy(x => x.ExternalId!).ToDictionary(g => g.Key, g => g.First());
+        var excluded = movie.ExcludedEpisodeIds.ToHashSet();
+        // Tập đang có mà TikTok không còn trả về với ID đó: ứng viên để nhận ID mới khi TikTok đăng lại cùng tập.
+        var currentIds = episodes.Select(x => x.Id).OfType<string>().ToHashSet();
+        var orphans = movie.Episodes!.Where(x => x.ExternalId is null || !currentIds.Contains(x.ExternalId)).ToList();
         var added = 0;
 
         for (var i = 0; i < episodes.Count; i++)
         {
             var item = episodes[i];
-            if (!byId.TryGetValue(item.Id!, out var episode))
-            {
-                episode = new Episode { ExternalId = item.Id, Status = EpisodeStatus.Listed, CreatedBy = movie.CreatedBy };
-                movie.Episodes!.Add(episode);
-                added++;
-            }
+            // Tập người dùng đã xoá không tự quay lại.
+            if (excluded.Contains(item.Id!)) continue;
 
             var number = item.EpisodeNumber is > 0 ? item.EpisodeNumber.Value : i + 1;
+
+            if (!byId.TryGetValue(item.Id!, out var episode))
+            {
+                // TikTok đăng lại tập với ID video mới: nhận lại tập cũ cùng số (giữ file đã lưu) thay vì thêm bản trùng.
+                episode = orphans.FirstOrDefault(x => x.EpisodeNumber == number);
+                if (episode is not null)
+                {
+                    episode.ExternalId = item.Id;
+                    orphans.Remove(episode);
+                }
+                else
+                {
+                    episode = new Episode { ExternalId = item.Id, Status = EpisodeStatus.Listed, CreatedBy = movie.CreatedBy };
+                    movie.Episodes!.Add(episode);
+                    added++;
+                }
+
+                byId[item.Id!] = episode;
+            }
+
             var handle = item.Author?.UniqueId ?? channelHandle;
 
-            episode.EpisodeNumber = number;
-            episode.Title = $"Tập {number}";
-            episode.NameRaw = item.Desc;
+            // Tập người dùng đã sửa tay: giữ số tập và tên.
+            if (!episode.IsEdited)
+            {
+                episode.EpisodeNumber = number;
+                episode.Title = $"Tập {number}";
+                episode.NameRaw = item.Desc;
+            }
+
             episode.DurationSeconds = item.Video?.Duration is > 0 ? item.Video.Duration : episode.DurationSeconds;
             episode.ThumbnailUrl = item.Video?.Cover ?? episode.ThumbnailUrl;
             // TikTok không trả ngôn ngữ (hoặc trả "un") thì giữ ngôn ngữ đang có của tập.

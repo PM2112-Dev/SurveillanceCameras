@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.Movies.Queries.GetChannelDramas;
 using SurveillanceCameras.Application.Local.UserProfiles.Commands.DeleteUserProfile;
+using SurveillanceCameras.Application.Local.UserProfiles.Commands.RequestChannelSync;
+using SurveillanceCameras.Application.Local.UserProfiles.Commands.SetChannelAutoSync;
 using SurveillanceCameras.Application.Local.UserProfiles.Queries.DTOs;
 using SurveillanceCameras.Application.Local.UserProfiles.Queries.GetUserProfileById;
 using SurveillanceCameras.Application.Local.UserProfiles.Queries.GetUserProfiles;
@@ -19,6 +21,28 @@ public class UserProfiles : IEndpointGroup
         groupBuilder.MapGet(GetUserProfileById, "{id}");
         groupBuilder.MapDelete(DeleteUserProfile, "{id}");
         groupBuilder.MapGet(GetChannelDramas, "{id}/dramas");
+        groupBuilder.MapPut(SetChannelAutoSync, "{id}/auto-sync");
+        groupBuilder.MapPost(RequestChannelSync, "{id}/sync-movies");
+    }
+
+    public sealed record SetChannelAutoSyncRequest(bool Enabled);
+
+    [EndpointSummary("Set channel auto sync")]
+    [EndpointDescription("Bật/tắt tự kiểm tra phim mới và tập mới của kênh theo định kỳ")]
+    public static async Task<NoContent> SetChannelAutoSync(ISender sender, int id, SetChannelAutoSyncRequest request)
+    {
+        await sender.Send(new SetChannelAutoSyncCommand(id, request.Enabled));
+
+        return TypedResults.NoContent();
+    }
+
+    [EndpointSummary("Request channel sync")]
+    [EndpointDescription("Kiểm tra ngay phim mới và tập mới của kênh (chạy nền qua Kafka)")]
+    public static async Task<Accepted> RequestChannelSync(ISender sender, int id)
+    {
+        await sender.Send(new RequestChannelSyncCommand(id));
+
+        return TypedResults.Accepted((string?)null);
     }
 
     [EndpointSummary("Get channel dramas")]

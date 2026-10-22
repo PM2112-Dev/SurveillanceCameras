@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, CloudUpload, ExternalLink, Eye, EyeOff, Pencil, RefreshCw, RotateCcw } from 'lucide-react';
-import { SetMovieEpisodeStreamRequest, SetMoviesPublishedRequest, SyncTikTokDramasCommand } from '../../web-api-client';
+import { ArrowLeft, Check, CloudUpload, ExternalLink, Eye, EyeOff, Pencil, RefreshCw, RotateCcw, Sparkles, Trash2, X } from 'lucide-react';
+import {
+  CleanupMovieEpisodesRequest,
+  DeleteMovieEpisodesRequest,
+  SetMovieEpisodeStreamRequest,
+  SetMoviesPublishedRequest,
+  SyncTikTokDramasCommand,
+  UpdateMovieEpisodeRequest
+} from '../../web-api-client';
 import { getErrorMessage, moviesClient } from '../../api/clients';
 import { retryMovieVideoStorage, storeMovieEpisodeVideo } from '../../api/storageAccounts';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -24,11 +31,15 @@ export function MovieDetail() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [storingId, setStoringId] = useState(null);
+  const [onlyIssues, setOnlyIssues] = useState(false);
+  const [selected, setSelected] = useState(() => new Set());
+  const [editing, setEditing] = useState(null);   // { id, episodeNumber, name }
+  const [cleanup, setCleanup] = useState(null);   // { removeBroken, renumber, preview, busy }
 
   const movie = useAsyncData(() => moviesClient.getMovieById(movieId), [movieId, version]);
   // Mặc định hệ thống (số tập miễn phí / quảng cáo) — endpoint công khai của app.
   const appConfig = useAsyncData(() => fetch('/api/app/config').then(response => (response.ok ? response.json() : null)), []);
-  const episodes = useAsyncData(() => moviesClient.getMovieEpisodes(movieId, page, PAGE_SIZE), [movieId, page, version]);
+  const episodes = useAsyncData(() => moviesClient.getMovieEpisodes(movieId, page, PAGE_SIZE, onlyIssues), [movieId, page, version, onlyIssues]);
   const info = movie.data;
 
   const resync = () => {
@@ -96,6 +107,60 @@ export function MovieDetail() {
       .finally(() => setStoringId(null));
   };
 
+  const run = (action, successMessage) => {
+    setMessage('');
+    setError('');
+    return action()
+      .then(result => {
+        if (successMessage) setMessage(typeof successMessage === 'function' ? successMessage(result) : successMessage);
+        setVersion(v => v + 1);
+        return result;
+      })
+      .catch(err => setError(getErrorMessage(err)));
+  };
+
+  const saveEdit = () => run(
+    () => moviesClient.updateMovieEpisode(movieId, editing.id,
+      new UpdateMovieEpisodeRequest({ episodeNumber: Number(editing.episodeNumber), name: editing.name })),
+    'Đã lưu tập.'
+  ).then(() => setEditing(null));
+
+  const deleteEpisodes = (ids, label) => {
+    if (!window.confirm(`Xoá ${label}? File video đã lưu ở kho cũng bị xoá, và đồng bộ lại sẽ không thêm lại.`)) return;
+    run(() => moviesClient.deleteMovieEpisodes(movieId, new DeleteMovieEpisodesRequest({ episodeIds: ids })),
+      count => `Đã xoá ${count} tập.`).then(() => setSelected(new Set()));
+  };
+
+  const toggleSelected = id => setSelected(current => {
+    const next = new Set(current);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+
+  const previewCleanup = (options = {}) => {
+    const next = { removeBroken: true, renumber: false, ...cleanup, ...options, busy: true };
+    setCleanup(next);
+    setError('');
+    moviesClient.cleanupMovieEpisodes(movieId, new CleanupMovieEpisodesRequest({
+      apply: false, removeBroken: next.removeBroken, renumber: next.renumber
+    }))
+      .then(preview => setCleanup(current => ({ ...current, preview, busy: false })))
+      .catch(err => { setError(getErrorMessage(err)); setCleanup(null); });
+  };
+
+  const applyCleanup = () => {
+    setCleanup(current => ({ ...current, busy: true }));
+    moviesClient.cleanupMovieEpisodes(movieId, new CleanupMovieEpisodesRequest({
+      apply: true, removeBroken: cleanup.removeBroken, renumber: cleanup.renumber
+    }))
+      .then(result => {
+        setMessage(`Đã dọn: xoá ${result.duplicates} bản sao, ${result.broken} tập hỏng, cho ${result.storageRetried} tập lưu lại, đổi số ${result.renumbered} tập.`);
+        setCleanup(null);
+        setVersion(v => v + 1);
+      })
+      .catch(err => { setError(getErrorMessage(err)); setCleanup(current => ({ ...current, busy: false })); });
+  };
+
   const items = episodes.data?.items ?? [];
   const accessRule = effectiveAccessRule(info, appConfig.data);
   const accessLabels = { free: 'Miễn phí', ads: 'Quảng cáo', vip: 'VIP' };
@@ -111,6 +176,9 @@ export function MovieDetail() {
                 <RefreshCw size={16} aria-hidden="true" /> Đồng bộ lại
               </button>
             )}
+            <button type="button" className="secondary" onClick={() => (cleanup ? setCleanup(null) : previewCleanup())}>
+              <Sparkles size={16} aria-hidden="true" /> Dọn tập lỗi/trùng
+            </button>
             {items.some(episode => episode.storageError) && (
               <button type="button" className="secondary" onClick={retryStorage}>
                 <RotateCcw size={16} aria-hidden="true" /> Lưu video lại
@@ -173,16 +241,61 @@ export function MovieDetail() {
         />
       )}
 
-      <h2>Danh sách tập</h2>
+      {cleanup && (
+        <section className="profile-card" aria-label="Dọn tập lỗi hoặc trùng">
+          <h3>Dọn tập lỗi / trùng</h3>
+          {cleanup.busy && !cleanup.preview ? <LoadingBlock /> : cleanup.preview && (
+            <>
+              <p className="cell-sub">
+                {cleanup.preview.duplicates} bản sao (cùng số tập, cùng nội dung) · {cleanup.preview.broken} tập không còn nguồn phát ·
+                {' '}{cleanup.preview.conflicts} nhóm cùng số nhưng khác nội dung · {cleanup.preview.storageRetried} tập lưu video lỗi
+              </p>
+              {cleanup.preview.details?.length > 0
+                ? <ul>{cleanup.preview.details.map((line, index) => <li key={index}>{line}</li>)}</ul>
+                : <p>Không có gì cần dọn.</p>}
+              <label className="checkbox-item">
+                <input type="checkbox" checked={cleanup.removeBroken} disabled={cleanup.busy}
+                  onChange={event => previewCleanup({ removeBroken: event.target.checked })} />
+                Xoá tập không còn link TikTok lẫn file phát
+              </label>
+              <label className="checkbox-item">
+                <input type="checkbox" checked={cleanup.renumber} disabled={cleanup.busy}
+                  onChange={event => previewCleanup({ renumber: event.target.checked })} />
+                Đánh số lại tập từ 1 theo thứ tự hiện tại (xử lý nhóm cùng số khác nội dung)
+              </label>
+              <div className="page-header-actions">
+                <button type="button" onClick={applyCleanup} disabled={cleanup.busy} aria-busy={cleanup.busy}>Áp dụng</button>
+                <button type="button" className="secondary" onClick={() => setCleanup(null)}>Đóng</button>
+              </div>
+            </>
+          )}
+        </section>
+      )}
+
+      <div className="chapter-toolbar">
+        <h2>Danh sách tập</h2>
+        <div className="page-header-actions">
+          <label className="checkbox-item">
+            <input type="checkbox" checked={onlyIssues} onChange={event => { setOnlyIssues(event.target.checked); setPage(1); }} />
+            Chỉ tập có vấn đề
+          </label>
+          {selected.size > 0 && (
+            <button type="button" className="secondary danger" onClick={() => deleteEpisodes([...selected], `${selected.size} tập đã chọn`)}>
+              <Trash2 size={16} aria-hidden="true" /> Xoá {selected.size} tập
+            </button>
+          )}
+        </div>
+      </div>
       {episodes.loading && !episodes.data ? (
         <LoadingBlock />
       ) : items.length === 0 ? (
-        <EmptyState message="Phim chưa có tập nào." />
+        <EmptyState message={onlyIssues ? 'Không có tập nào có vấn đề.' : 'Phim chưa có tập nào.'} />
       ) : (
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
+                <th aria-label="Chọn"></th>
                 <th>Tập</th>
                 <th>Ảnh</th>
                 <th>Quyền xem</th>
@@ -190,12 +303,34 @@ export function MovieDetail() {
                 <th>Thời lượng</th>
                 <th>Video</th>
                 <th>Video tự lưu trữ (app)</th>
+                <th className="col-actions">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {items.map(episode => (
                 <tr key={episode.id}>
-                  <td className="nowrap">{episode.title || `Tập ${episode.episodeNumber}`}</td>
+                  <td>
+                    <input type="checkbox" checked={selected.has(episode.id)} onChange={() => toggleSelected(episode.id)}
+                      aria-label={`Chọn tập ${episode.episodeNumber}`} />
+                  </td>
+                  <td>
+                    {editing?.id === episode.id ? (
+                      <span className="inline-edit">
+                        <input type="number" min={1} value={editing.episodeNumber} style={{ width: '6rem' }}
+                          onChange={event => setEditing({ ...editing, episodeNumber: event.target.value })} aria-label="Số tập" />
+                        <input type="text" maxLength={2000} value={editing.name} placeholder="Tên tập"
+                          onChange={event => setEditing({ ...editing, name: event.target.value })} aria-label="Tên tập" />
+                      </span>
+                    ) : (
+                      <>
+                        <span className="nowrap">{episode.title || `Tập ${episode.episodeNumber}`}</span>
+                        {episode.nameRaw && <span className="cell-sub clamp-2">{episode.nameRaw}</span>}
+                        {episode.isDuplicate && <span className="status-badge danger" title="Có tập khác cùng số tập">Trùng số tập</span>}
+                        {episode.isMissingSource && <span className="status-badge danger" title="Không còn link TikTok lẫn file phát">Thiếu nguồn</span>}
+                        {episode.isEdited && <span className="status-badge" title="Đã sửa tay — đồng bộ lại không ghi đè">Đã sửa</span>}
+                      </>
+                    )}
+                  </td>
                   <td>
                     {episode.thumbnailUrl && (
                       <img className="drama-cover" src={episode.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer"
@@ -236,6 +371,25 @@ export function MovieDetail() {
                       <span className="cell-sub">Đã lưu vào kho — {formatBytes(episode.storageSizeBytes)}</span>
                     )}
                     {episode.storageError && <span className="cell-sub">Lưu video lỗi: {episode.storageError}</span>}
+                  </td>
+                  <td className="col-actions">
+                    {editing?.id === episode.id ? (
+                      <>
+                        <button type="button" className="icon-btn" title="Lưu" onClick={saveEdit}><Check size={16} aria-hidden="true" /></button>
+                        <button type="button" className="icon-btn" title="Huỷ" onClick={() => setEditing(null)}><X size={16} aria-hidden="true" /></button>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" className="icon-btn" title="Sửa số tập và tên"
+                          onClick={() => setEditing({ id: episode.id, episodeNumber: episode.episodeNumber, name: episode.nameRaw ?? '' })}>
+                          <Pencil size={16} aria-hidden="true" />
+                        </button>
+                        <button type="button" className="icon-btn danger" title="Xoá tập"
+                          onClick={() => deleteEpisodes([episode.id], `tập ${episode.episodeNumber}`)}>
+                          <Trash2 size={16} aria-hidden="true" />
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
