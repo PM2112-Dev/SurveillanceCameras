@@ -65,4 +65,7 @@ public interface ITytRepository
 
     /// <summary>Thu nhập và điều kiện nhận thưởng của truyện (trang Nhận Thưởng). Chưa đủ điều kiện thì <see cref="TytEarningDto.Eligible"/> là <c>false</c>.</summary>
     Task<TytEarningDto> GetEarningAsync(TytContext context, string storyId, CancellationToken cancellationToken = default);
+
+    /// <summary>Bật/tắt nhận thưởng theo lượt hiển thị quảng cáo của truyện (trang Nhận Thưởng, ô "Theo Lượt Hiển Thị Quảng Cáo").</summary>
+    Task SetEarningAsync(TytContext context, string storyId, bool enabled, CancellationToken cancellationToken = default);
 }

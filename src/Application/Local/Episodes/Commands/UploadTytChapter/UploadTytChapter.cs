@@ -58,6 +58,13 @@ public class UploadTytChapterCommandHandler : IRequestHandler<UploadTytChapterCo
                 Number = chapter.EpisodeNumber
             };
 
+            // Chương đã đăng (Force) mà chưa lưu Id TYT: tìm Id theo số chương để cập nhật, không đăng trùng.
+            if (request.Force && chapter.IsUploaded && string.IsNullOrWhiteSpace(chapter.TytChapterId))
+            {
+                chapter.TytChapterId = (await _tyt.GetChaptersAsync(context, story.TytStoryId, cancellationToken))
+                    .FirstOrDefault(x => x.Number == chapter.EpisodeNumber)?.Id;
+            }
+
             if (string.IsNullOrWhiteSpace(chapter.TytChapterId))
             {
                 chapter.TytChapterId = await _tyt.CreateChapterAsync(context, story.TytStoryId, content, cancellationToken);

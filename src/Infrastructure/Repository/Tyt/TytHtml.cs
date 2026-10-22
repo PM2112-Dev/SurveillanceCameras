@@ -117,27 +117,41 @@ public static partial class TytHtml
     }
 
     /// <summary>
-    /// Trang Nhận Thưởng của truyện. Chưa đủ điều kiện thì trang chỉ báo "Không đủ điều kiện mở nhận thưởng" (chưa có số liệu);
-    /// đủ điều kiện thì đọc các ô thống kê (Tổng, Đang Có, Đang Rút, Đã Thanh Toán, Bởi Quảng Cáo, Số Lượt QC) — cách đọc theo
-    /// công cụ StoriesAuto.
+    /// Trang Nhận Thưởng của truyện (khảo sát 2026-10-22). Chưa đủ điều kiện thì trang báo "Không đủ điều kiện mở nhận thưởng" và
+    /// chưa có số liệu. Đủ điều kiện thì có ô <c>#earning_ad</c> (1 = Bật, 0 = Tắt) và các thẻ thống kê: mỗi thẻ
+    /// <c>.card-body</c> có nhãn (Đang Có, Đang Rút, Đã Thanh Toán, Đã Chuyển, Tổng, Bởi Quảng Cáo, Bởi Đề Cử, Bởi Quà Tặng),
+    /// giá trị dạng "13,056 đ" và với nguồn thu có thêm dòng số lượt ("2,007 lượt").
     /// </summary>
     public static TytEarningDto ParseEarning(string html)
     {
         var document = Parse(html);
-        var text = Clean(document.Body?.TextContent);
-        var locked = text.Contains("không đủ điều kiện", StringComparison.OrdinalIgnoreCase);
+        var locked = Clean(document.Body?.TextContent).Contains("không đủ điều kiện", StringComparison.OrdinalIgnoreCase);
 
-        var stats = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
-        foreach (var box in document.QuerySelectorAll(".form-group.row .alert .form-group"))
+        var values = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        var counts = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        foreach (var body in document.QuerySelectorAll(".card-body"))
         {
-            var label = Clean(box.QuerySelector("span")?.TextContent).TrimEnd(':').Trim();
-            var digits = new string(Clean(box.QuerySelector(".text-primary")?.TextContent).Where(char.IsDigit).ToArray());
-            if (label.Length > 0 && long.TryParse(digits, out var value)) stats[label] = value;
+            var parts = body.Children.Where(x => x.LocalName == "div").ToList();
+            if (parts.Count < 2) continue;
+
+            var label = Clean(parts[0].TextContent);
+            if (label.Length == 0 || label.Length > 30 || !TryDigits(parts[1].TextContent, out var value)) continue;
+
+            values[label] = value;
+            if (parts.Count >= 3 && TryDigits(parts[2].TextContent, out var count)) counts[label] = count;
         }
 
-        long? Get(string label) => stats.TryGetValue(label, out var v) ? v : null;
-        return new TytEarningDto(!locked, Get("Tổng"), Get("Đang Có"), Get("Đang Rút"), Get("Đã Thanh Toán"), Get("Bởi Quảng Cáo"), Get("Số Lượt QC"));
+        var select = document.QuerySelector("select#earning_ad");
+        var enabled = select?.QuerySelectorAll("option").FirstOrDefault(o => o.HasAttribute("selected"))?.GetAttribute("value") == "1";
+
+        long? Get(string label) => values.TryGetValue(label, out var v) ? v : null;
+        return new TytEarningDto(!locked && (select is not null || values.Count > 0), enabled, Get("Tổng"), Get("Đang Có"),
+            Get("Đang Rút"), Get("Đã Thanh Toán"), Get("Đã Chuyển"), Get("Bởi Quảng Cáo"),
+            counts.TryGetValue("Bởi Quảng Cáo", out var views) ? views : null);
     }
+
+    private static bool TryDigits(string? text, out long value)
+        => long.TryParse(new string(Clean(text).Where(char.IsDigit).ToArray()), out value);
 
     /// <summary>Trang có nút đăng xuất nghĩa là đang đăng nhập.</summary>
     public static bool IsLoggedIn(string html) => html.Contains("/user/logout", StringComparison.OrdinalIgnoreCase);

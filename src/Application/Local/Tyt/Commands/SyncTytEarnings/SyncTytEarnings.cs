@@ -9,8 +9,8 @@ namespace SurveillanceCameras.Application.Local.Tyt.Commands.SyncTytEarnings;
 /// <summary>
 /// Chạy định kỳ: với truyện đã được TYT duyệt, xem trang Nhận Thưởng. Truyện đủ điều kiện (công khai, đủ chương, lượt xem,
 /// thời gian đăng) thì chuyển sang bật kiếm tiền (<c>IsEarning</c>) và đồng bộ số liệu về truyện: Tổng → <c>EarnCount</c>,
-/// Đang Có → <c>EarnNow</c>, Đã Thanh Toán → <c>Paid</c>, Số Lượt QC → <c>AdCount</c>. Chưa đủ điều kiện thì chưa có số liệu để
-/// lấy, chỉ ghi chú và kiểm tra lại ở lượt sau. Không bật nhận thưởng bên phía TYT — chỉ đọc.
+/// Đang Có → <c>EarnNow</c>, Đã Thanh Toán + Đã Chuyển → <c>Paid</c>, Số Lượt QC → <c>AdCount</c>. Chưa đủ điều kiện thì chưa có số liệu để
+/// lấy, chỉ ghi chú và kiểm tra lại ở lượt sau. Ô nhận thưởng của TYT đang Tắt thì bật lên (<c>update_earning</c>).
 /// </summary>
 /// <returns>Số truyện đã đồng bộ được thu nhập.</returns>
 public record SyncTytEarningsCommand : IRequest<int>;
@@ -76,15 +76,33 @@ public class SyncTytEarningsCommandHandler : IRequestHandler<SyncTytEarningsComm
                     continue;
                 }
 
+                // Đủ điều kiện mà ô thưởng đang Tắt: bật lên (đây là "bật kiếm tiền" bên phía TYT).
+                var turnedOn = false;
+                if (!earning.EarningEnabled)
+                {
+                    try
+                    {
+                        await _tyt.SetEarningAsync(context, work.TytStoryId!, true, cancellationToken);
+                        turnedOn = true;
+                    }
+                    catch (TytException ex)
+                    {
+                        work.TytEarningNote = $"Đủ điều kiện nhận thưởng nhưng chưa bật được: {ex.Message}";
+                        continue;
+                    }
+                }
+
                 work.IsEarning = true;
                 if (earning.Total is { } total) work.EarnCount = (int)Math.Min(int.MaxValue, total);
                 if (earning.Available is { } available) work.EarnNow = (int)Math.Min(int.MaxValue, available);
-                if (earning.Paid is { } paid) work.Paid = (int)Math.Min(int.MaxValue, paid);
+                // Đã Thanh Toán và Đã Chuyển đều là tiền đã rời khỏi số dư của truyện: cộng lại thành "Đã thanh toán".
+                if (earning.Paid is not null || earning.Transferred is not null)
+                    work.Paid = (int)Math.Min(int.MaxValue, (earning.Paid ?? 0) + (earning.Transferred ?? 0));
                 if (earning.AdViews is { } adViews) work.AdCount = (int)Math.Min(int.MaxValue, adViews);
 
                 work.TytEarningNote = earning.Total is null
                     ? "Đủ điều kiện nhận thưởng nhưng chưa đọc được số liệu thu nhập (giao diện trang có thể đã đổi)."
-                    : $"Đã đồng bộ thu nhập{(earning.Withdrawing is > 0 ? $"; đang rút {earning.Withdrawing:N0} đ" : "")}{(earning.FromAds is { } ads ? $"; từ quảng cáo {ads:N0} đ" : "")}.";
+                    : $"{(turnedOn ? "Đã bật nhận thưởng trên TYT. " : "")}Đã đồng bộ thu nhập{(earning.Withdrawing is > 0 ? $"; đang rút {earning.Withdrawing:N0} đ" : "")}{(earning.FromAds is { } ads ? $"; từ quảng cáo {ads:N0} đ" : "")}.";
                 synced++;
             }
         }

@@ -3,6 +3,7 @@ using SurveillanceCameras.Application.Common.Models;
 using SurveillanceCameras.Application.Local.Episodes.Commands.CreateEpisode;
 using SurveillanceCameras.Application.Local.Episodes.Commands.DeleteEpisode;
 using SurveillanceCameras.Application.Local.Episodes.Commands.RequestEpisodeEdit;
+using SurveillanceCameras.Application.Local.Episodes.Commands.RequestTytChapterUpdate;
 using SurveillanceCameras.Application.Local.Episodes.Commands.UpdateEpisode;
 using SurveillanceCameras.Application.Local.Episodes.Queries.DTOs;
 using SurveillanceCameras.Application.Local.Episodes.Queries.GetEpisodeById;
@@ -22,6 +23,7 @@ public class Episodes : IEndpointGroup
         groupBuilder.MapPut(UpdateEpisode, "{id}");
         groupBuilder.MapDelete(DeleteEpisode, "{id}");
         groupBuilder.MapPost(RequestEpisodeEdit, "{id}/ai-edit");
+        groupBuilder.MapPost(RequestTytChapterUpdate, "{id}/tyt-update");
     }
 
     [EndpointSummary("Request episode AI edit")]
@@ -79,5 +81,14 @@ public class Episodes : IEndpointGroup
         await sender.Send(new DeleteEpisodeCommand(id));
 
         return TypedResults.NoContent();
+    }
+
+    [EndpointSummary("Request TYT chapter update")]
+    [EndpointDescription("Cập nhật lại chương đã đăng lên TYT bằng nội dung đã biên tập hiện tại (chạy nền)")]
+    public static async Task<Accepted> RequestTytChapterUpdate(ISender sender, int id)
+    {
+        await sender.Send(new RequestTytChapterUpdateCommand(id));
+
+        return TypedResults.Accepted((string?)null);
     }
 }
