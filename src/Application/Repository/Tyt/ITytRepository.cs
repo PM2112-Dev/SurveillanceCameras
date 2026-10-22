@@ -46,4 +46,23 @@ public interface ITytRepository
     /// <summary>Sửa nội dung chương đã đăng.</summary>
     Task UpdateChapterAsync(TytContext context, string storyId, string chapterId, TytChapterRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gửi yêu cầu công khai truyện (trang Xuất bản): TYT cần xét duyệt nên truyện chưa hiện công khai ngay — dùng
+    /// <see cref="GetStoriesAsync"/> với <see cref="TytStoryVisibility.Public"/> để biết đã được duyệt chưa.
+    /// </summary>
+    /// <returns>Thông điệp TYT trả về (vd. đã gửi yêu cầu, đang chờ duyệt).</returns>
+    Task<string?> RequestPublishAsync(TytContext context, string storyId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Truyện đã công khai chưa, theo ô chế độ hiển thị ở trang Xuất bản (lựa chọn đang chọn là "Công Khai"). Dùng để biết TYT
+    /// đã duyệt truyện chưa sau khi gửi yêu cầu công khai.
+    /// </summary>
+    Task<bool> IsStoryPublicAsync(TytContext context, string storyId, CancellationToken cancellationToken = default);
+
+    /// <summary>Các chương của truyện trên TYT (mọi trang), dùng để tìm Id chương và tránh đăng trùng số chương.</summary>
+    Task<IReadOnlyList<TytChapterItemDto>> GetChaptersAsync(TytContext context, string storyId, CancellationToken cancellationToken = default);
+
+    /// <summary>Thu nhập và điều kiện nhận thưởng của truyện (trang Nhận Thưởng). Chưa đủ điều kiện thì <see cref="TytEarningDto.Eligible"/> là <c>false</c>.</summary>
+    Task<TytEarningDto> GetEarningAsync(TytContext context, string storyId, CancellationToken cancellationToken = default);
 }

@@ -16,6 +16,7 @@ public static class DependencyInjection
 
         builder.Services.Configure<Local.App.AppOptions>(builder.Configuration.GetSection(Local.App.AppOptions.SectionName));
 
+        builder.Services.Configure<Local.Tyt.TytPolicyOptions>(builder.Configuration.GetSection("TytUpload"));
         builder.Services.AddSingleton<Local.AIs.AIKeyCooldowns>();
         builder.Services.AddScoped<Local.AIs.AIPromptRunner>();
         builder.Services.AddScoped<Local.Movies.Commands.SyncTikTokDramas.TikTokDramaSyncer>();

@@ -152,6 +152,38 @@ public sealed class TytRepository : ITytRepository
         return genres;
     }
 
+    public async Task<TytEarningDto> GetEarningAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)
+    {
+        var id = RequireStoryId(storyId);
+        var response = await SendAsync(context, $"mystory/{id}/earning", null, false, cancellationToken);
+        return TytHtml.ParseEarning(response.Body);
+    }
+
+    public async Task<bool> IsStoryPublicAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)
+    {
+        var id = RequireStoryId(storyId);
+        var response = await SendAsync(context, $"mystory/{id}/publish", null, false, cancellationToken);
+        return TytHtml.IsPublishedPublic(response.Body);
+    }
+
+    public async Task<IReadOnlyList<TytChapterItemDto>> GetChaptersAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)
+    {
+        var id = RequireStoryId(storyId);
+        var chapters = new List<TytChapterItemDto>();
+        var seen = new HashSet<string>();
+
+        for (var page = 1; page <= MaxListPages; page++)
+        {
+            var response = await SendAsync(context, $"mystory/{id}/chapters" + (page > 1 ? $"?page={page}" : ""), null, false, cancellationToken);
+            var added = TytHtml.ParseChapterList(response.Body).Where(x => seen.Add(x.Id)).ToList();
+            if (added.Count == 0) break;   // hết trang (hoặc TYT trả lại trang cũ)
+
+            chapters.AddRange(added);
+        }
+
+        return chapters;
+    }
+
     public async Task<string?> CreateChapterAsync(TytContext context, string storyId, TytChapterRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -160,7 +192,7 @@ public sealed class TytRepository : ITytRepository
         if (title.Length is < 1 or > 200) title = title.Length == 0 ? $"Chương {request.Number}" : title[..200];
         if (request.Number is < 1 or > 9999) throw new TytException($"Số chương {request.Number} ngoài khoảng 1–9999 của TYT.");
 
-        var content = TytHtml.DescriptionToHtml(request.Content);
+        var content = TytHtml.ChapterContentToHtml(request.Content);
         if (content.Length == 0) throw new TytException("Chương không có nội dung để đăng.");
 
         // Form "Thêm chương" của TYT gửi ajax tới mystory/{id}/chapters/add (khảo sát 2026-10-22).
@@ -179,7 +211,35 @@ public sealed class TytRepository : ITytRepository
                                    (message ?? $"phản hồi không hợp lệ (HTTP {response.StatusCode})"));
         }
 
-        return TytHtml.ChapterIdFromUrl(redirectUrl, id);
+        if (TytHtml.ChapterIdFromUrl(redirectUrl, id) is { } chapterId) return chapterId;
+
+        // TYT không luôn trả đường dẫn chương: tìm trong danh sách chương theo số chương để vẫn lưu được Id.
+        try
+        {
+            return (await GetChaptersAsync(context, id, cancellationToken)).FirstOrDefault(x => x.Number == request.Number)?.Id;
+        }
+        catch (TytException)
+        {
+            return null;   // chương đã đăng; chỉ thiếu Id
+        }
+    }
+
+    public async Task<string?> RequestPublishAsync(TytContext context, string storyId, CancellationToken cancellationToken = default)
+    {
+        var id = RequireStoryId(storyId);
+
+        // Giá trị của lựa chọn "Công Khai" do TYT cấp cho từng truyện nên đọc từ trang Xuất bản thay vì đoán.
+        var page = await SendAsync(context, $"mystory/{id}/publish", null, false, cancellationToken);
+        var value = TytHtml.PublicVisibilityValue(page.Body)
+                    ?? throw new TytException("Không tìm thấy lựa chọn “Công Khai” ở trang Xuất bản của TYT (giao diện có thể đã đổi).");
+
+        var response = await SendAsync(context, $"mystory/{id}/published", [new("published", value)], ajax: true, cancellationToken);
+
+        var (success, message) = TytHtml.ParseAjaxResult(response.Body);
+        if (!success)
+            throw new TytException($"TYT không nhận yêu cầu công khai truyện {id}: {message ?? $"phản hồi không hợp lệ (HTTP {response.StatusCode})"}");
+
+        return message;
     }
 
     public Task UpdateChapterAsync(TytContext context, string storyId, string chapterId, TytChapterRequest request,

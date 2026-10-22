@@ -17,6 +17,9 @@ public class TytUploadOptions
     /// <summary>Số chương tối đa mỗi truyện được đưa vào hàng đợi mỗi lượt quét ở chế độ "đăng ngay".</summary>
     public int ImmediateBatchSize { get; set; } = 20;
 
+    /// <summary>Bao lâu kiểm tra một lần xem TYT đã duyệt các truyện đang chờ chưa, và đồng bộ thu nhập (phút). Mặc định 720 = 2 lần mỗi ngày.</summary>
+    public int ApprovalCheckIntervalMinutes { get; set; } = 720;
+
     /// <summary>Múi giờ để hiểu giờ đăng mỗi ngày của truyện (IANA, vd. Asia/Ho_Chi_Minh).</summary>
     public string TimeZone { get; set; } = "Asia/Ho_Chi_Minh";
 }

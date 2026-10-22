@@ -23,24 +23,33 @@ public static class TytUploadSchedule
 
             case TytUploadMode.Daily:
                 var localNow = TimeZoneInfo.ConvertTime(now, timeZone);
-                var scheduled = ScheduledToday(localNow, dailyTime);
-                if (localNow < scheduled) return false;
-                return last is null || TimeZoneInfo.ConvertTime(last.Value, timeZone) < scheduled;
+                // Giờ gần nhất đã qua hôm nay: mỗi giờ hẹn là một lô, lô đó đã đăng nếu lần đăng gần nhất sau giờ hẹn.
+                var scheduled = DailyTimes(dailyTime)
+                    .Select(t => new DateTimeOffset(localNow.Date + t.ToTimeSpan(), localNow.Offset))
+                    .Where(t => t <= localNow)
+                    .OrderByDescending(t => t)
+                    .Cast<DateTimeOffset?>()
+                    .FirstOrDefault();
+                if (scheduled is null) return false;
+                return last is null || TimeZoneInfo.ConvertTime(last.Value, timeZone) < scheduled.Value;
 
             default:
                 return false;
         }
     }
 
-    /// <summary>Giờ đăng hợp lệ ("HH:mm"); sai định dạng thì dùng mặc định.</summary>
+    /// <summary>Giờ đăng hợp lệ: "HH:mm" hoặc nhiều giờ cách nhau dấu phẩy ("08:00,12:00").</summary>
     public static bool IsValidDailyTime(string? value)
-        => TimeOnly.TryParseExact(value, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _);
+        => !string.IsNullOrWhiteSpace(value)
+           && value.Split(',', StringSplitOptions.TrimEntries).All(x => TimeOnly.TryParseExact(x, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _));
 
-    private static DateTimeOffset ScheduledToday(DateTimeOffset localNow, string? dailyTime)
+    /// <summary>Các giờ đăng mỗi ngày, tăng dần; chuỗi sai hoặc trống thì dùng giờ mặc định.</summary>
+    public static List<TimeOnly> DailyTimes(string? value)
     {
-        var time = TimeOnly.TryParseExact(dailyTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
-            ? parsed
-            : TimeOnly.ParseExact(DefaultDailyTime, "HH:mm", CultureInfo.InvariantCulture);
-        return new DateTimeOffset(localNow.Date + time.ToTimeSpan(), localNow.Offset);
+        var times = IsValidDailyTime(value)
+            ? value!.Split(',', StringSplitOptions.TrimEntries)
+                .Select(x => TimeOnly.ParseExact(x, "HH:mm", CultureInfo.InvariantCulture)).Distinct().Order().ToList()
+            : [];
+        return times.Count > 0 ? times : [TimeOnly.ParseExact(DefaultDailyTime, "HH:mm", CultureInfo.InvariantCulture)];
     }
 }

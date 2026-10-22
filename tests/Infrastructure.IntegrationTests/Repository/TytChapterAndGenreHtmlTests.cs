@@ -43,4 +43,80 @@ public class TytChapterAndGenreHtmlTests
         Assert.That(TytHtml.ChapterIdFromUrl("https://tytnovel.info/mystory/" + StoryId + "/chapters", StoryId), Is.Null);
         Assert.That(TytHtml.ParseChapterResult("<html>lỗi</html>").Success, Is.False);
     }
+
+    [Test]
+    public void PublicVisibilityValue_IsReadFromThePublishPage_NotHardCoded()
+    {
+        const string html = """
+            <select id="published" name="published">
+              <option value="11" selected>Chỉ Mình Tôi</option>
+              <option value="25">Công Khai - Mọi Người</option>
+            </select>
+            """;
+
+        Assert.That(TytHtml.PublicVisibilityValue(html), Is.EqualTo("25"));
+        Assert.That(TytHtml.PublicVisibilityValue("<p>không có ô chọn</p>"), Is.Null);
+    }
+
+    [Test]
+    public void PublishPage_IsPublic_OnlyWhenTheSelectedOptionIsPublic()
+    {
+        const string priv = """<select id="published"><option value="11" selected>Chỉ Mình Tôi</option><option value="25">Công Khai - Mọi Người</option></select>""";
+        const string pub = """<select id="published"><option value="11">Chỉ Mình Tôi</option><option value="25" selected>Công Khai - Mọi Người</option></select>""";
+
+        Assert.That(TytHtml.IsPublishedPublic(priv), Is.False);
+        Assert.That(TytHtml.IsPublishedPublic(pub), Is.True);
+        Assert.That(TytHtml.IsPublishedPublic("<p>không có ô chọn</p>"), Is.False);
+    }
+
+    [Test]
+    public void ChapterList_ReadsIdsAndNumbersFromTheEditLinks()
+    {
+        const string html = """
+            <table><tbody>
+              <tr><td>1</td><td><a href="/mystory/6937c842dac07c1fa72c5482/chapters/6937d000dac07c1fa72c5499/edit">Chương mở đầu</a></td><td>Menu</td></tr>
+              <tr><td> 12 </td><td><a href="/mystory/6937c842dac07c1fa72c5482/chapters/6937d000dac07c1fa72c54aa/edit">Chương mười hai</a></td><td>Menu</td></tr>
+              <tr><td>12</td><td><a href="/mystory/6937c842dac07c1fa72c5482/chapters/6937d000dac07c1fa72c54aa/edit">Trùng</a></td></tr>
+            </tbody></table>
+            """;
+
+        var chapters = TytHtml.ParseChapterList(html);
+
+        Assert.That(chapters.Select(x => (x.Id, x.Number)), Is.EqualTo(new[]
+        {
+            ("6937d000dac07c1fa72c5499", (int?)1), ("6937d000dac07c1fa72c54aa", (int?)12)
+        }));
+    }
+
+    [Test]
+    public void ChapterContent_KeepsLinesWithBrTags_AndEscapesHtml()
+    {
+        Assert.That(TytHtml.ChapterContentToHtml("Đoạn một.\r\nĐoạn <hai> & ba.\n\nĐoạn bốn.\n"),
+            Is.EqualTo("Đoạn một.<br>Đoạn &lt;hai&gt; &amp; ba.<br><br>Đoạn bốn."));
+        Assert.That(TytHtml.ChapterContentToHtml("  \n "), Is.Empty);
+    }
+
+    [Test]
+    public void Earning_LockedPageHasNoFigures_EligiblePageIsParsedLikeStoriesAuto()
+    {
+        var locked = TytHtml.ParseEarning("<main><h5>Nhận Thưởng</h5><div>Không đủ điều kiện mở nhận thưởng. Vui lòng quay lại sau</div></main>");
+        Assert.That(locked.Eligible, Is.False);
+        Assert.That(locked.Total, Is.Null);
+
+        const string html = """
+            <main><div class="form-group row"><div class="alert">
+              <div class="form-group"><span>Tổng:</span> <b class="text-primary">1.250 đ</b></div>
+              <div class="form-group"><span>Đang Có:</span> <b class="text-primary">300 đ</b></div>
+              <div class="form-group"><span>Đang Rút:</span> <b class="text-primary">50 đ</b></div>
+              <div class="form-group"><span>Đã Thanh Toán:</span> <b class="text-primary">900 đ</b></div>
+              <div class="form-group"><span>Bởi Quảng Cáo:</span> <b class="text-primary">1.000 đ</b></div>
+              <div class="form-group"><span>Số Lượt QC:</span> <b class="text-primary">412</b></div>
+            </div></div></main>
+            """;
+        var earning = TytHtml.ParseEarning(html);
+
+        Assert.That(earning.Eligible, Is.True);
+        Assert.That((earning.Total, earning.Available, earning.Withdrawing, earning.Paid, earning.FromAds, earning.AdViews),
+            Is.EqualTo(((long?)1250, (long?)300, (long?)50, (long?)900, (long?)1000, (long?)412)));
+    }
 }

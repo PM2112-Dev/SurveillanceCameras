@@ -30,7 +30,7 @@ public class ScheduleTytUploadsCommandHandler : IRequestHandler<ScheduleTytUploa
         var now = _timeProvider.GetUtcNow();
 
         var works = await _context.Works
-            .Where(x => x.Type == WorkType.Story && x.TytUploadMode != TytUploadMode.Manual
+            .Where(x => x.Type == WorkType.Story && x.TytUploadMode != TytUploadMode.Manual && x.TytStage == TytStage.Approved
                         && x.TytStoryId != null && x.TytStoryId != "" && x.AccountId != null)
             .ToListAsync(cancellationToken);
 
@@ -50,6 +50,15 @@ public class ScheduleTytUploadsCommandHandler : IRequestHandler<ScheduleTytUploa
             var batch = work.TytUploadMode == TytUploadMode.Immediate
                 ? request.ImmediateBatchSize
                 : Math.Max(1, work.TytUploadBatchSize);
+
+            // Hạn mức chương mỗi ngày: chỉ đăng phần còn lại của hôm nay.
+            if (work.TytUploadDailyLimit > 0)
+            {
+                var localNow = TimeZoneInfo.ConvertTime(now, request.TimeZone);
+                var dayStart = new DateTimeOffset(localNow.Date, localNow.Offset);
+                batch = Math.Min(batch, work.TytUploadDailyLimit - await TytUploadQueue.CountSinceAsync(_context, work.Id, dayStart, cancellationToken));
+                if (batch <= 0) continue;
+            }
 
             queued += await TytUploadQueue.QueueNextAsync(_context, work, batch, now, cancellationToken);
         }

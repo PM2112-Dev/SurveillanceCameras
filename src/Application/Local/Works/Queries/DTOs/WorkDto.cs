@@ -30,6 +30,21 @@ public class WorkDto : BaseDto
     public int TytUploadEveryHours { get; init; }
 
     public string? TytUploadDailyTime { get; init; }
+
+    public int TytUploadDailyLimit { get; init; }
+
+    /// <summary>Bước của quy trình xuất bản: chờ chỗ / đăng chương đầu / chờ duyệt / đã duyệt.</summary>
+    public TytStage TytStage { get; init; }
+
+    public string? TytStageNote { get; init; }
+
+    public DateTimeOffset? TytPublishRequestedAt { get; init; }
+
+    public DateTimeOffset? TytApprovedAt { get; init; }
+
+    public DateTimeOffset? TytEarningSyncedAt { get; init; }
+
+    public string? TytEarningNote { get; init; }
     
     public string? Description { get; init; }
     

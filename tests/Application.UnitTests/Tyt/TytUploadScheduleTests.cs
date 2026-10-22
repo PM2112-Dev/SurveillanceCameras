@@ -47,4 +47,21 @@ public class TytUploadScheduleTests
         TytUploadSchedule.IsDue(TytUploadMode.Daily, 1, "bậy", null, Utc(20, 0, 59), Vn).ShouldBeFalse();
         TytUploadSchedule.IsDue(TytUploadMode.Daily, 1, "bậy", null, Utc(20, 1), Vn).ShouldBeTrue();
     }
+
+    [Test]
+    public void Daily_WithSeveralTimes_EachTimeIsItsOwnBatch()
+    {
+        // 08:00, 12:00, 20:00 giờ VN = 01:00, 05:00, 13:00 UTC.
+        const string times = "20:00, 08:00,12:00";
+        TytUploadSchedule.DailyTimes(times).Select(x => x.ToString("HH:mm")).ShouldBe(["08:00", "12:00", "20:00"]);
+        TytUploadSchedule.IsValidDailyTime(times).ShouldBeTrue();
+        TytUploadSchedule.IsValidDailyTime("08:00,25:00").ShouldBeFalse();
+
+        // Đã đăng lúc 08:05 → 08:30 chưa tới lô mới, 12:00 tới lô mới.
+        TytUploadSchedule.IsDue(TytUploadMode.Daily, 1, times, Utc(20, 1, 5), Utc(20, 2), Vn).ShouldBeFalse();
+        TytUploadSchedule.IsDue(TytUploadMode.Daily, 1, times, Utc(20, 1, 5), Utc(20, 5), Vn).ShouldBeTrue();
+        // Sau lô 12:00 đã đăng, tới 20:00 mới có lô kế.
+        TytUploadSchedule.IsDue(TytUploadMode.Daily, 1, times, Utc(20, 5, 2), Utc(20, 12), Vn).ShouldBeFalse();
+        TytUploadSchedule.IsDue(TytUploadMode.Daily, 1, times, Utc(20, 5, 2), Utc(20, 13), Vn).ShouldBeTrue();
+    }
 }

@@ -47,7 +47,8 @@ const initial = {
   tytUploadMode: 0,
   tytUploadBatchSize: 1,
   tytUploadEveryHours: 1,
-  tytUploadDailyTime: ''
+  tytUploadDailyTime: '',
+  tytUploadDailyLimit: 0
 };
 
 export function StoryForm() {
@@ -190,12 +191,21 @@ export function StoryForm() {
           {form.tytUploadMode === 3 && (
             <label>
               Giờ đăng mỗi ngày
-              <input type="time" value={form.tytUploadDailyTime || '08:00'}
+              <input type="text" placeholder="08:00,12:00,20:00" value={form.tytUploadDailyTime}
                 onChange={event => update({ tytUploadDailyTime: event.target.value })} />
+              <small className="hint">Mỗi giờ đăng một lô chương. Nhiều giờ cách nhau dấu phẩy; để trống là 08:00.</small>
+            </label>
+          )}
+          {form.tytUploadMode >= 2 && (
+            <label>
+              Tối đa chương mỗi ngày
+              <input type="number" min={0} max={1000} value={form.tytUploadDailyLimit}
+                onChange={event => update({ tytUploadDailyLimit: Number(event.target.value) })} />
+              <small className="hint">0 là không giới hạn.</small>
             </label>
           )}
           <small className="hint">
-            Chỉ áp dụng khi truyện đã có trên TYT. Chương được đăng theo đúng thứ tự, chương nào chưa biên tập xong hoặc đang lỗi thì các chương sau chờ.
+            Chỉ áp dụng sau khi truyện được xuất bản và TYT đã duyệt. Chương được đăng theo đúng thứ tự, chương nào chưa biên tập xong hoặc đang lỗi thì các chương sau chờ.
           </small>
         </fieldset>
       )}

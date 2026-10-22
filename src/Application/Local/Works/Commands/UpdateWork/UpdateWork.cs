@@ -49,6 +49,9 @@ public record UpdateWorkCommand : IRequest
 
     /// <summary>Giờ đăng mỗi ngày "HH:mm"; chuỗi rỗng là xoá (dùng giờ mặc định).</summary>
     public string? TytUploadDailyTime { get; init; }
+
+    /// <summary>Số chương tối đa đăng mỗi ngày; 0 là không giới hạn.</summary>
+    public int? TytUploadDailyLimit { get; init; }
 }
 
 public class UpdateWorkCommandValidator : AbstractValidator<UpdateWorkCommand>
@@ -59,9 +62,11 @@ public class UpdateWorkCommandValidator : AbstractValidator<UpdateWorkCommand>
             .WithMessage("Số chương mỗi lượt đăng từ 1 đến 100.");
         RuleFor(x => x.TytUploadEveryHours).InclusiveBetween(1, 168).When(x => x.TytUploadEveryHours.HasValue)
             .WithMessage("Khoảng cách giữa hai lượt đăng từ 1 đến 168 giờ.");
+        RuleFor(x => x.TytUploadDailyLimit).InclusiveBetween(0, 1000).When(x => x.TytUploadDailyLimit.HasValue)
+            .WithMessage("Số chương mỗi ngày từ 0 (không giới hạn) đến 1000.");
         RuleFor(x => x.TytUploadDailyTime).Must(TytUploadSchedule.IsValidDailyTime)
             .When(x => !string.IsNullOrEmpty(x.TytUploadDailyTime))
-            .WithMessage("Giờ đăng mỗi ngày phải có dạng HH:mm (vd. 08:30).");
+            .WithMessage("Giờ đăng mỗi ngày phải có dạng HH:mm, nhiều giờ cách nhau dấu phẩy (vd. 08:00,20:30).");
     }
 }
 
@@ -118,6 +123,7 @@ public class UpdateWorkCommandHandler : IRequestHandler<UpdateWorkCommand>
         if (request.TytUploadMode is { } mode) entity.TytUploadMode = mode;
         if (request.TytUploadBatchSize is { } batch) entity.TytUploadBatchSize = batch;
         if (request.TytUploadEveryHours is { } hours) entity.TytUploadEveryHours = hours;
+        if (request.TytUploadDailyLimit is { } dailyLimit) entity.TytUploadDailyLimit = dailyLimit;
         if (request.TytUploadDailyTime is { } dailyTime) entity.TytUploadDailyTime = dailyTime.Length == 0 ? null : dailyTime;
         
         await _context.SaveChangesAsync(cancellationToken);

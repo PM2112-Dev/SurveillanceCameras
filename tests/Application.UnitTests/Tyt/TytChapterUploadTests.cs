@@ -52,7 +52,7 @@ public class TytChapterUploadTests
         var work = new Work
         {
             Title = "Truyện", Type = WorkType.Story, CreatedBy = Owner, AccountId = _account.Id, TytStoryId = tytStoryId,
-            TytUploadMode = mode, TytUploadBatchSize = batch, TytUploadEveryHours = 1, Episodes = []
+            TytStage = TytStage.Approved, TytUploadMode = mode, TytUploadBatchSize = batch, TytUploadEveryHours = 1, Episodes = []
         };
         for (var i = 1; i <= chapters; i++)
         {
