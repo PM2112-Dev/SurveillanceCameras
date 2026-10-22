@@ -158,14 +158,13 @@ public class TikTokDramaSyncer
 
             var languages = await LanguagesAsync(ownerId, episodes, cancellationToken);
             episodesAdded += MergeEpisodes(movie, episodes, channel.UniqueId, languages);
-            // Ngôn ngữ của phim: ngôn ngữ có nhiều tập nhất. Không tập nào có ngôn ngữ thì giữ giá trị đang có
-            // (có thể do người dùng chọn tay).
-            movie.Language = movie.Episodes!
-                .Where(x => x.Language is not null)
-                .GroupBy(x => x.Language!)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .FirstOrDefault() ?? movie.Language;
+            // Ngôn ngữ của phim: tiếng Việt thắng — phim audio tiếng Anh kèm phụ đề tiếng Việt bị TikTok nhận diện chữ lúc là
+            // "en" lúc là "vi", mà người xem của app cần thấy phim đó trong danh mục tiếng Việt. Không có tập tiếng Việt thì
+            // lấy ngôn ngữ có nhiều tập nhất. Không tập nào có ngôn ngữ thì giữ giá trị đang có (có thể do người dùng chọn tay).
+            var tagged = movie.Episodes!.Where(x => x.Language is not null).Select(x => x.Language!).ToList();
+            movie.Language = tagged.FirstOrDefault(x => x.Code!.Equals(VietnameseCode, StringComparison.OrdinalIgnoreCase))
+                             ?? tagged.GroupBy(x => x).OrderByDescending(g => g.Count()).Select(g => g.Key).FirstOrDefault()
+                             ?? movie.Language;
             movie.EpisodesSyncedAt = _timeProvider.GetUtcNow();
             movie.EpisodeSyncError = null;
 
@@ -258,6 +257,8 @@ public class TikTokDramaSyncer
 
         return added;
     }
+
+    private const string VietnameseCode = "vi";
 
     /// <summary>
     /// Ngôn ngữ (của chủ phim) ứng với các mã <c>textLanguage</c> xuất hiện trong các tập, theo mã. Mã chưa khai báo thì

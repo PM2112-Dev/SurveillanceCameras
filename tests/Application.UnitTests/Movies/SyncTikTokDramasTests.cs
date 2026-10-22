@@ -232,6 +232,21 @@ public class SyncTikTokDramasTests
     }
 
     [Test]
+    public async Task MovieLanguage_VietnameseWins_ElseMajority()
+    {
+        // Audio tiếng Anh + phụ đề tiếng Việt: TikTok nhận diện lẫn lộn, chỉ cần có tập "vi" là phim thuộc tiếng Việt.
+        SetupPages(new DramaEpisodeListDto { Cursor = "1", ItemList = [Ep(1, 4, "en"), Ep(2, 4, "en"), Ep(3, 4, "en"), Ep(4, 4, "vi")] });
+        await SyncAsync();
+        var movie = await _db.Works.Include(x => x.Language).SingleAsync();
+        movie.Language!.Code.ShouldBe("vi");
+
+        // Không còn tập tiếng Việt: quay về ngôn ngữ nhiều tập nhất.
+        SetupPages(new DramaEpisodeListDto { Cursor = "1", ItemList = [Ep(1, 4, "en"), Ep(2, 4, "en"), Ep(3, 4, "en"), Ep(4, 4, "es")] });
+        await SyncAsync();
+        (await _db.Works.Include(x => x.Language).SingleAsync()).Language!.Code.ShouldBe("en");
+    }
+
+    [Test]
     public async Task CreatesMovie_WithAllEpisodesAcrossPages()
     {
         SetupPages(
