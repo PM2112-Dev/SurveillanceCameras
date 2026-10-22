@@ -183,7 +183,7 @@ public static class AppQueries
     }
 
     /// <summary>Ngôn ngữ app dùng khi người xem chưa chọn, hoặc chọn ngôn ngữ chưa có phim nào.</summary>
-    public const string DefaultLanguage = "en";
+    public const string DefaultLanguage = "vi";
 
     public static IQueryable<Work> InLanguage(this IQueryable<Work> works, string code)
         => works.Where(x => x.Language != null && x.Language.Code != null && x.Language.Code.ToLower() == code);

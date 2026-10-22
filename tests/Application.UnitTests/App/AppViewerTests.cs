@@ -36,7 +36,7 @@ public class AppViewerTests
         var movie = new Work
         {
             Title = "Lửa Thánh", Type = WorkType.Movie, IsPublished = true, ViewCount = 500, CreatedBy = Admin,
-            Language = new Language { Title = "Tiếng Anh", Code = "en", CreatedBy = Admin },
+            Language = new Language { Title = "Tiếng Việt", Code = "vi", CreatedBy = Admin },
             Episodes = Enumerable.Range(1, 4)
                 .Select(n => new Episode { EpisodeNumber = n, ExternalId = $"tt{n}", ThumbnailUrl = $"https://img.example.com/{n}.jpg", CreatedBy = Admin })
                 .ToList()
@@ -73,13 +73,13 @@ public class AppViewerTests
     }
 
     [Test]
-    public async Task Catalog_FiltersByChosenLanguage_AndFallsBackToEnglish()
+    public async Task Catalog_FiltersByChosenLanguage_AndFallsBackToVietnamese()
     {
-        var (db, english, _) = await SeedAsync();
+        var (db, vietnameseMovie, _) = await SeedAsync();
         using var __ = db;
-        var vietnamese = new Language { Title = "Tiếng Việt", Code = "VI", CreatedBy = Admin };
+        var english = new Language { Title = "Tiếng Anh", Code = "EN", CreatedBy = Admin };
         db.Works.AddRange(
-            new Work { Title = "Phim Việt", Type = WorkType.Movie, IsPublished = true, Language = vietnamese, CreatedBy = Admin },
+            new Work { Title = "Phim Anh", Type = WorkType.Movie, IsPublished = true, Language = english, CreatedBy = Admin },
             new Work { Title = "Chưa rõ ngôn ngữ", Type = WorkType.Movie, IsPublished = true, CreatedBy = Admin },
             // Ngôn ngữ chỉ có phim chưa xuất bản thì coi như chưa có phim.
             new Work { Title = "Phim Hàn ẩn", Type = WorkType.Movie, Language = new Language { Title = "Tiếng Hàn", Code = "ko", CreatedBy = Admin }, CreatedBy = Admin });
@@ -88,11 +88,11 @@ public class AppViewerTests
         async Task<List<string?>> Titles(string? language)
             => (await handler.Handle(new GetAppMoviesQuery { Language = language }, CancellationToken.None)).Items.Select(x => x.Title).ToList();
 
-        (await Titles("vi")).ShouldBe(["Phim Việt"]);
+        (await Titles("en")).ShouldBe(["Phim Anh"]);
         (await Titles(null)).ShouldBe(["Lửa Thánh"]);
         (await Titles("ko")).ShouldBe(["Lửa Thánh"]);
         (await Titles("xx")).ShouldBe(["Lửa Thánh"]);
-        (await handler.Handle(new GetAppMoviesQuery { Language = "vi" }, CancellationToken.None)).Items.Single().Language.ShouldBe("VI");
+        (await handler.Handle(new GetAppMoviesQuery { Language = "en" }, CancellationToken.None)).Items.Single().Language.ShouldBe("EN");
 
         var languages = await new GetAppLanguagesQueryHandler(db).Handle(new GetAppLanguagesQuery(), CancellationToken.None);
         languages.ShouldBe([new AppLanguageDto("en", "Tiếng Anh", 1), new AppLanguageDto("vi", "Tiếng Việt", 1)]);

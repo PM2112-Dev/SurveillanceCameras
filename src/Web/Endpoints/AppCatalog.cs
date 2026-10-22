@@ -72,7 +72,7 @@ public class AppCatalog : IEndpointGroup
         => TypedResults.Ok(await sender.Send(new GetAppLanguagesQuery()));
 
     [EndpointSummary("Get app movies")]
-    [EndpointDescription("Danh sách phim đã xuất bản theo ngôn ngữ người xem chọn (mặc định tiếng Anh); tìm theo tên/kênh, sắp xếp, có phân trang")]
+    [EndpointDescription("Danh sách phim đã xuất bản theo ngôn ngữ người xem chọn (mặc định tiếng Việt); tìm theo tên/kênh, sắp xếp, có phân trang")]
     public static async Task<Ok<PaginatedList<AppMovieDto>>> GetAppMovies(ISender sender, string? search = null,
         string? language = null, AppMovieSort sort = AppMovieSort.Newest, bool? full = null, int page = 1, int pageSize = 20)
         => TypedResults.Ok(await sender.Send(new GetAppMoviesQuery
