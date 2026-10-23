@@ -1,4 +1,5 @@
 using SurveillanceCameras.Application.Common.Interfaces;
+using SurveillanceCameras.Application.Local.StorageAccounts;
 using SurveillanceCameras.Domain.Entities;
 
 namespace SurveillanceCameras.Application.Local.App.Commands;
@@ -99,6 +100,8 @@ public class SaveAppWatchProgressCommandHandler : IRequestHandler<SaveAppWatchPr
         var entry = await _context.AppWatchHistories
             .FirstOrDefaultAsync(x => x.CreatedBy == userId && x.WorkId == request.MovieId, cancellationToken);
 
+        var isNewEpisodeView = entry is null || entry.EpisodeNumber != request.EpisodeNumber;
+
         if (entry is null)
         {
             if (!await _context.PublishedMovies().AnyAsync(x => x.Id == request.MovieId, cancellationToken))
@@ -117,6 +120,21 @@ public class SaveAppWatchProgressCommandHandler : IRequestHandler<SaveAppWatchPr
         entry.PositionSeconds = request.PositionSeconds;
         entry.DurationSeconds = request.DurationSeconds;
         entry.WatchedAt = watchedAt;
+
+        if (isNewEpisodeView)
+        {
+            var storageAccountId = await _context.Episodes
+                .AsNoTracking()
+                .Where(x => x.WorkId == request.MovieId && x.EpisodeNumber == request.EpisodeNumber && x.StorageAccountId != null)
+                .Select(x => x.StorageAccountId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (storageAccountId is { } accountId)
+            {
+                var stat = await _context.GetOrCreateMonthlyStatAsync(accountId, watchedAt, cancellationToken);
+                stat.GetObjectRequests += 1;
+            }
+        }
 
         await _context.SaveChangesAsync(cancellationToken);
     }

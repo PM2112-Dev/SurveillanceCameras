@@ -1,11 +1,15 @@
-﻿#Requires -RunAsAdministrator
+#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    Triển khai bản publish của src/Web lên IIS (app pool + site), và tuỳ chọn trỏ ngrok service sang site này.
+    Triển khai bản publish của src/Web lên IIS (app pool + site), và tuỳ chọn trỏ ngrok (test) hoặc Cloudflare Tunnel (production) sang site này.
 
 .EXAMPLE
     dotnet publish src\Web\Web.csproj -c Release -o C:\temp\story-publish
-    .\deploy\iis\Deploy-IIS.ps1 -PublishDir C:\temp\story-publish
+    # Chạy kèm ngrok (để test):
+    .\deploy\iis\Deploy-IIS.ps1 -PublishDir C:\temp\story-publish -NgrokConfig C:\ngrok\ngrok.yml
+    # Chạy kèm Cloudflare Tunnel trên production (dùng config.yml hoặc Tunnel Token):
+    .\deploy\iis\Deploy-IIS.ps1 -PublishDir C:\temp\story-publish -CloudflareTunnelConfig C:\cloudflared\config.yml
+    .\deploy\iis\Deploy-IIS.ps1 -PublishDir C:\temp\story-publish -CloudflareTunnelToken "<TUNNEL_TOKEN>"
 
 .NOTES
     Thư mục data\, logs\ và file appsettings.Production.json trong thư mục site được giữ nguyên giữa các lần deploy.
@@ -17,9 +21,15 @@ param(
     [string]$SitePath = "C:\inetpub\$SiteName",
     # Chỉ copy vào site ở lần đầu (khi site chưa có appsettings.Production.json).
     [string]$ProductionSettings,
-    # Nếu truyền: sửa upstream của endpoint trong ngrok.yml sang cổng site rồi restart service ngrok.
+    # [Test] Nếu truyền: sửa upstream của endpoint trong ngrok.yml sang cổng site rồi restart service ngrok.
     [string]$NgrokConfig,
     [string]$NgrokEndpointName,
+    # [Production] Nếu truyền file config.yml của cloudflared: sửa service: http://localhost:<Port> rồi restart service Cloudflared.
+    [string]$CloudflareTunnelConfig,
+    [string]$CloudflareTunnelHostname,
+    # [Production] Nếu dùng Remotely-managed Tunnel từ Cloudflare Zero Trust Dashboard: cài/cập nhật token cho service Cloudflared.
+    [string]$CloudflareTunnelToken,
+    [string]$CloudflareServiceName = 'Cloudflared',
     # Dưới IIS cửa sổ Chrome đăng nhập không hiện ra màn hình: account N mở cổng debug (base + N) để đăng nhập
     # qua chrome://inspect trên máy này. 0 = tắt.
     [int]$BrowserDebugPortBase = 9222,
@@ -76,7 +86,7 @@ try {
         Write-Warning "Site chưa có appsettings.Production.json (connection string, Jwt:SigningKey)."
     }
 
-    # --- web.config: môi trường + tin header X-Forwarded-* của ngrok + bật stdout log ---
+    # --- web.config: môi trường + tin header X-Forwarded-* của ngrok / Cloudflare Tunnel + bật stdout log ---
     $webConfigPath = Join-Path $SitePath 'web.config'
     [xml]$webConfig = Get-Content $webConfigPath -Raw
     $aspNetCore = $webConfig.SelectSingleNode('//aspNetCore')
@@ -132,7 +142,7 @@ try {
     if (-not $ok) { throw "Site http://localhost:$Port/ không trả 200 - xem $SitePath\logs\stdout_*.log" }
     Write-Host "Site OK: http://localhost:$Port/"
 
-    # --- ngrok ---
+    # --- ngrok (Test) ---
     if ($NgrokConfig) {
         Copy-Item $NgrokConfig "$NgrokConfig.bak" -Force
         $yaml = Get-Content $NgrokConfig -Raw
@@ -141,6 +151,37 @@ try {
         [IO.File]::WriteAllText($NgrokConfig, $yaml)
         Restart-Service ngrok
         Write-Host "Đã trỏ ngrok sang cổng $Port và restart service (bản cũ: $NgrokConfig.bak)"
+    }
+
+    # --- Cloudflare Tunnel (Production - file config.yml) ---
+    if ($CloudflareTunnelConfig) {
+        Copy-Item $CloudflareTunnelConfig "$CloudflareTunnelConfig.bak" -Force
+        $cfYaml = Get-Content $CloudflareTunnelConfig -Raw
+        $cfYaml = [regex]::Replace($cfYaml, '(service:\s*http://(?:localhost|127\.0\.0\.1):)\d+', "`${1}$Port")
+        if ($CloudflareTunnelHostname) {
+            $cfYaml = [regex]::Replace($cfYaml, '(-\s*hostname:\s*)\S+', "`${1}$CloudflareTunnelHostname")
+        }
+        [IO.File]::WriteAllText($CloudflareTunnelConfig, $cfYaml)
+        if (Get-Service -Name $CloudflareServiceName -ErrorAction SilentlyContinue) {
+            Restart-Service -Name $CloudflareServiceName
+            Write-Host "Đã trỏ Cloudflare Tunnel sang http://localhost:$Port và restart service $CloudflareServiceName (bản cũ: $CloudflareTunnelConfig.bak)"
+        }
+        else {
+            Write-Warning "Đã cập nhật $CloudflareTunnelConfig sang cổng $Port nhưng chưa tìm thấy Windows service '$CloudflareServiceName'. Chạy: cloudflared service install"
+        }
+    }
+
+    # --- Cloudflare Tunnel (Production - Tunnel Token từ Zero Trust Dashboard) ---
+    if ($CloudflareTunnelToken) {
+        $cloudflaredExe = (Get-Command cloudflared.exe -ErrorAction SilentlyContinue)?.Source
+        if (-not $cloudflaredExe) {
+            throw "Không tìm thấy cloudflared.exe trong PATH. Cài bằng: winget install Cloudflare.cloudflared"
+        }
+        if (-not (Get-Service -Name $CloudflareServiceName -ErrorAction SilentlyContinue)) {
+            & $cloudflaredExe service install $CloudflareTunnelToken | Out-Host
+        }
+        Restart-Service -Name $CloudflareServiceName
+        Write-Host "Đã khởi động Cloudflare Tunnel service ($CloudflareServiceName) — hãy trỏ Public Hostname trong Zero Trust sang http://localhost:$Port"
     }
 
     Write-Host 'DEPLOY_OK'

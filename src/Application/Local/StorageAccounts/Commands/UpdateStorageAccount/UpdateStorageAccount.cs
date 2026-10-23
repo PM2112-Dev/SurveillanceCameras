@@ -22,6 +22,9 @@ public record UpdateStorageAccountCommand : IRequest, IStorageAccountSettings
 
     public long QuotaBytes { get; init; }
 
+    /// <summary>Số video tối đa được tải lên R2 mỗi tháng (0 = không giới hạn).</summary>
+    public int MonthlyVideoLimit { get; init; }
+
     public bool IsEnabled { get; init; }
 
     public int Priority { get; init; }
@@ -65,7 +68,7 @@ public class UpdateStorageAccountCommandHandler : IRequestHandler<UpdateStorageA
         {
             throw new Common.Exceptions.ValidationException([
                 new FluentValidation.Results.ValidationFailure(nameof(request.Bucket),
-                    "Tài khoản đang lưu video của các tập phim nên không đổi được Account ID hay bucket. Tạo tài khoản lưu trữ mới thay vì sửa.")
+                    "Tài khoản đang lưu video của các tập phim nên không đổi được Account ID hay bucket.")
             ]);
         }
 
@@ -86,8 +89,9 @@ public class UpdateStorageAccountCommandHandler : IRequestHandler<UpdateStorageA
         entity.Bucket = bucket;
         entity.PublicBaseUrl = publicBaseUrl;
         entity.QuotaBytes = request.QuotaBytes;
+        entity.MonthlyVideoLimit = request.MonthlyVideoLimit;
         entity.IsEnabled = request.IsEnabled;
-        entity.Priority = request.Priority;
+        entity.Priority = 0;
 
         await _context.SaveChangesAsync(cancellationToken);
     }

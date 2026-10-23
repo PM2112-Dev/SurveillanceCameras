@@ -1,6 +1,6 @@
 # Chạy hệ thống bằng Docker
 
-Gồm 4 container: **web** (API + giao diện + Chrome), **db** (PostgreSQL 17), **kafka**, **kafka-init** (tạo topic rồi thoát).
+Gồm các container: **web** (API + giao diện + Chrome), **db** (PostgreSQL 17), **kafka**, **kafka-init** (tạo topic rồi thoát), cùng 2 tuỳ chọn tunnel: **ngrok** (để test) và **cloudflared** (Cloudflare Tunnel cho production).
 
 ## Máy cũ: đóng gói
 
@@ -23,6 +23,19 @@ docker compose up -d --build
 - Giao diện: `http://<máy>:8080` — tài khoản có sẵn trong dữ liệu mang sang (máy trắng: `administrator@localhost` / `Administrator1!`).
 - Lần đầu: DB trống thì nạp `docker/initdb/01-data.sql`, sau đó app tự chạy migration.
 - Xem log: `docker compose logs -f web`
+
+## Chạy qua Ngrok (Test) hoặc Cloudflare Tunnel (Production)
+
+- **Chạy kèm Ngrok để test**:
+  Điền `NGROK_AUTHTOKEN` và `NGROK_DOMAIN` trong `.env`, sau đó chạy:
+  ```bash
+  docker compose --profile ngrok up -d --build
+  ```
+- **Chạy kèm Cloudflare Tunnel cho Production**:
+  Tạo tunnel trong Cloudflare Zero Trust → Networks → Tunnels, trỏ Public Hostname (vd. `https://api.ten-mien-cua-ban.com`) về `http://web:8080`, điền `CLOUDFLARE_TUNNEL_TOKEN` vào `.env`, sau đó chạy:
+  ```bash
+  docker compose --profile cloudflare up -d --build
+  ```
 
 ## Đăng nhập tài khoản (TYT, Wikicv, TikTok)
 

@@ -2,10 +2,10 @@ import { createStorageAccount, getStorageAccount, updateStorageAccount } from '.
 import { EntityForm, useEntityForm } from '../../components/common/EntityForm';
 import { GB } from './storageFormat';
 
-// Hạn mức mặc định thấp hơn mức miễn phí 10 GB của R2 một chút để không chạm trần.
+// Hạn mức mặc định thấp hơn mức miễn phí 10 GB của R2 một chút để không chạm trần miễn phí khi chưa muốn phát sinh phí.
 const initial = {
-  title: '', cloudflareAccountId: '', accessKeyId: '', secretAccessKey: '', bucket: '', publicBaseUrl: '',
-  quotaGb: '9.5', priority: '0', isEnabled: true
+  title: 'Cloudflare R2', cloudflareAccountId: '', accessKeyId: '', secretAccessKey: '', bucket: '', publicBaseUrl: '',
+  quotaGb: '9.5', monthlyVideoLimit: '0', isEnabled: true
 };
 
 export function StorageAccountForm() {
@@ -21,12 +21,17 @@ export function StorageAccountForm() {
       bucket: entity.bucket ?? '',
       publicBaseUrl: entity.publicBaseUrl ?? '',
       quotaGb: String(Math.round((entity.quotaBytes / GB) * 100) / 100),
-      priority: String(entity.priority ?? 0),
+      monthlyVideoLimit: String(entity.monthlyVideoLimit ?? 0),
       isEnabled: Boolean(entity.isEnabled)
     }),
     save: ({ isEdit, id, form }) => {
-      const { quotaGb, priority, ...rest } = form;
-      const account = { ...rest, quotaBytes: Math.round(Number(quotaGb) * GB), priority: Number(priority) || 0 };
+      const { quotaGb, monthlyVideoLimit, ...rest } = form;
+      const account = {
+        ...rest,
+        quotaBytes: Math.round(Number(quotaGb) * GB),
+        monthlyVideoLimit: Math.max(0, Math.floor(Number(monthlyVideoLimit) || 0)),
+        priority: 0
+      };
 
       return isEdit ? updateStorageAccount(id, account) : createStorageAccount(account);
     },
@@ -36,11 +41,11 @@ export function StorageAccountForm() {
   const { form, update, isEdit } = state;
 
   return (
-    <EntityForm title={isEdit ? 'Sửa tài khoản lưu trữ' : 'Thêm tài khoản lưu trữ'} state={state}>
+    <EntityForm title={isEdit ? 'Cấu hình tài khoản lưu trữ R2' : 'Thiết lập tài khoản lưu trữ R2'} state={state}>
       <label>
-        Tên tài khoản <span className="required">*</span>
+        Tên gợi nhớ <span className="required">*</span>
         <input type="text" required maxLength={500} value={form.title}
-          onChange={event => update({ title: event.target.value })} placeholder="VD: R2 số 1" />
+          onChange={event => update({ title: event.target.value })} placeholder="VD: Cloudflare R2 chính" />
       </label>
 
       <label>
@@ -70,7 +75,7 @@ export function StorageAccountForm() {
       <label>
         Bucket <span className="required">*</span>
         <input type="text" required maxLength={63} value={form.bucket}
-          onChange={event => update({ bucket: event.target.value })} placeholder="VD: phim-01" />
+          onChange={event => update({ bucket: event.target.value })} placeholder="VD: phim-r2" />
       </label>
 
       <label>
@@ -79,26 +84,32 @@ export function StorageAccountForm() {
           onChange={event => update({ publicBaseUrl: event.target.value })} placeholder="VD: https://pub-xxxx.r2.dev" />
         <small>
           Bật Public Access cho bucket (r2.dev hoặc domain riêng) rồi dán địa chỉ vào đây — link phát của từng tập được
-          ghép từ địa chỉ này. Nên dùng domain riêng: video được Cloudflare cache nên app phát nhanh hơn, còn r2.dev bị
-          giới hạn tốc độ. Đổi địa chỉ thì link phát của các tập đã lưu được cập nhật theo.
+          ghép từ địa chỉ này. Nên dùng domain riêng: video được Cloudflare cache nên giảm số request Class B vào R2 và
+          app phát nhanh hơn. Đổi địa chỉ thì link phát của các tập đã lưu được cập nhật theo.
         </small>
       </label>
 
-      <label>
-        Hạn mức (GB) <span className="required">*</span>
-        <input type="number" required min="0.01" step="0.01" value={form.quotaGb}
-          onChange={event => update({ quotaGb: event.target.value })} />
-        <small>
-          Đầy tới mức này thì hệ thống chuyển sang tài khoản kế tiếp. Mức miễn phí của R2 là 10 GB, tính như Cloudflare
-          (1 GB = 1 tỷ byte).
-        </small>
-      </label>
+      <div className="grid">
+        <label>
+          Hạn mức dung lượng (GB) <span className="required">*</span>
+          <input type="number" required min="0.01" step="0.01" value={form.quotaGb}
+            onChange={event => update({ quotaGb: event.target.value })} />
+          <small>
+            Đầy tới mức này thì hệ thống ngừng tải thêm video lên R2. Mức miễn phí của R2 là 10 GB/tháng (vượt mức tính
+            $0.015/GB-tháng, 1 GB = 1 tỷ byte).
+          </small>
+        </label>
 
-      <label>
-        Thứ tự
-        <input type="number" step="1" value={form.priority} onChange={event => update({ priority: event.target.value })} />
-        <small>Tài khoản có số nhỏ hơn được dùng trước.</small>
-      </label>
+        <label>
+          Giới hạn số video tải lên mỗi tháng
+          <input type="number" min="0" step="1" value={form.monthlyVideoLimit}
+            onChange={event => update({ monthlyVideoLimit: event.target.value })} />
+          <small>
+            Đặt <strong>0</strong> nếu không giới hạn. Khi đặt &gt; 0, đạt đủ số video trong tháng (UTC) thì hệ thống tạm
+            dừng tải thêm cho tới tháng sau.
+          </small>
+        </label>
+      </div>
 
       <label>
         <input type="checkbox" checked={form.isEnabled} onChange={event => update({ isEnabled: event.target.checked })} />

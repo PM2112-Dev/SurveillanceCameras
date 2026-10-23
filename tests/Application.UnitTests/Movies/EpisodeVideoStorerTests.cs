@@ -5,8 +5,14 @@ using Moq;
 using NUnit.Framework;
 using Shouldly;
 using SurveillanceCameras.Application.Common.Exceptions;
+using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Models.TikTok;
+using SurveillanceCameras.Application.Local.App.Commands;
 using SurveillanceCameras.Application.Local.Movies.Commands.StoreEpisodeVideos;
+using SurveillanceCameras.Application.Local.StorageAccounts.Commands.CheckStorageAccount;
+using SurveillanceCameras.Application.Local.StorageAccounts.Commands.CreateStorageAccount;
+using SurveillanceCameras.Application.Local.StorageAccounts.Commands.UpdateStorageAccountMonthlyStat;
+using SurveillanceCameras.Application.Local.StorageAccounts.Queries.GetStorageAccounts;
 using SurveillanceCameras.Application.Repository.TikTok;
 using SurveillanceCameras.Application.Repository.VideoStorage;
 using SurveillanceCameras.Domain.Entities;
@@ -32,6 +38,7 @@ public class EpisodeVideoStorerTests
     [SetUp]
     public async Task SetUp()
     {
+        _now = new(2026, 10, 21, 0, 0, 0, TimeSpan.Zero);
         _db = TestDb.Create();
         _protector = new AesSecretProtector("khoá-thử-nghiệm-đủ-dài-0123456789");
         _videoSize = 30 * Mb;
@@ -43,7 +50,7 @@ public class EpisodeVideoStorerTests
             Options.Create(new EpisodeVideoStoreOptions { DelayBetweenVideosSeconds = 0, MaxAttempts = 3, MinFreeBytes = 1, BatchSize = 10 }),
             new DramaFileCache(TimeProvider.System), NullLogger<EpisodeVideoStorer>.Instance);
 
-        _movie = new Work { Title = "Phim", Type = WorkType.Movie, CreatedBy = Owner, Episodes = [] };
+        _movie = new Work { Title = "Phim", Type = WorkType.Movie, CreatedBy = Owner, IsPublished = true, Episodes = [] };
         _db.Works.Add(_movie);
         await _db.SaveChangesAsync();
     }
@@ -64,14 +71,15 @@ public class EpisodeVideoStorerTests
         return queued;
     }
 
-    private async Task<StorageAccount> AddAccount(string title, int priority, long quota, long used = 0, bool enabled = true,
-        string owner = Owner)
+    private async Task<StorageAccount> AddAccount(string title, int priority = 1, long quota = 100 * Mb, long used = 0,
+        bool enabled = true, string owner = Owner, int monthlyVideoLimit = 0)
     {
         var account = new StorageAccount
         {
             Title = title, CloudflareAccountId = "acc" + priority, AccessKeyId = "key", Bucket = "videos",
             SecretAccessKey = _protector.Protect("secret-" + title), PublicBaseUrl = $"https://{title}.example.com",
-            QuotaBytes = quota, UsedBytes = used, Priority = priority, IsEnabled = enabled, CreatedBy = owner
+            QuotaBytes = quota, UsedBytes = used, Priority = priority, IsEnabled = enabled, CreatedBy = owner,
+            MonthlyVideoLimit = monthlyVideoLimit
         };
         _db.StorageAccounts.Add(account);
         await _db.SaveChangesAsync();
@@ -91,24 +99,51 @@ public class EpisodeVideoStorerTests
     }
 
     [Test]
-    public async Task Store_UploadsToHighestPriorityAccount_AndRecordsUsage()
+    public async Task Store_UploadsToSingleAccount_AndRecordsUsageAndMonthlyStats()
     {
-        var second = await AddAccount("b", priority: 2, quota: 100 * Mb);
-        var first = await AddAccount("a", priority: 1, quota: 100 * Mb, used: 10 * Mb);
+        var account = await AddAccount("a", quota: 100 * Mb, used: 10 * Mb);
         var episode = await AddEpisode(1);
 
         (await RunBatchAsync(CancellationToken.None)).ShouldBe(1);
 
-        episode.StorageAccountId.ShouldBe(first.Id);
+        episode.StorageAccountId.ShouldBe(account.Id);
         episode.StorageSizeBytes.ShouldBe(30 * Mb);
         episode.StorageKey.ShouldNotBeNull().ShouldStartWith($"movies/{_movie.Id}/{episode.Id}-");
         episode.StreamUrl.ShouldBe($"https://a.example.com/{episode.StorageKey}");
         episode.StorageError.ShouldBeNull();
-        first.UsedBytes.ShouldBe(40 * Mb);
-        second.UsedBytes.ShouldBe(0);
+        account.UsedBytes.ShouldBe(40 * Mb);
+
+        var stat = await _db.StorageAccountMonthlyStats.SingleAsync(x => x.StorageAccountId == account.Id);
+        stat.Year.ShouldBe(2026);
+        stat.Month.ShouldBe(10);
+        stat.VideosUploaded.ShouldBe(1);
+        stat.BytesUploaded.ShouldBe(30 * Mb);
+        stat.PutObjectRequests.ShouldBe(1);
+        stat.TotalClassARequests.ShouldBe(1);
+
         // Khoá bí mật được giải mã trước khi gọi kho.
         _storage.Verify(x => x.UploadFileAsync(It.Is<VideoStorageTarget>(t => t.SecretAccessKey == "secret-a" && t.Bucket == "videos"),
             episode.StorageKey!, It.IsAny<string>(), "video/mp4", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task Create_RefusesSecondStorageAccount_ForSameUser()
+    {
+        await AddAccount("a");
+        var user = new Mock<IUser>();
+        user.Setup(x => x.Id).Returns(Owner);
+        var handler = new CreateStorageAccountCommandHandler(_db, user.Object, _protector);
+
+        await Should.ThrowAsync<ValidationException>(() => handler.Handle(new CreateStorageAccountCommand
+        {
+            Title = "R2 thứ 2",
+            CloudflareAccountId = "acc2",
+            AccessKeyId = "key2",
+            SecretAccessKey = "sec2",
+            Bucket = "videos-02",
+            PublicBaseUrl = "https://pub.example.com",
+            QuotaBytes = StorageAccount.DefaultQuotaBytes
+        }, CancellationToken.None));
     }
 
     [Test]
@@ -236,24 +271,9 @@ public class EpisodeVideoStorerTests
     }
 
     [Test]
-    public async Task Store_MovesToNextAccount_WhenFirstHasNoRoomForTheFile()
+    public async Task Store_RecordsErrorAndPutRequest_WhenUploadToSingleAccountFails()
     {
-        var first = await AddAccount("a", priority: 1, quota: 100 * Mb, used: 80 * Mb);
-        var second = await AddAccount("b", priority: 2, quota: 100 * Mb);
-        var episode = await AddEpisode(1);
-
-        await RunBatchAsync(CancellationToken.None);
-
-        episode.StorageAccountId.ShouldBe(second.Id);
-        first.UsedBytes.ShouldBe(80 * Mb);
-        second.UsedBytes.ShouldBe(30 * Mb);
-    }
-
-    [Test]
-    public async Task Store_FallsBackToNextAccount_WhenUploadFails()
-    {
-        var first = await AddAccount("a", priority: 1, quota: 100 * Mb);
-        var second = await AddAccount("b", priority: 2, quota: 100 * Mb);
+        var account = await AddAccount("a", priority: 1, quota: 100 * Mb);
         var episode = await AddEpisode(1);
         _storage.Setup(x => x.UploadFileAsync(It.Is<VideoStorageTarget>(t => t.SecretAccessKey == "secret-a"), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -261,10 +281,105 @@ public class EpisodeVideoStorerTests
 
         await RunBatchAsync(CancellationToken.None);
 
-        episode.StorageAccountId.ShouldBe(second.Id);
-        episode.StorageError.ShouldBeNull();
-        first.LastError.ShouldBe("sai khoá");
-        first.UsedBytes.ShouldBe(0);
+        episode.StorageAccountId.ShouldBeNull();
+        episode.StorageAttempts.ShouldBe(1);
+        episode.StorageError.ShouldNotBeNull().ShouldContain("sai khoá");
+        account.LastError.ShouldBe("sai khoá");
+        account.UsedBytes.ShouldBe(0);
+
+        var stat = await _db.StorageAccountMonthlyStats.SingleAsync(x => x.StorageAccountId == account.Id);
+        stat.PutObjectRequests.ShouldBe(1);
+        stat.VideosUploaded.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task MonthlyVideoLimit_CapsUploadsPerMonth_AndResumesNextMonth()
+    {
+        var account = await AddAccount("a", quota: 500 * Mb, monthlyVideoLimit: 2);
+        var ep1 = await AddEpisode(1);
+        var ep2 = await AddEpisode(2);
+        var ep3 = await AddEpisode(3);
+
+        // Tháng 10/2026: giới hạn 2 video/tháng → chỉ xếp hàng và tải 2 tập.
+        (await RunBatchAsync(CancellationToken.None)).ShouldBe(2);
+        ep1.StreamUrl.ShouldNotBeNull();
+        ep2.StreamUrl.ShouldNotBeNull();
+        ep3.StreamUrl.ShouldBeNull();
+
+        // Lượt quét tiếp theo trong cùng tháng 10/2026 không xếp hàng thêm tập 3.
+        (await RunBatchAsync(CancellationToken.None)).ShouldBe(0);
+
+        // Sang tháng 11/2026: hạn mức tháng mới mở lại, tập 3 được tải lên R2.
+        _now = new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.Zero);
+        (await RunBatchAsync(CancellationToken.None)).ShouldBe(1);
+        ep3.StreamUrl.ShouldNotBeNull();
+
+        var octStat = await _db.StorageAccountMonthlyStats.SingleAsync(x => x.StorageAccountId == account.Id && x.Year == 2026 && x.Month == 10);
+        var novStat = await _db.StorageAccountMonthlyStats.SingleAsync(x => x.StorageAccountId == account.Id && x.Year == 2026 && x.Month == 11);
+        octStat.VideosUploaded.ShouldBe(2);
+        octStat.BytesUploaded.ShouldBe(60 * Mb);
+        novStat.VideosUploaded.ShouldBe(1);
+        novStat.BytesUploaded.ShouldBe(30 * Mb);
+    }
+
+    [Test]
+    public async Task MonthlyTracking_TracksCheckWatchAndCostCalculation_AndSupportsReconciliation()
+    {
+        // Tài khoản đang dùng 20 GB (vượt 10 GB miễn phí → 10 GB * $0.015 = $0.15).
+        var account = await AddAccount("a", quota: 50 * StorageAccount.BytesPerGb, used: 20 * StorageAccount.BytesPerGb);
+        var ep1 = await AddEpisode(1);
+        await RunBatchAsync(CancellationToken.None);
+
+        // Kiểm tra bucket có 2.500 file → 3 trang ListObjectsV2 (Class A).
+        _storage.Setup(x => x.GetUsageAsync(It.IsAny<VideoStorageTarget>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new VideoStorageUsage(20 * StorageAccount.BytesPerGb, 2500));
+        var user = new Mock<IUser>();
+        user.Setup(x => x.Id).Returns(Owner);
+        var checkHandler = new CheckStorageAccountCommandHandler(_db, user.Object, _protector, _storage.Object, TimeProvider.System);
+        await checkHandler.Handle(new CheckStorageAccountCommand(account.Id), CancellationToken.None);
+
+        // Người xem phát tập 1 trên app → cộng 1 request GetObject (Class B).
+        var watchHandler = new SaveAppWatchProgressCommandHandler(_db, user.Object, TimeProvider.System);
+        await watchHandler.Handle(new SaveAppWatchProgressCommand
+        {
+            MovieId = _movie.Id,
+            EpisodeNumber = ep1.EpisodeNumber,
+            PositionSeconds = 10,
+            DurationSeconds = 60,
+            WatchedAt = _now
+        }, CancellationToken.None);
+
+        // Đối soát số liệu tháng 10/2026 với Cloudflare: 2.000.000 Class A (vượt 1M → $4.50) và 20.000.000 Class B (vượt 10M → $3.60).
+        var reconcileHandler = new UpdateStorageAccountMonthlyStatCommandHandler(_db, user.Object);
+        var updatedStat = await reconcileHandler.Handle(new UpdateStorageAccountMonthlyStatCommand
+        {
+            StorageAccountId = account.Id,
+            Year = 2026,
+            Month = 10,
+            VideosUploaded = 150,
+            BytesUploaded = 4500 * Mb,
+            VideosDeleted = 5,
+            BytesDeleted = 150 * Mb,
+            PutObjectRequests = 1_500_000,
+            ListObjectsRequests = 500_000,
+            OtherClassARequests = 0,
+            GetObjectRequests = 20_000_000,
+            HeadObjectRequests = 0,
+            OtherClassBRequests = 0,
+            DeleteObjectRequests = 500
+        }, CancellationToken.None);
+
+        updatedStat.TotalClassARequests.ShouldBe(2_000_000);
+        updatedStat.TotalClassBRequests.ShouldBe(20_000_000);
+        updatedStat.StorageCostUsd.ShouldBe(0.15m);
+        updatedStat.ClassACostUsd.ShouldBe(4.50m);
+        updatedStat.ClassBCostUsd.ShouldBe(3.60m);
+        updatedStat.TotalEstimatedCostUsd.ShouldBe(8.25m);
+
+        var dtos = await new GetStorageAccountsQueryHandler(_db, user.Object, TimeProvider.System)
+            .Handle(new GetStorageAccountsQuery(), CancellationToken.None);
+        dtos.Count.ShouldBe(1);
+        dtos[0].MonthlyStats.ShouldContain(x => x.Year == 2026 && x.Month == 10 && x.TotalEstimatedCostUsd == 8.25m);
     }
 
     [Test]
@@ -460,7 +575,7 @@ public class EpisodeVideoStorerTests
     }
 
     [Test]
-    public async Task Release_DeletesFile_ReturnsSpace_AndClearsEpisode()
+    public async Task Release_DeletesFile_ReturnsSpace_RecordsDeleteRequest_AndClearsEpisode()
     {
         var account = await AddAccount("a", priority: 1, quota: 100 * Mb);
         var episode = await AddEpisode(1);
@@ -475,6 +590,11 @@ public class EpisodeVideoStorerTests
         episode.StreamUrl.ShouldBeNull();
         episode.StorageAccountId.ShouldBeNull();
         episode.StorageKey.ShouldBeNull();
+
+        var stat = await _db.StorageAccountMonthlyStats.SingleAsync(x => x.StorageAccountId == account.Id);
+        stat.DeleteObjectRequests.ShouldBe(1);
+        stat.VideosDeleted.ShouldBe(1);
+        stat.BytesDeleted.ShouldBe(30 * Mb);
     }
 
     [Test]

@@ -69,6 +69,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
 
     public DbSet<StorageAccount> StorageAccounts => Set<StorageAccount>();
 
+    public DbSet<StorageAccountMonthlyStat> StorageAccountMonthlyStats => Set<StorageAccountMonthlyStat>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using SurveillanceCameras.Infrastructure.Data;
 using Scalar.AspNetCore;
 using SurveillanceCameras.Application;
@@ -16,7 +17,17 @@ builder.AddApplicationServices();
 builder.AddInfrastructureServices();
 builder.AddWebServices();
 
+// Hỗ trợ nhận đúng HTTPS và địa chỉ IP thật khi đứng sau cả ngrok (test) lẫn Cloudflare Tunnel (production).
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 // Development luôn tự áp migration + seed; môi trường khác (vd. Docker) bật bằng Database:InitialiseOnStartup = true.

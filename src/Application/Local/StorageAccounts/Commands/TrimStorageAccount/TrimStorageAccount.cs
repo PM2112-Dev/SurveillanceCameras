@@ -67,8 +67,13 @@ public class TrimStorageAccountCommandHandler : IRequestHandler<TrimStorageAccou
             .FirstOrDefaultAsync(x => x.Id == request.Id && x.CreatedBy == _user.Id, cancellationToken);
         Guard.Against.NotFound(request.Id, account);
 
+        var now = _timeProvider.GetUtcNow();
+        var stat = await _context.GetOrCreateMonthlyStatAsync(account.Id, now, cancellationToken);
+
         var target = account.ToTarget(_protector);
         var objects = await _storage.ListAsync(target, cancellationToken);
+        stat.ListObjectsRequests += StorageAccountUsageTracker.CountListRequests(objects.Count);
+
         var usedBefore = objects.Sum(x => x.Size);
         var sizes = objects.GroupBy(x => x.Key).ToDictionary(g => g.Key, g => g.First().Size);
 
@@ -107,9 +112,12 @@ public class TrimStorageAccountCommandHandler : IRequestHandler<TrimStorageAccou
             {
                 foreach (var orphan in orphans)
                 {
+                    stat.DeleteObjectRequests += 1;
                     try
                     {
                         await _storage.DeleteAsync(target, orphan.Key, cancellationToken);
+                        stat.VideosDeleted += 1;
+                        stat.BytesDeleted += orphan.Size;
                     }
                     catch (VideoStorageException ex)
                     {
@@ -118,7 +126,7 @@ public class TrimStorageAccountCommandHandler : IRequestHandler<TrimStorageAccou
                 }
             }
 
-            // Xoá file của tập và gỡ link phát (ReleaseAsync tự ghi log file không xoá được).
+            // Xoá file của tập và gỡ link phát (ReleaseAsync tự ghi log file không xoá được và cộng thống kê DeleteObject).
             await _storer.ReleaseAsync(release.Select(x => x.Episode).ToList(), cancellationToken);
             foreach (var (episode, _) in release)
             {
@@ -128,12 +136,15 @@ public class TrimStorageAccountCommandHandler : IRequestHandler<TrimStorageAccou
             }
 
             // Đối soát lại theo bucket sau khi xoá: con số cuối cùng là dung lượng thực, kể cả file xoá lỗi.
-            used = (await _storage.ListAsync(target, cancellationToken)).Sum(x => x.Size);
+            var afterObjects = await _storage.ListAsync(target, cancellationToken);
+            stat.ListObjectsRequests += StorageAccountUsageTracker.CountListRequests(afterObjects.Count);
+            used = afterObjects.Sum(x => x.Size);
             account.UsedBytes = used;
             account.LastError = null;
-            account.LastCheckedAt = _timeProvider.GetUtcNow();
-            await _context.SaveChangesAsync(cancellationToken);
+            account.LastCheckedAt = now;
         }
+
+        await _context.SaveChangesAsync(cancellationToken);
 
         return new TrimStorageAccountResult(request.Apply, account.QuotaBytes, usedBefore, used, objects.Count,
             orphans.Count, orphanBytes, request.DeleteOrphans, release.Count, release.Sum(x => x.Size), movies, errors);

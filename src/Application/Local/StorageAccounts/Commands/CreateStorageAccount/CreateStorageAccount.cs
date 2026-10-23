@@ -19,12 +19,15 @@ public record CreateStorageAccountCommand : IRequest<int>, IStorageAccountSettin
 
     public long QuotaBytes { get; init; } = StorageAccount.DefaultQuotaBytes;
 
+    /// <summary>Số video tối đa được tải lên R2 mỗi tháng (0 = không giới hạn).</summary>
+    public int MonthlyVideoLimit { get; init; }
+
     public bool IsEnabled { get; init; } = true;
 
     public int Priority { get; init; }
 }
 
-/// <summary>Phần cấu hình chung của lệnh tạo và sửa tài khoản lưu trữ.</summary>
+/// <summary>Phần cấu hình chung của lệnh tạo và sửa tài khoản lưu trữ R2 duy nhất.</summary>
 public interface IStorageAccountSettings
 {
     string? Title { get; }
@@ -34,6 +37,7 @@ public interface IStorageAccountSettings
     string? Bucket { get; }
     string? PublicBaseUrl { get; }
     long QuotaBytes { get; }
+    int MonthlyVideoLimit { get; }
 }
 
 public class StorageAccountSettingsValidator : AbstractValidator<IStorageAccountSettings>
@@ -57,6 +61,7 @@ public class StorageAccountSettingsValidator : AbstractValidator<IStorageAccount
                                                                                    && string.IsNullOrEmpty(uri.Query))
             .WithMessage("Địa chỉ công khai phải là link https đầy đủ (vd. https://pub-xxxx.r2.dev).");
         RuleFor(x => x.QuotaBytes).GreaterThan(0).WithMessage("Hạn mức phải lớn hơn 0.");
+        RuleFor(x => x.MonthlyVideoLimit).GreaterThanOrEqualTo(0).WithMessage("Giới hạn số video mỗi tháng không được âm.");
     }
 }
 
@@ -72,16 +77,26 @@ public class CreateStorageAccountCommandValidator : AbstractValidator<CreateStor
 public class CreateStorageAccountCommandHandler : IRequestHandler<CreateStorageAccountCommand, int>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUser _user;
     private readonly ISecretProtector _protector;
 
-    public CreateStorageAccountCommandHandler(IApplicationDbContext context, ISecretProtector protector)
+    public CreateStorageAccountCommandHandler(IApplicationDbContext context, IUser user, ISecretProtector protector)
     {
         _context = context;
+        _user = user;
         _protector = protector;
     }
 
     public async Task<int> Handle(CreateStorageAccountCommand request, CancellationToken cancellationToken)
     {
+        if (await _context.StorageAccounts.AnyAsync(x => x.CreatedBy == _user.Id, cancellationToken))
+        {
+            throw new Common.Exceptions.ValidationException([
+                new FluentValidation.Results.ValidationFailure(nameof(request.Title),
+                    "Hệ thống chỉ sử dụng 1 tài khoản lưu trữ R2 duy nhất. Vui lòng cập nhật tài khoản hiện có thay vì tạo mới.")
+            ]);
+        }
+
         var entity = new StorageAccount
         {
             Title = request.Title!.Trim(),
@@ -91,8 +106,9 @@ public class CreateStorageAccountCommandHandler : IRequestHandler<CreateStorageA
             Bucket = request.Bucket!.Trim(),
             PublicBaseUrl = request.PublicBaseUrl!.Trim().TrimEnd('/'),
             QuotaBytes = request.QuotaBytes,
+            MonthlyVideoLimit = request.MonthlyVideoLimit,
             IsEnabled = request.IsEnabled,
-            Priority = request.Priority
+            Priority = 0
         };
 
         _context.StorageAccounts.Add(entity);

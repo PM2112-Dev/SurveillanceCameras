@@ -1,4 +1,6 @@
 # Chạy toàn bộ hệ thống: docker compose up -d --build
+# Chạy kèm ngrok (để test):            docker compose --profile ngrok up -d --build
+# Chạy kèm Cloudflare Tunnel (prod):   docker compose --profile cloudflare up -d --build
 # Web:            http://<máy>:8080
 # Màn hình Chrome: http://<máy>:6080/vnc.html  (đăng nhập tài khoản TYT/Wikicv/TikTok)
 name: story-system
@@ -21,6 +23,7 @@ services:
       ConnectionStrings__Kafka: "kafka:9092"
       Database__InitialiseOnStartup: "true"
       Jwt__SigningKey: "${JWT_SIGNING_KEY:?Đặt JWT_SIGNING_KEY trong .env}"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       # Trong container dùng Chromium của Playwright (Google Chrome không có bản Linux ARM).
       AccountSession__Channel: ""
       AccountSession__Headless: "false"
@@ -33,6 +36,30 @@ services:
       - web-data:/app/data
       - ./docker/media:/seed/media:ro
     shm_size: "1gb"   # Chrome cần /dev/shm lớn, mặc định 64MB dễ crash tab
+
+  # Cloudflare Tunnel cho môi trường Production (bật bằng: docker compose --profile cloudflare up -d).
+  # Trong Cloudflare Zero Trust → Networks → Tunnels, trỏ Public Hostname về http://web:8080.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["cloudflare"]
+    restart: unless-stopped
+    depends_on:
+      - web
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:-}
+
+  # Ngrok để test nhanh (bật bằng: docker compose --profile ngrok up -d).
+  ngrok:
+    image: ngrok/ngrok:latest
+    profiles: ["ngrok"]
+    restart: unless-stopped
+    depends_on:
+      - web
+    environment:
+      NGROK_AUTHTOKEN: "${NGROK_AUTHTOKEN:-}"
+    command:
+      - "http"
+      - "web:8080"
+      - "--url=${NGROK_DOMAIN:-headscarf-lard-broken.ngrok-free.dev}"
 
   db:
     image: postgres:17

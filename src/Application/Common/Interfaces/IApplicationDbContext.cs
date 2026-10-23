@@ -57,6 +57,8 @@ public interface IApplicationDbContext
     DbSet<AppMonetizationSettings> AppMonetizationSettings { get; }
 
     DbSet<StorageAccount> StorageAccounts { get; }
+
+    DbSet<StorageAccountMonthlyStat> StorageAccountMonthlyStats { get; }
     
     /// <summary>Outbox pattern: pending integration events awaiting Kafka publish.</summary>
     DbSet<OutboxMessage> OutboxMessages { get; }

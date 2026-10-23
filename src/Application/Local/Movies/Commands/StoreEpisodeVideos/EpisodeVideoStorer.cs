@@ -4,6 +4,7 @@ using SurveillanceCameras.Application.Common.Exceptions;
 using SurveillanceCameras.Application.Common.Interfaces;
 using SurveillanceCameras.Application.Common.Models.TikTok;
 using SurveillanceCameras.Application.Local.Movies.IntegrationEvents;
+using SurveillanceCameras.Application.Local.StorageAccounts;
 using SurveillanceCameras.Application.Repository.TikTok;
 using SurveillanceCameras.Application.Repository.VideoStorage;
 using SurveillanceCameras.Domain.Entities;
@@ -12,9 +13,9 @@ using SurveillanceCameras.Domain.Enums;
 namespace SurveillanceCameras.Application.Local.Movies.Commands.StoreEpisodeVideos;
 
 /// <summary>
-/// Tải file video của tập phim từ TikTok (bằng cookie tài khoản TikTok của chủ phim) rồi lưu vào tài khoản lưu trữ (Cloudflare R2) của chủ phim, ghi link phát vào
-/// <see cref="Episode.StreamUrl"/>. Video vào tài khoản đang bật có ưu tiên cao nhất còn đủ chỗ; đầy (hoặc lỗi) thì
-/// chuyển sang tài khoản kế tiếp.
+/// Tải file video của tập phim từ TikTok (bằng cookie tài khoản TikTok của chủ phim) rồi lưu vào tài khoản lưu trữ
+/// Cloudflare R2 duy nhất của chủ phim, ghi link phát vào <see cref="Episode.StreamUrl"/> và ghi nhận số lượng video tải
+/// lên cùng số request R2 theo từng tháng.
 /// </summary>
 public class EpisodeVideoStorer
 {
@@ -30,6 +31,8 @@ public class EpisodeVideoStorer
     private readonly ISecretProtector _protector;
     private readonly EpisodeVideoStoreOptions _options;
     private readonly ILogger<EpisodeVideoStorer> _logger;
+    private readonly TimeProvider _timeProvider;
+    private DateTimeOffset? _lastQueueNow;
 
     // Cookie TikTok theo chủ phim, đọc một lần cho mỗi lượt (đối tượng sống theo scope).
     private readonly Dictionary<string, string?> _cookies = [];
@@ -40,7 +43,7 @@ public class EpisodeVideoStorer
 
     public EpisodeVideoStorer(IApplicationDbContext context, ITikTokRepository tikTok, IVideoStorageRepository storage,
         ISecretProtector protector, IOptions<EpisodeVideoStoreOptions> options, DramaFileCache dramaFiles,
-        ILogger<EpisodeVideoStorer> logger)
+        ILogger<EpisodeVideoStorer> logger, TimeProvider? timeProvider = null)
     {
         _dramaFiles = dramaFiles;
         _context = context;
@@ -49,43 +52,65 @@ public class EpisodeVideoStorer
         _protector = protector;
         _options = options.Value;
         _logger = logger;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
+
+    private DateTimeOffset GetNow() => _lastQueueNow ?? _timeProvider.GetUtcNow();
 
     /// <summary>
     /// Đưa các tập chưa có video trên kho vào hàng đợi Kafka (sự kiện <see cref="EpisodeVideoStoreRequestedIntegrationEvent"/>).
-    /// Mỗi người dùng chỉ được đưa vào khi tài khoản lưu trữ của họ còn ít nhất <see cref="EpisodeVideoStoreOptions.MinFreeBytes"/>,
-    /// và số tập không vượt quá số video kho còn chứa được (theo dung lượng trung bình một video), tính cả các tập đang chờ
-    /// trong hàng đợi — tải xong mà không có chỗ để thì phí cả lượt tải từ TikTok.
+    /// Mỗi người dùng chỉ được đưa vào khi tài khoản lưu trữ R2 duy nhất của họ đang bật, còn ít nhất
+    /// <see cref="EpisodeVideoStoreOptions.MinFreeBytes"/>, chưa chạm giới hạn số video tải lên trong tháng
+    /// (<see cref="StorageAccount.MonthlyVideoLimit"/>) và số tập không vượt quá số video kho còn chứa được (tính cả các
+    /// tập đang chờ trong hàng đợi).
     /// </summary>
     /// <returns>Số tập được đưa vào hàng đợi.</returns>
     public async Task<int> QueuePendingAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
+        _lastQueueNow = now;
         var requeueBefore = now - TimeSpan.FromMinutes(Math.Max(1, _options.RequeueAfterMinutes));
         var exhaustedBefore = _options.ExhaustedRetryHours > 0 ? now - TimeSpan.FromHours(_options.ExhaustedRetryHours) : (DateTimeOffset?)null;
         var max = Math.Max(1, _options.MaxAttempts);
+        var utc = now.UtcDateTime;
 
         var accounts = await _context.StorageAccounts
             .AsNoTracking()
             .Where(x => x.IsEnabled)
-            .Select(x => new { x.CreatedBy, x.QuotaBytes, x.UsedBytes })
+            .OrderBy(x => x.Id)
+            .Select(x => new { x.Id, x.CreatedBy, x.QuotaBytes, x.UsedBytes, x.MonthlyVideoLimit })
             .ToListAsync(cancellationToken);
 
         var queued = 0;
-        foreach (var owner in accounts.GroupBy(x => x.CreatedBy))
+        foreach (var ownerGroup in accounts.GroupBy(x => x.CreatedBy))
         {
-            var free = owner.Sum(x => Math.Max(0, x.QuotaBytes - x.UsedBytes));
+            // Mỗi người dùng chỉ dùng 1 tài khoản R2 duy nhất.
+            var account = ownerGroup.First();
+            var free = Math.Max(0, account.QuotaBytes - account.UsedBytes);
             if (free < _options.MinFreeBytes) continue;
 
-            var estimate = await EstimatedVideoBytesAsync(owner.Key, cancellationToken);
-            var inFlight = await _context.Episodes.CountAsync(x => x.Work!.Type == WorkType.Movie && x.Work.CreatedBy == owner.Key
+            var estimate = await EstimatedVideoBytesAsync(account.CreatedBy, cancellationToken);
+            var inFlight = await _context.Episodes.CountAsync(x => x.Work!.Type == WorkType.Movie && x.Work.CreatedBy == account.CreatedBy
                 && x.StreamUrl == null && x.QueuedAt != null && x.QueuedAt > requeueBefore && x.StorageAttempts < max, cancellationToken);
-            // Số video kho còn chứa được, trừ các tập đang chờ trong hàng đợi.
+            // Số video kho còn chứa được theo dung lượng trống, trừ các tập đang chờ trong hàng đợi.
             var room = (int)Math.Min(int.MaxValue, free / estimate) - inFlight;
+
+            if (account.MonthlyVideoLimit > 0)
+            {
+                var uploadedThisMonth = await _context.StorageAccountMonthlyStats
+                    .AsNoTracking()
+                    .Where(x => x.StorageAccountId == account.Id && x.Year == utc.Year && x.Month == utc.Month)
+                    .Select(x => (int?)x.VideosUploaded)
+                    .FirstOrDefaultAsync(cancellationToken) ?? 0;
+
+                var monthlyRemaining = account.MonthlyVideoLimit - uploadedThisMonth - inFlight;
+                room = Math.Min(room, monthlyRemaining);
+            }
+
             var take = Math.Min(Math.Max(1, _options.BatchSize), room);
             if (take <= 0) continue;
 
             var episodes = await _context.Episodes
-                .Where(x => x.Work!.Type == WorkType.Movie && x.Work.CreatedBy == owner.Key
+                .Where(x => x.Work!.Type == WorkType.Movie && x.Work.CreatedBy == account.CreatedBy
                             && x.StreamUrl == null && x.VideoUrl != null
                             && (x.QueuedAt == null || x.QueuedAt <= requeueBefore)
                             && (x.StorageAttempts < max
@@ -121,8 +146,16 @@ public class EpisodeVideoStorer
         return Math.Max(1, (long)(average ?? _options.EstimatedVideoBytes));
     }
 
+    /// <summary>Lấy tài khoản lưu trữ R2 duy nhất đang bật của người dùng.</summary>
+    private Task<StorageAccount?> GetActiveAccountAsync(string? owner, CancellationToken cancellationToken)
+        => _context.StorageAccounts
+            .Where(x => x.CreatedBy == owner && x.IsEnabled)
+            .OrderBy(x => x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
     /// <summary>
-    /// Xử lý một tập lấy từ hàng đợi: bỏ qua nếu đã có link phát, hết lượt thử hoặc kho không còn chỗ; còn lại tải và lưu.
+    /// Xử lý một tập lấy từ hàng đợi: bỏ qua nếu đã có link phát, hết lượt thử, kho không còn chỗ hoặc đã đạt giới hạn
+    /// số video tải lên trong tháng; còn lại tải và lưu.
     /// </summary>
     /// <exception cref="TikTokBlockedException">TikTok đang chặn máy chủ / chưa đăng nhập: bên gọi nên nghỉ.</exception>
     public async Task StoreQueuedAsync(int episodeId, CancellationToken cancellationToken)
@@ -135,17 +168,34 @@ public class EpisodeVideoStorer
         if (episode.StreamUrl is not null || string.IsNullOrWhiteSpace(episode.VideoUrl)) return;
         if (episode.StorageAttempts >= _options.MaxAttempts) return;
 
-        // Hàng đợi có thể đã chờ lâu: kho có thể đã đầy từ lúc xếp hàng. Không tải khi không có chỗ để.
-        var free = await _context.StorageAccounts
-            .Where(x => x.CreatedBy == work.CreatedBy && x.IsEnabled)
-            .Select(x => x.QuotaBytes - x.UsedBytes)
-            .ToListAsync(cancellationToken);
-        if (free.Sum(x => Math.Max(0, x)) < _options.MinFreeBytes)
+        // Hàng đợi có thể đã chờ lâu: kho có thể đã đầy hoặc chạm trần tháng từ lúc xếp hàng. Không tải khi không lưu được.
+        var account = await GetActiveAccountAsync(work.CreatedBy, cancellationToken);
+        if (account is null || account.FreeBytes < _options.MinFreeBytes)
         {
-            episode.StorageError = "Kho lưu trữ không còn đủ chỗ trống — thêm tài khoản mới hoặc nâng hạn mức, hệ thống sẽ tự tải lại.";
+            episode.StorageError = "Kho lưu trữ không còn đủ chỗ trống — nâng hạn mức hoặc dọn bớt video, hệ thống sẽ tự tải lại.";
             episode.QueuedAt = null;
             await _context.SaveChangesAsync(cancellationToken);
             return;
+        }
+
+        if (account.MonthlyVideoLimit > 0)
+        {
+            var now = GetNow();
+            var utc = now.UtcDateTime;
+            var uploadedThisMonth = await _context.StorageAccountMonthlyStats
+                .AsNoTracking()
+                .Where(x => x.StorageAccountId == account.Id && x.Year == utc.Year && x.Month == utc.Month)
+                .Select(x => (int?)x.VideosUploaded)
+                .FirstOrDefaultAsync(cancellationToken) ?? 0;
+
+            if (uploadedThisMonth >= account.MonthlyVideoLimit)
+            {
+                episode.StorageError =
+                    $"Đã đạt giới hạn {account.MonthlyVideoLimit} video tải lên R2 trong tháng {utc:MM/yyyy} — hệ thống sẽ tự tải tiếp vào tháng sau hoặc khi tăng giới hạn.";
+                episode.QueuedAt = null;
+                await _context.SaveChangesAsync(cancellationToken);
+                return;
+            }
         }
 
         await StoreAsync(episode, cancellationToken);
@@ -179,8 +229,8 @@ public class EpisodeVideoStorer
         }
         catch (StorageFullException ex)
         {
-            // Hết chỗ không phải lỗi của tập: không tính lần thử, cho xếp hàng lại khi kho có thêm dung lượng.
-            _logger.LogWarning("Tập {EpisodeId}: kho đầy: {Error}", episode.Id, ex.Message);
+            // Hết chỗ hoặc đạt trần tháng không phải lỗi của tập: không tính lần thử, cho xếp hàng lại khi có thêm dung lượng/sang tháng.
+            _logger.LogWarning("Tập {EpisodeId}: kho đầy / đạt giới hạn tháng: {Error}", episode.Id, ex.Message);
             episode.StorageKey = null;
             episode.StorageError = ex.Message.Length <= MaxErrorLength ? ex.Message : ex.Message[..MaxErrorLength];
             episode.QueuedAt = null;
@@ -294,50 +344,46 @@ public class EpisodeVideoStorer
         return _cookies[owner ?? ""] = cookie;
     }
 
-    /// <summary>Tải file lên tài khoản đầu tiên còn đủ chỗ; tài khoản lỗi thì thử tài khoản kế tiếp.</summary>
+    /// <summary>Tải file lên tài khoản lưu trữ R2 duy nhất của chủ phim và ghi nhận thống kê tháng.</summary>
     /// <returns>Tài khoản đã nhận file (khoá file được ghi vào <see cref="Episode.StorageKey"/>).</returns>
     private async Task<StorageAccount> UploadAsync(Episode episode, string filePath, long size, CancellationToken cancellationToken)
     {
         var owner = episode.Work!.CreatedBy;
-        var accounts = await _context.StorageAccounts
-            .Where(x => x.CreatedBy == owner && x.IsEnabled)
-            .ToListAsync(cancellationToken);
+        var account = await GetActiveAccountAsync(owner, cancellationToken);
 
-        var candidates = Candidates(accounts, size);
-        if (candidates.Count == 0)
+        if (account is null || account.FreeBytes < size)
         {
             throw new StorageFullException(
-                $"Không tài khoản lưu trữ nào còn đủ {size / (double)StorageAccount.BytesPerMb:0.#} MB trống. Thêm tài khoản mới hoặc nâng hạn mức rồi bấm thử lại.");
+                $"Tài khoản lưu trữ R2 không còn đủ {size / (double)StorageAccount.BytesPerMb:0.#} MB trống. Nâng hạn mức hoặc dọn bớt video rồi bấm thử lại.");
+        }
+
+        var now = GetNow();
+        var stat = await _context.GetOrCreateMonthlyStatAsync(account.Id, now, cancellationToken);
+        if (account.MonthlyVideoLimit > 0 && stat.VideosUploaded >= account.MonthlyVideoLimit)
+        {
+            throw new StorageFullException(
+                $"Đã đạt giới hạn {account.MonthlyVideoLimit} video tải lên R2 trong tháng {now.UtcDateTime:MM/yyyy}. Tăng giới hạn tháng hoặc chờ sang tháng sau.");
         }
 
         // Tên file có phần ngẫu nhiên: bucket công khai nên không để đoán được link các tập bị khoá.
         var key = $"movies/{episode.WorkId}/{episode.Id}-{Guid.NewGuid():N}.mp4";
-        var errors = new List<string>();
-        foreach (var account in candidates)
+        try
         {
-            try
-            {
-                await _storage.UploadFileAsync(account.ToTarget(_protector), key, filePath, "video/mp4", cancellationToken);
-                episode.StorageKey = key;
-                return account;
-            }
-            catch (VideoStorageException ex)
-            {
-                _logger.LogWarning("Tài khoản lưu trữ {AccountId}: tải lên lỗi: {Error}", account.Id, ex.Message);
-                account.LastError = ex.Message.Length <= MaxErrorLength ? ex.Message : ex.Message[..MaxErrorLength];
-                errors.Add($"{account.Title}: {ex.Message}");
-            }
+            await _storage.UploadFileAsync(account.ToTarget(_protector), key, filePath, "video/mp4", cancellationToken);
+            stat.PutObjectRequests += 1;
+            stat.VideosUploaded += 1;
+            stat.BytesUploaded += size;
+            episode.StorageKey = key;
+            return account;
         }
-
-        throw new VideoStorageException("Tải lên kho lỗi — " + string.Join("; ", errors));
+        catch (VideoStorageException ex)
+        {
+            stat.PutObjectRequests += 1;
+            _logger.LogWarning("Tài khoản lưu trữ {AccountId}: tải lên lỗi: {Error}", account.Id, ex.Message);
+            account.LastError = ex.Message.Length <= MaxErrorLength ? ex.Message : ex.Message[..MaxErrorLength];
+            throw new VideoStorageException($"Tải lên kho lỗi — {account.Title}: {ex.Message}", ex);
+        }
     }
-
-    /// <summary>Các tài khoản đang bật còn đủ chỗ cho file <paramref name="size"/> byte, theo thứ tự được dùng.</summary>
-    public static List<StorageAccount> Candidates(IEnumerable<StorageAccount> accounts, long size)
-        => accounts
-            .Where(x => x.IsEnabled && x.FreeBytes >= size)
-            .OrderBy(x => x.Priority).ThenBy(x => x.Id)
-            .ToList();
 
     /// <summary>Cho các tập lưu video lỗi thử lại: xoá lỗi, đặt lại số lần thử và mốc xếp hàng (lượt quét sau sẽ nhận).</summary>
     public async Task ReleaseAndRetryAsync(IApplicationDbContext context, IReadOnlyCollection<int> episodeIds, CancellationToken cancellationToken)
@@ -357,8 +403,7 @@ public class EpisodeVideoStorer
 
     /// <summary>
     /// Gỡ file video đã lưu của các tập (trước khi xoá tập hoặc thay link phát): xoá file trong bucket, trả lại dung lượng
-    /// cho tài khoản và xoá thông tin lưu trữ trên tập. Chưa gọi SaveChanges. Xoá file lỗi thì chỉ ghi log — file mồ côi
-    /// sẽ lộ ra khi đối soát dung lượng tài khoản.
+    /// cho tài khoản, ghi nhận request <c>DeleteObject</c> trong tháng và xoá thông tin lưu trữ trên tập. Chưa gọi SaveChanges.
     /// </summary>
     public async Task ReleaseAsync(IReadOnlyCollection<Episode> episodes, CancellationToken cancellationToken)
     {
@@ -370,13 +415,18 @@ public class EpisodeVideoStorer
             .Where(x => accountIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id, cancellationToken);
 
+        var now = GetNow();
         foreach (var episode in stored)
         {
             if (accounts.TryGetValue(episode.StorageAccountId!.Value, out var account))
             {
+                var stat = await _context.GetOrCreateMonthlyStatAsync(account.Id, now, cancellationToken);
+                stat.DeleteObjectRequests += 1;
                 try
                 {
                     await _storage.DeleteAsync(account.ToTarget(_protector), episode.StorageKey!, cancellationToken);
+                    stat.VideosDeleted += 1;
+                    stat.BytesDeleted += episode.StorageSizeBytes ?? 0;
                 }
                 catch (VideoStorageException ex)
                 {
