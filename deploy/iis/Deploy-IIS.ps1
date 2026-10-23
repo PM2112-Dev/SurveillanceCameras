@@ -173,15 +173,15 @@ try {
 
     # --- Cloudflare Tunnel (Production - Tunnel Token từ Zero Trust Dashboard) ---
     if ($CloudflareTunnelToken) {
-        $cloudflaredExe = (Get-Command cloudflared.exe -ErrorAction SilentlyContinue)?.Source
-        if (-not $cloudflaredExe) {
+        $cloudflaredCmd = Get-Command cloudflared.exe -ErrorAction SilentlyContinue
+        if (-not $cloudflaredCmd) {
             throw "Không tìm thấy cloudflared.exe trong PATH. Cài bằng: winget install Cloudflare.cloudflared"
         }
         if (-not (Get-Service -Name $CloudflareServiceName -ErrorAction SilentlyContinue)) {
-            & $cloudflaredExe service install $CloudflareTunnelToken | Out-Host
+            & $cloudflaredCmd.Source service install $CloudflareTunnelToken | Out-Host
         }
         Restart-Service -Name $CloudflareServiceName
-        Write-Host "Đã khởi động Cloudflare Tunnel service ($CloudflareServiceName) — hãy trỏ Public Hostname trong Zero Trust sang http://localhost:$Port"
+        Write-Host "Đã khởi động Cloudflare Tunnel service ($CloudflareServiceName) - hãy trỏ Public Hostname trong Zero Trust sang http://localhost:$Port"
     }
 
     Write-Host 'DEPLOY_OK'
