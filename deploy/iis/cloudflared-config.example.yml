@@ -1,0 +1,22 @@
+# Mẫu cấu hình Cloudflare Tunnel (cloudflared) trên máy chủ Windows / IIS cho môi trường Production.
+# Hướng dẫn:
+#   1. Cài đặt cloudflared: winget install Cloudflare.cloudflared
+#   2. Đăng nhập & tạo tunnel:
+#        cloudflared tunnel login
+#        cloudflared tunnel create story-production
+#        cloudflared tunnel route dns story-production api.ten-mien-cua-ban.com
+#   3. Copy file này thành C:\cloudflared\config.yml và thay <TUNNEL_UUID> + hostname.
+#   4. Khi chạy Deploy-IIS.ps1 cho production:
+#        .\deploy\iis\Deploy-IIS.ps1 -PublishDir C:\temp\story-publish -CloudflareTunnelConfig C:\cloudflared\config.yml
+#      (Trong lúc test vẫn có thể dùng -NgrokConfig như cũ).
+
+tunnel: <TUNNEL_UUID>
+credentials-file: C:\cloudflared\<TUNNEL_UUID>.json
+
+ingress:
+  - hostname: api.ten-mien-cua-ban.com
+    service: http://localhost:8090
+    originRequest:
+      noTLSVerify: true
+      connectTimeout: 30s
+  - service: http_status:404

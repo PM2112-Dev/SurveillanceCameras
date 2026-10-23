@@ -32,6 +32,10 @@ export const checkStorageAccount = id => send('POST', `/api/StorageAccounts/${id
 export const trimStorageAccount = (id, apply, deleteOrphans) =>
   send('POST', `/api/StorageAccounts/${id}/trim`, { apply, deleteOrphans });
 
+/** Đối soát / cập nhật số lượng video và số request R2 theo loại của một tháng. */
+export const updateStorageAccountMonthlyStat = (id, year, month, stat) =>
+  send('PUT', `/api/StorageAccounts/${id}/monthly-stats/${year}/${month}`, stat);
+
 /** Cho hệ thống thử lưu lại video của các tập đã lỗi trong phim. Trả về số tập được đưa lại vào hàng chờ. */
 export const retryMovieVideoStorage = movieId => send('POST', `/api/Movies/${movieId}/video-storage/retry`);
 

@@ -18,3 +18,20 @@ public class StorageAccountConfiguration : IEntityTypeConfiguration<StorageAccou
         builder.HasIndex(x => new { x.CreatedBy, x.IsEnabled, x.Priority });
     }
 }
+
+public class StorageAccountMonthlyStatConfiguration : IEntityTypeConfiguration<StorageAccountMonthlyStat>
+{
+    public void Configure(EntityTypeBuilder<StorageAccountMonthlyStat> builder)
+    {
+        builder.Ignore(x => x.TotalClassARequests);
+        builder.Ignore(x => x.TotalClassBRequests);
+        builder.Ignore(x => x.TotalRequests);
+
+        builder.HasIndex(x => new { x.StorageAccountId, x.Year, x.Month }).IsUnique();
+
+        builder.HasOne(x => x.StorageAccount)
+            .WithMany(x => x.MonthlyStats)
+            .HasForeignKey(x => x.StorageAccountId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

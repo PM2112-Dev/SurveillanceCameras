@@ -6,7 +6,8 @@ namespace SurveillanceCameras.Application.Local.StorageAccounts.Commands.CheckSt
 
 /// <summary>
 /// Kết nối thử tới bucket và đối soát dung lượng: dung lượng đã dùng được đặt lại bằng tổng kích thước mọi file đang có
-/// trong bucket (kể cả file không do hệ thống tải lên, vì chúng cũng chiếm hạn mức).
+/// trong bucket (kể cả file không do hệ thống tải lên, vì chúng cũng chiếm hạn mức), đồng thời ghi nhận số request
+/// <c>ListObjectsV2</c> (Class A) vào thống kê tháng.
 /// </summary>
 public record CheckStorageAccountCommand(int Id) : IRequest<CheckStorageAccountResult>;
 
@@ -38,21 +39,26 @@ public class CheckStorageAccountCommandHandler : IRequestHandler<CheckStorageAcc
 
         Guard.Against.NotFound(request.Id, entity);
 
+        var now = _timeProvider.GetUtcNow();
+        var stat = await _context.GetOrCreateMonthlyStatAsync(entity.Id, now, cancellationToken);
+
         CheckStorageAccountResult result;
         try
         {
             var usage = await _storage.GetUsageAsync(entity.ToTarget(_protector), cancellationToken);
+            stat.ListObjectsRequests += StorageAccountUsageTracker.CountListRequests(usage.Objects);
             entity.UsedBytes = usage.Bytes;
             entity.LastError = null;
             result = new CheckStorageAccountResult(true, null, usage.Bytes, usage.Objects);
         }
         catch (VideoStorageException ex)
         {
+            stat.ListObjectsRequests += 1;
             entity.LastError = ex.Message;
             result = new CheckStorageAccountResult(false, ex.Message, entity.UsedBytes, 0);
         }
 
-        entity.LastCheckedAt = _timeProvider.GetUtcNow();
+        entity.LastCheckedAt = now;
         await _context.SaveChangesAsync(cancellationToken);
 
         return result;
