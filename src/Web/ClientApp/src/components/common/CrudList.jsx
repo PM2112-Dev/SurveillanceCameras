@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Pencil, Plus, RotateCcw, Search, Trash2 } from 'lucide-react';
 import { getErrorMessage } from '../../api/clients';
 import { PageHeader } from './PageHeader';
 import { Pagination } from './Pagination';
@@ -73,6 +73,15 @@ export function CrudList({
     setFilterValues(prev => ({ ...prev, [name]: value }));
   };
 
+  const hasActiveFilters = Boolean(search || searchInput || Object.values(filterValues).some(v => v !== undefined && v !== null && v !== ''));
+
+  const handleResetFilters = () => {
+    setPage(1);
+    setSearchInput('');
+    setSearch('');
+    setFilterValues(initialFilters);
+  };
+
   const handleDelete = () => {
     setDeleting(true);
 
@@ -129,6 +138,11 @@ export function CrudList({
         <button type="submit">
           <Search size={16} aria-hidden="true" /> Tìm
         </button>
+        {hasActiveFilters && (
+          <button type="button" className="secondary" onClick={handleResetFilters} title="Đặt lại toàn bộ bộ lọc">
+            <RotateCcw size={16} aria-hidden="true" /> Xoá lọc
+          </button>
+        )}
       </form>
 
       <ErrorAlert message={error} />

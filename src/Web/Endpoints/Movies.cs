@@ -111,7 +111,7 @@ public class Movies : IEndpointGroup
         => TypedResults.Ok(await sender.Send(new StoreMovieEpisodeVideoCommand(id, episodeId)));
 
     [EndpointSummary("Get Movies")]
-    [EndpointDescription("Lấy danh sách phim (lọc theo tên, kênh; có phân trang)")]
+    [EndpointDescription("Lấy danh sách phim (lọc theo tên, kênh, ngôn ngữ, trạng thái xuất bản, quyền xem, lưu trữ R2, lỗi; có phân trang)")]
     public static async Task<Ok<PaginatedList<MovieDto>>> GetMovies(ISender sender, [AsParameters] GetMoviesQuery query)
         => TypedResults.Ok(await sender.Send(query));
 
@@ -121,10 +121,11 @@ public class Movies : IEndpointGroup
         => TypedResults.Ok(await sender.Send(new GetMovieByIdQuery(id)));
 
     [EndpointSummary("Get Movie episodes")]
-    [EndpointDescription("Lấy các tập của phim theo thứ tự tập")]
+    [EndpointDescription("Lấy các tập của phim theo thứ tự tập, hỗ trợ lọc theo trạng thái và tìm kiếm")]
     public static async Task<Ok<PaginatedList<MovieEpisodeDto>>> GetMovieEpisodes(ISender sender, int id,
-        int page = 1, int pageSize = 50, bool onlyIssues = false)
-        => TypedResults.Ok(await sender.Send(new GetMovieEpisodesQuery { MovieId = id, Page = page, PageSize = pageSize, OnlyIssues = onlyIssues }));
+        int page = 1, int pageSize = 50, bool onlyIssues = false, string? filter = null, string? search = null)
+        => TypedResults.Ok(await sender.Send(new GetMovieEpisodesQuery
+            { MovieId = id, Page = page, PageSize = pageSize, OnlyIssues = onlyIssues, Filter = filter, Search = search }));
 
     [EndpointSummary("Sync TikTok dramas")]
     [EndpointDescription("Đồng bộ các drama đã chọn của kênh TikTok thành phim cùng các tập (đã có thì cập nhật, thêm tập mới)")]

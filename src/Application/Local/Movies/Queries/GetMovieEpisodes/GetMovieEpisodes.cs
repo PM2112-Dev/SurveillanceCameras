@@ -16,6 +16,12 @@ public record GetMovieEpisodesQuery : IRequest<PaginatedList<MovieEpisodeDto>>
 
     /// <summary>Chỉ lấy tập có vấn đề: trùng số tập, lưu video lỗi hoặc không còn nguồn phát.</summary>
     public bool OnlyIssues { get; init; }
+
+    /// <summary>Bộ lọc tập: <c>issues</c>, <c>stored</c>, <c>unstored</c>, <c>storageError</c>, <c>missingSource</c>, <c>duplicate</c>, <c>edited</c>.</summary>
+    public string? Filter { get; init; }
+
+    /// <summary>Tìm theo số tập, tên tập hoặc ID video.</summary>
+    public string? Search { get; init; }
 }
 
 public class GetMovieEpisodesQueryValidator : AbstractValidator<GetMovieEpisodesQuery>
@@ -55,11 +61,44 @@ public class GetMovieEpisodesQueryHandler : IRequestHandler<GetMovieEpisodesQuer
             .ToListAsync(cancellationToken);
 
         var query = _context.Episodes.Where(x => x.WorkId == request.MovieId);
-        if (request.OnlyIssues)
+
+        var filter = !string.IsNullOrWhiteSpace(request.Filter)
+            ? request.Filter
+            : (request.OnlyIssues ? "issues" : null);
+
+        if (!string.IsNullOrWhiteSpace(filter))
         {
-            query = query.Where(x => duplicateNumbers.Contains(x.EpisodeNumber)
-                                     || (x.StorageError != null && x.StreamUrl == null)
-                                     || ((x.VideoUrl == null || x.VideoUrl == "") && (x.StreamUrl == null || x.StreamUrl == "")));
+            query = filter switch
+            {
+                "issues" => query.Where(x => duplicateNumbers.Contains(x.EpisodeNumber)
+                                             || (x.StorageError != null && (x.StreamUrl == null || x.StreamUrl == ""))
+                                             || ((x.VideoUrl == null || x.VideoUrl == "") && (x.StreamUrl == null || x.StreamUrl == ""))),
+                "stored" => query.Where(x => x.StreamUrl != null && x.StreamUrl != ""),
+                "unstored" => query.Where(x => x.StreamUrl == null || x.StreamUrl == ""),
+                "storageError" => query.Where(x => x.StorageError != null && (x.StreamUrl == null || x.StreamUrl == "")),
+                "missingSource" => query.Where(x => (x.VideoUrl == null || x.VideoUrl == "") && (x.StreamUrl == null || x.StreamUrl == "")),
+                "duplicate" => query.Where(x => duplicateNumbers.Contains(x.EpisodeNumber)),
+                "edited" => query.Where(x => x.IsEdited),
+                _ => query
+            };
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var term = request.Search.Trim();
+            if (int.TryParse(term, out var epNum))
+            {
+                query = query.Where(x => x.EpisodeNumber == epNum
+                                         || (x.Title != null && x.Title.Contains(term))
+                                         || (x.NameRaw != null && x.NameRaw.Contains(term))
+                                         || (x.ExternalId != null && x.ExternalId.Contains(term)));
+            }
+            else
+            {
+                query = query.Where(x => (x.Title != null && x.Title.Contains(term))
+                                         || (x.NameRaw != null && x.NameRaw.Contains(term))
+                                         || (x.ExternalId != null && x.ExternalId.Contains(term)));
+            }
         }
 
         var page = await PaginatedList<MovieEpisodeDto>.CreateAsync(
