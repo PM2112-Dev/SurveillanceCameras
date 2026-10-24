@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, CloudUpload, ExternalLink, Eye, EyeOff, Pencil, RefreshCw, RotateCcw, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Check, CloudUpload, ExternalLink, Eye, EyeOff, Pencil, RefreshCw, RotateCcw, Search, Sparkles, Trash2, X } from 'lucide-react';
 import {
   CleanupMovieEpisodesRequest,
   DeleteMovieEpisodesRequest,
@@ -10,6 +10,7 @@ import {
   UpdateMovieEpisodeRequest
 } from '../../web-api-client';
 import { getErrorMessage, moviesClient } from '../../api/clients';
+import { getMovieEpisodesFiltered } from '../../api/movies';
 import { retryMovieVideoStorage, storeMovieEpisodeVideo } from '../../api/storageAccounts';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Pagination } from '../../components/common/Pagination';
@@ -21,6 +22,17 @@ import { formatBytes } from '../StorageAccounts/storageFormat';
 
 const PAGE_SIZE = 50;
 
+const EPISODE_FILTER_OPTIONS = [
+  { value: '', label: 'Loại tập: tất cả' },
+  { value: 'issues', label: 'Tập có vấn đề (lỗi / trùng / mất nguồn)' },
+  { value: 'stored', label: 'Đã lưu video R2' },
+  { value: 'unstored', label: 'Chưa lưu video R2' },
+  { value: 'storageError', label: 'Đang lỗi lưu video R2' },
+  { value: 'missingSource', label: 'Mất nguồn phát' },
+  { value: 'duplicate', label: 'Trùng số tập' },
+  { value: 'edited', label: 'Đã sửa tay' }
+];
+
 /** Chi tiết phim: thông tin và danh sách tập (tập nằm trong phim, không có menu riêng). */
 export function MovieDetail() {
   const { id } = useParams();
@@ -31,7 +43,9 @@ export function MovieDetail() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [storingId, setStoringId] = useState(null);
-  const [onlyIssues, setOnlyIssues] = useState(false);
+  const [episodeFilter, setEpisodeFilter] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [episodeSearch, setEpisodeSearch] = useState('');
   const [selected, setSelected] = useState(() => new Set());
   const [editing, setEditing] = useState(null);   // { id, episodeNumber, name }
   const [cleanup, setCleanup] = useState(null);   // { removeBroken, renumber, preview, busy }
@@ -39,7 +53,15 @@ export function MovieDetail() {
   const movie = useAsyncData(() => moviesClient.getMovieById(movieId), [movieId, version]);
   // Mặc định hệ thống (số tập miễn phí / quảng cáo) — endpoint công khai của app.
   const appConfig = useAsyncData(() => fetch('/api/app/config').then(response => (response.ok ? response.json() : null)), []);
-  const episodes = useAsyncData(() => moviesClient.getMovieEpisodes(movieId, page, PAGE_SIZE, onlyIssues), [movieId, page, version, onlyIssues]);
+  const episodes = useAsyncData(
+    () => getMovieEpisodesFiltered(movieId, {
+      page,
+      pageSize: PAGE_SIZE,
+      filter: episodeFilter || undefined,
+      search: episodeSearch || undefined
+    }),
+    [movieId, page, version, episodeFilter, episodeSearch]
+  );
   const info = movie.data;
 
   const resync = () => {
@@ -161,6 +183,12 @@ export function MovieDetail() {
       .catch(err => { setError(getErrorMessage(err)); setCleanup(current => ({ ...current, busy: false })); });
   };
 
+  const handleEpisodeSearch = event => {
+    event.preventDefault();
+    setPage(1);
+    setEpisodeSearch(searchInput.trim());
+  };
+
   const items = episodes.data?.items ?? [];
   const accessRule = effectiveAccessRule(info, appConfig.data);
   const accessLabels = { free: 'Miễn phí', ads: 'Quảng cáo', vip: 'VIP' };
@@ -179,7 +207,7 @@ export function MovieDetail() {
             <button type="button" className="secondary" onClick={() => (cleanup ? setCleanup(null) : previewCleanup())}>
               <Sparkles size={16} aria-hidden="true" /> Dọn tập lỗi/trùng
             </button>
-            {items.some(episode => episode.storageError) && (
+            {((info?.failedStorageEpisodeCount ?? 0) > 0 || items.some(episode => episode.storageError)) && (
               <button type="button" className="secondary" onClick={retryStorage}>
                 <RotateCcw size={16} aria-hidden="true" /> Lưu video lại
               </button>
@@ -217,6 +245,19 @@ export function MovieDetail() {
             <dt>Ngôn ngữ</dt><dd>{info.languageTitle || info.languageCode || '—'}</dd>
             <dt>Lượt xem</dt><dd>{info.viewCount != null ? numberFormat.format(info.viewCount) : '—'}</dd>
             <dt>Số tập</dt><dd>{info.episodeCount ?? 0}{info.isFull && <span className="status-badge ok">Đủ tập</span>}</dd>
+            <dt>Lưu trữ R2</dt>
+            <dd>
+              {info.storedEpisodeCount ?? 0} / {info.episodeCount ?? 0} tập
+              {(info.episodeCount ?? 0) > 0 && info.storedEpisodeCount === info.episodeCount && (
+                <span className="status-badge ok" style={{ marginLeft: 6 }}>Đủ R2</span>
+              )}
+              {(info.failedStorageEpisodeCount ?? 0) > 0 && (
+                <span className="status-badge danger" style={{ marginLeft: 6 }}>{info.failedStorageEpisodeCount} lỗi R2</span>
+              )}
+              {(info.missingSourceEpisodeCount ?? 0) > 0 && (
+                <span className="status-badge warn" style={{ marginLeft: 6 }}>{info.missingSourceEpisodeCount} mất nguồn</span>
+              )}
+            </dd>
             <dt>Tổng thời lượng</dt><dd>{formatDuration(info.totalDurationSeconds)}</dd>
             <dt>Trên app</dt>
             <dd>{info.isPublished ? <span className="status-badge ok">Đang hiện</span> : 'Chưa xuất bản'}</dd>
@@ -275,10 +316,6 @@ export function MovieDetail() {
       <div className="chapter-toolbar">
         <h2>Danh sách tập</h2>
         <div className="page-header-actions">
-          <label className="checkbox-item">
-            <input type="checkbox" checked={onlyIssues} onChange={event => { setOnlyIssues(event.target.checked); setPage(1); }} />
-            Chỉ tập có vấn đề
-          </label>
           {selected.size > 0 && (
             <button type="button" className="secondary danger" onClick={() => deleteEpisodes([...selected], `${selected.size} tập đã chọn`)}>
               <Trash2 size={16} aria-hidden="true" /> Xoá {selected.size} tập
@@ -286,10 +323,32 @@ export function MovieDetail() {
           )}
         </div>
       </div>
+
+      <form className="filter-bar" onSubmit={handleEpisodeSearch}>
+        <select
+          aria-label="Lọc tập phim"
+          value={episodeFilter}
+          onChange={event => { setEpisodeFilter(event.target.value); setPage(1); }}
+        >
+          {EPISODE_FILTER_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <input
+          type="search"
+          placeholder="Tìm theo số tập, tên tập hoặc ID video…"
+          value={searchInput}
+          onChange={event => setSearchInput(event.target.value)}
+        />
+        <button type="submit">
+          <Search size={16} aria-hidden="true" /> Tìm
+        </button>
+      </form>
+
       {episodes.loading && !episodes.data ? (
         <LoadingBlock />
       ) : items.length === 0 ? (
-        <EmptyState message={onlyIssues ? 'Không có tập nào có vấn đề.' : 'Phim chưa có tập nào.'} />
+        <EmptyState message={episodeFilter || episodeSearch ? 'Không có tập nào khớp bộ lọc.' : 'Phim chưa có tập nào.'} />
       ) : (
         <div className="table-wrap">
           <table>

@@ -53,6 +53,15 @@ public class MovieDto : BaseDto
 
     public int EpisodeCount { get; init; }
 
+    /// <summary>Số tập đã có link video lưu trữ R2 (<see cref="Episode.StreamUrl"/>).</summary>
+    public int StoredEpisodeCount { get; init; }
+
+    /// <summary>Số tập đang bị lỗi lưu trữ video R2.</summary>
+    public int FailedStorageEpisodeCount { get; init; }
+
+    /// <summary>Số tập mất cả link TikTok lẫn link lưu trữ R2.</summary>
+    public int MissingSourceEpisodeCount { get; init; }
+
     /// <summary>Tổng thời lượng các tập (giây).</summary>
     public int TotalDurationSeconds { get; init; }
 
@@ -70,6 +79,9 @@ public class MovieDto : BaseDto
                 .ForMember(d => d.LanguageCode, o => o.MapFrom(s => s.Language != null ? s.Language.Code : null))
                 .ForMember(d => d.LanguageTitle, o => o.MapFrom(s => s.Language != null ? s.Language.Title : null))
                 .ForMember(d => d.EpisodeCount, o => o.MapFrom(s => s.Episodes!.Count))
+                .ForMember(d => d.StoredEpisodeCount, o => o.MapFrom(s => s.Episodes!.Count(e => e.StreamUrl != null && e.StreamUrl != "")))
+                .ForMember(d => d.FailedStorageEpisodeCount, o => o.MapFrom(s => s.Episodes!.Count(e => e.StorageError != null && (e.StreamUrl == null || e.StreamUrl == ""))))
+                .ForMember(d => d.MissingSourceEpisodeCount, o => o.MapFrom(s => s.Episodes!.Count(e => (e.VideoUrl == null || e.VideoUrl == "") && (e.StreamUrl == null || e.StreamUrl == ""))))
                 .ForMember(d => d.TotalDurationSeconds, o => o.MapFrom(s => s.Episodes!.Sum(e => e.DurationSeconds ?? 0)));
         }
     }
